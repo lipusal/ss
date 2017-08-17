@@ -12,13 +12,22 @@ class CellIndexMethod:
         self.particles = particles
         self.interactionRadius = interactionRadius
         self.cells = self.particlesInCells()
-        self.distances = defaultdict({})    # Dictionary that returns a new dictionary when accessing a nonexistent key
+        self.distances = self.calculateDistances(interactionRadius)
 
 
     # TODO: Ver si queda interactionRadius o no
     def calculateDistances(self, interactionRadius = -1):
-        if(interactionRadius == -1): interactionRadius = self.interactionRadius
-            #TODO NOW
+        result = defaultdict({}) # Dictionary that returns a new dictionary when accessing a nonexistent key
+        if(interactionRadius == -1):
+            interactionRadius = self.interactionRadius
+        for cell in self.cells:
+            for ownParticle in cell.particles:
+                for neighbor in cell.getNeighborParticles(self):
+                    result[TODO cell ID][TODO other cell ID] = result[TODO other cell ID][TODO cell ID] = ownParticle.distanceTo(neighbor)
+        return result
+
+        #TODO: When returning, remove default dict behavior
+        #TODO NOW
 
 
     def getCell(self, particle):
@@ -42,7 +51,7 @@ class CellIndexMethod:
             self.col = col
             self.particles = particles
 
-        def getNeighbors(self, board: CellIndexMethod):
+        def getNeighborCells(self, board: CellIndexMethod):
             '''Gets neighboring cells above and to the right of the cell that are within the board. Ver teórica 1 filmina 24.'''
             cells = board.cells
             result = []
@@ -59,11 +68,9 @@ class CellIndexMethod:
 
             return result
 
-        # def getNeighboringParticles(self, board: CellIndexMethod):
-        #     result = []
-        #     for cell in self.getNeighbors(board):
-        #         if(cell.distanceTo)
-        #         result += cell.particles
-        #
-        #     return result
-        # TODO NOW
+        def getNeighborParticles(self, board: CellIndexMethod):
+            result = []
+            for cell in self.getNeighborCells(board):
+                result += cell.particles
+
+            return result
