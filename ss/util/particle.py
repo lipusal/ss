@@ -1,11 +1,14 @@
 from math import sqrt
 
-class Particle:
-    '''Model class for particles used in simulations'''
 
-    def __init__(self, x, y, radius = 0):
+class Particle:
+    """Model class for particles used in simulations"""
+
+    def __init__(self, x, y, radius=0):
         self.radius = radius
         self.moveTo(x, y)
+        # TODO id
+        # TODO vectores de velocidad, posición
 
     def moveTo(self, x, y):
         self.x = x

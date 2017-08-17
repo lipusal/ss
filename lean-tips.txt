@@ -1,0 +1,17 @@
+LEAN TIPS (<3)
+- tiene que recibir:
+	- Listado de partículas
+	- Radio de interacción
+- tiene que devolver:
+	- hashMap<Partícila, List<Particula>, son los vecinos>
+
+- por qué no necesitamos tamaños
+	- preprocesar:
+		- min X, max X, min Y, max Y => obtengo L1 y L2
+		- mayor radio de partícula
+	- considerar usar tablero rectangular
+	- usar la mínima cantidad de celdas posibles que cumpla la restricción:
+		- techo(L/(rc + 2*MAX radio)) = mejor M !!!!!!!!1!!!11uno1!!1!!
+
+- si te pasás, restarle/sumarle width/height como corresponda
+	- en las esquinas hacer combinación de las dos
