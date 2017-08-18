@@ -6,18 +6,17 @@ class CellIndexMethod:
         self.particles = particles
         self.interactionRadius = interaction_radius
         self.cells = self.particlesInCells(particles, interaction_radius)
-
         self.distances = self.calculateDistances(interaction_radius)
 
     # TODO: Ver si queda interactionRadius o no
-    def calculateDistances(self, interactionRadius=-1):
+    def calculateDistances(self, interaction_radius= None):
         result = defaultdict(defaultdict)  # Dictionary that returns a new dictionary when accessing a nonexistent key
-        if (interactionRadius == -1):
-            interactionRadius = self.interactionRadius
+        if interaction_radius is None:
+            interaction_radius = self.interactionRadius
         for cell in self.cells:
             for ownParticle in cell.particles:
                 for neighbor in cell.getNeighborParticles(self):
-                    result[TODO cell ID][TODO other cell ID] = result[TODO other cell ID][TODO cell ID] = ownParticle.distanceTo(neighbor)
+                    result[ownParticle.id][neighbor.id] = result[neighbor.id][ownParticle.id] = ownParticle.distance_to(neighbor)
         return result
 
         # TODO: When returning, remove default dict behavior
