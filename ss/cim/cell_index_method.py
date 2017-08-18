@@ -1,13 +1,17 @@
 from math import ceil
 from ss.util.ddict import Ddict
+from collections import defaultdict
 
 
 class CellIndexMethod:
     def __init__(self, *particles, interaction_radius):
         self.particles = particles
         self.interaction_radius = interaction_radius
+        self.l = -1
+        self.cells_per_row = -1
         self.board = self.particles_in_cells(particles, interaction_radius)
-        self.distances = self.calculate_distances()
+        self.distances = self.calculate_distances() # TODO stop using this, it's only used for debugging
+        self.neighbors = self.calculate_neighbors()
 
     def calculate_distances(self):
         result = Ddict.ddict()  # Dictionary that returns a new dictionary when accessing a nonexistent key
@@ -16,10 +20,29 @@ class CellIndexMethod:
                 for ownParticle in cell.particles:
                     for neighbor in cell.getNeighborParticles(self.board):
                         distance = ownParticle.distance_to(neighbor)
-                        if distance <= self.interaction_radius:
-                            result[ownParticle.id][neighbor.id] = result[neighbor.id][ownParticle.id] = distance
+                        result[ownParticle.id][neighbor.id] = result[neighbor.id][ownParticle.id] = distance
 
         return Ddict.to_dict(result)
+
+    def calculate_neighbors(self):
+        result = defaultdict(list)
+        for row in self.board:
+            for cell in row:
+                for ownParticle in cell.particles:
+                    for neighbor in cell.getNeighborParticles(self.board):
+                        distance = ownParticle.distance_to(neighbor)
+                        if distance <= self.interaction_radius:
+                            if ownParticle.id not in result:
+                                result[ownParticle.id] = []
+                            if neighbor.id not in result:
+                                result[neighbor.id] = []
+
+                            result[ownParticle.id].append(neighbor)
+                            result[neighbor.id].append(ownParticle)
+        # Don't convert to plain dict because caller doesn't know which particles have neighbors and which don't. Keep
+        # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
+        # also return empty list)
+        return result
 
     def particles_in_cells(self, particles, interaction_radius):
         """Calculates a minimum bounding rectangle that contains the specified particles, calculates the optimum number
@@ -34,16 +57,16 @@ class CellIndexMethod:
             max_radius = max((max_radius, particle.radius))
 
         # Compute optimal board parameters
-        width, height = ceil(max(xs)), ceil(max(ys))    # No negative positions allowed
-        # width, height = max(xs) - min(xs), max(ys) - min(ys)
-        l = max((width, height))
-        cells_per_row = int(ceil(l / (interaction_radius + 2 * max_radius)))
+        width, height = ceil(max(xs)), ceil(max(ys))  # No negative positions allowed, no need to subtract min(xs|ys)
+        self.l = max((width, height))
+        # TODO support rectangular boards
+        self.cells_per_row = int(ceil(self.l / (interaction_radius + 2 * max_radius)))
 
         # Create board and put particles in it
-        board = self.create_board(cells_per_row, cells_per_row) # TODO support rectangular boards
+        board = self.create_board(self.cells_per_row, self.cells_per_row)
 
         for particle in particles:
-            row, col = self.get_cell(particle, board, l)
+            row, col = self.get_cell(particle, board, self.l)
             # TODO: If a particle has EXACTLY the same x or y as the side length, we get out of bounds
             board[row][col].particles.append(particle)
 
@@ -52,20 +75,8 @@ class CellIndexMethod:
     def get_cell(self, particle, board, side_length):
         """Gets the cell to which a given particle belongs in a given board"""
 
-        x, y = particle.x, particle.y
-        cells_per_row = len(board)
-        # Handle out-of-board cases TODO: Make parameter for infinite board
-        if x < 0:
-            x += side_length
-        elif x > side_length:
-            x -= side_length
-        if y < 0:
-            y += side_length
-        elif y > side_length:
-            y -= side_length
-
-        row, col = int(particle.y / side_length * cells_per_row), int(particle.x / side_length * cells_per_row)
-        return row, col # Return array indices rather than raw (x,y)
+        row, col = int(particle.y / side_length * self.cells_per_row), int(particle.x / side_length * self.cells_per_row)
+        return row, col  # Return array indices rather than raw (x,y)
 
     def create_board(self, width, height):
         board = []
@@ -75,7 +86,6 @@ class CellIndexMethod:
                 board[y].append(CellIndexMethod.Cell(y, x))
 
         return board
-
 
     class Cell:
 
@@ -90,7 +100,7 @@ class CellIndexMethod:
         def getNeighborCells(self, board):
             """Gets neighboring cells above and to the right of the cell that are within the board. Ver teórica 1
             filmina 24. """
-            
+
             result = []
             for deltaY in [1, 0, -1]:
                 for deltaX in [0, 1]:
@@ -110,7 +120,7 @@ class CellIndexMethod:
         def getNeighborParticles(self, board):
 
             result = []
-            for cell in self.getNeighborCells(board):
+            for cell in self.getNeighborCells(board) + [self]:
                 result += cell.particles
 
             return result

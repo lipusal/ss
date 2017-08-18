@@ -15,7 +15,7 @@ class Ddict:
 
     @classmethod
     def to_dict(cls, ddict):
-        return cls.to_dict_recursive(deepcopy(ddict))
+        return cls.to_dict_recursive(ddict)
 
     @classmethod
     def to_dict_recursive(cls, d):

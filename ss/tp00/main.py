@@ -3,25 +3,28 @@ import pprint
 
 from ss.cim.particle import Particle
 from ss.cim.cell_index_method import CellIndexMethod
+from ss.util.file_writer import FileWriter
 
-l = 25
-m = 5
+max = 25
 r = 3
 
 particles = []
 for i in range(100):
-    particles.append(Particle(random.random() * l, random.random() * l))
+    particles.append(Particle(random.random() * max, random.random() * max))
     print(particles[-1])
 
-la = CellIndexMethod(*particles, interaction_radius=r)
+data = CellIndexMethod(*particles, interaction_radius=r)
 
 print('# of particles per cell:')
-
-for row in range(m):
+# TODO: Move this to CellIndexMethod#__str__
+for row in reversed(range(data.cells_per_row)):
     print('|', end='')
-    for col in range(m):
-        print("%i|" % len(la.board[row][col].particles), end='')
+    for col in range(data.cells_per_row):
+        print("%i|" % len(data.board[row][col].particles), end='')
     print()
 
 print('Distances:')
-pprint.pprint(la.distances)
+pprint.pprint(data.distances)
+
+print('Writing MATLAB output')
+FileWriter.export_positions_matlab(data)
