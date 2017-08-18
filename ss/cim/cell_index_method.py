@@ -17,10 +17,13 @@ class CellIndexMethod:
         result = Ddict.ddict()  # Dictionary that returns a new dictionary when accessing a nonexistent key
         for row in self.board:
             for cell in row:
-                for ownParticle in cell.particles:
+                for me in cell.particles:
                     for neighbor in cell.getNeighborParticles(self.board):
-                        distance = ownParticle.distance_to(neighbor)
-                        result[ownParticle.id][neighbor.id] = result[neighbor.id][ownParticle.id] = distance
+                        if me == neighbor or neighbor in result[me.id]:
+                            continue
+
+                        distance = me.distance_to(neighbor)
+                        result[me.id][neighbor.id] = result[neighbor.id][me.id] = distance
 
         return Ddict.to_dict(result)
 
@@ -28,17 +31,14 @@ class CellIndexMethod:
         result = defaultdict(list)
         for row in self.board:
             for cell in row:
-                for ownParticle in cell.particles:
+                for me in cell.particles:
                     for neighbor in cell.getNeighborParticles(self.board):
-                        distance = ownParticle.distance_to(neighbor)
+                        if me == neighbor or neighbor in result[me.id]:
+                            continue
+                        distance = me.distance_to(neighbor)
                         if distance <= self.interaction_radius:
-                            if ownParticle.id not in result:
-                                result[ownParticle.id] = []
-                            if neighbor.id not in result:
-                                result[neighbor.id] = []
-
-                            result[ownParticle.id].append(neighbor)
-                            result[neighbor.id].append(ownParticle)
+                            result[me.id].append(neighbor)
+                            result[neighbor.id].append(me)
         # Don't convert to plain dict because caller doesn't know which particles have neighbors and which don't. Keep
         # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
         # also return empty list)
