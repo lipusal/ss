@@ -11,7 +11,7 @@ class Particle:
         self.radius = radius
         self.position = Vector2(x, y)
         self.velocity = Vector2()
-        # TODO usar vectores de velocidad
+        # TODO usar vectores para velocidad
 
     def move_to(self, x, y):
         self.position = Vector2(x, y)
@@ -25,5 +25,13 @@ class Particle:
     def id(self):
         return self._id
 
+    @property
+    def x(self):
+        return self.position.x
+
+    @property
+    def y(self):
+        return self.position.y
+
     def __str__(self) -> str:
-        return "Particle (%g, %g)" % (self.position.x, self.position.y)
+        return "Particle (%g, %g, r=%g)" % (self.position.x, self.position.y, self.radius)

@@ -1,7 +1,8 @@
 import random
+import pprint
 
-from ss.util import cell_index_method
-import ss.util.particle
+from ss.cim.particle import Particle
+from ss.cim.cell_index_method import CellIndexMethod
 
 l = 25
 m = 5
@@ -9,16 +10,18 @@ r = 3
 
 particles = []
 for i in range(100):
-    particles.append(ss.util.particle.Particle(random.random() * l, random.random() * l))
+    particles.append(Particle(random.random() * l, random.random() * l))
     print(particles[-1])
 
-la = cell_index_method.CellIndexMethod(l, m, r, particles)
-cells = la.particlesInCells()
+la = CellIndexMethod(*particles, interaction_radius=r)
 
-print()
+print('# of particles per cell:')
 
 for row in range(m):
     print('|', end='')
     for col in range(m):
-        print("%i|" % len(cells[row][col]), end='')
+        print("%i|" % len(la.board[row][col].particles), end='')
     print()
+
+print('Distances:')
+pprint.pprint(la.distances)
