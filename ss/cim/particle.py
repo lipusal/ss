@@ -6,8 +6,11 @@ from euclid3 import Vector2
 class Particle:
     """Model class for particles used in simulations"""
 
+    _global_id = 1
+
     def __init__(self, x, y, radius=0):
-        self._id = uuid().int
+        self._id = Particle._global_id
+        Particle._global_id += 1
         self.radius = radius
         self.position = Vector2(x, y)
         self.velocity = Vector2()
