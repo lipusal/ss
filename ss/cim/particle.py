@@ -37,4 +37,4 @@ class Particle:
         return self.position.y
 
     def __str__(self) -> str:
-        return "Particle (%g, %g, r=%g)" % (self.position.x, self.position.y, self.radius)
+        return "Particle #%i @ (%g, %g), r = %g" % (self.id, self.position.x, self.position.y, self.radius)
