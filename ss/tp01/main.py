@@ -4,16 +4,32 @@ from ss.cim.cell_index_method import CellIndexMethod
 from ss.util.file_writer import FileWriter
 from ss.util.file_reader import FileReader
 from os import path
+import argparse
 
-cwd = path.dirname(__file__)
-r = 6
-imported_data = FileReader.import_particles(path.join(cwd, '..', '..', 'ex', '01', 'Dynamic100.txt'), path.join(cwd, '..', '..', 'ex', '01', 'Static100.txt'))
+# Prepare argument parser
+parser = argparse.ArgumentParser(description="Cell Index Method program, runs method on a given set of particles")
+parser.add_argument("dynamic", help="Path of dynamic file from which to read time and particle positions")
+parser.add_argument("static", nargs="?",
+                    help="(Optional) Path of static file from which to read particle radii and properties",
+                    default=None)
+parser.add_argument("radius", help="Interaction radius for all particles.", type=float)
+parser.add_argument("--output", "-o", help="Path of output file. Defaults to './output.txt'", default="./output.txt")
+args = parser.parse_args()
+pprint.pprint(args)
+
+# Normalize paths so they work in any machine
+args.dynamic = path.normpath(args.dynamic)
+args.output = path.normpath(args.output)
+if not args.static is None:
+    args.static = path.normpath(args.static)
+
+imported_data = FileReader.import_particles(args.dynamic, args.static)
 particles = imported_data['particles']
 
-data = CellIndexMethod(*particles, interaction_radius=r)
+data = CellIndexMethod(*particles, interaction_radius=args.radius)
 
 for i in range(len(particles)):
-    print('#%i: %s' % (i+1, particles[i]))
+    print('#%i: %s' % (i + 1, particles[i]))
 
 print('# of particles per cell:')
 # TODO: Move this to CellIndexMethod#__str__
@@ -27,4 +43,4 @@ print('Distances:')
 pprint.pprint(data.distances)
 
 print('Writing MATLAB output')
-FileWriter.export_positions_matlab(data, 75, path.join(cwd, 'dynamic.txt'))
+FileWriter.export_positions_matlab(data, 75, args.output)
