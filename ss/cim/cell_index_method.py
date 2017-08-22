@@ -39,8 +39,9 @@ class CellIndexMethod:
                             continue
                         distance = me.distance_to(neighbor)
                         if distance <= self.interaction_radius:
-                            result[me.id].append(neighbor)
-                            result[neighbor.id].append(me)
+                            # Put only real particles in result
+                            result[me.id].append(neighbor.original_particle if neighbor.is_fake else neighbor)
+                            result[neighbor.original_particle.id if neighbor.is_fake else neighbor.id].append(me)
         # Don't convert to plain dict because caller doesn't know which particles have neighbors and which don't. Keep
         # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
         # also return empty list)

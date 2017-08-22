@@ -24,7 +24,7 @@ args.output = path.normpath(args.output)
 if not args.static is None:
     args.static = path.normpath(args.static)
 
-imported_data = FileReader.import_particles(args.dynamic, args.static)
+imported_data = FileReader.import_particles(args.dynamic, args.static) if args.static else FileReader.import_particles(args.dynamic)
 particles = imported_data['particles']
 
 data = CellIndexMethod(*particles, interaction_radius=args.radius, is_periodic=args.periodic)
@@ -44,4 +44,5 @@ print('Distances:')
 pprint.pprint(data.distances)
 
 print('Writing MATLAB output')
-FileWriter.export_positions_matlab(data, 23, args.output)
+FileWriter.export_positions_matlab(data, 0, args.output)
+# FileWriter.export_positions_matlab(data, 23, args.output)

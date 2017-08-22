@@ -24,7 +24,7 @@ class FileReader:
             positions.append(list(map(float, numbers)))     # Convert each string to number
 
         num_particles = len(positions)
-        radii = []
+        radii = [0] * num_particles
         properties = []
         if not static_file is None:
             static_particles = int(static_file.readline())
@@ -33,9 +33,11 @@ class FileReader:
                 static_particles, num_particles))
 
             board_side_length = int(static_file.readline())  # Unused
+            i = 0
             for line in static_file:
                 radius, property = re.split(" +", line.strip())
-                radii.append(float(radius))
+                radii[i] = float(radius)
+                i += 1
                 # TODO what to do with property?
 
         particles = []
