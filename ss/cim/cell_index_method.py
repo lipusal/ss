@@ -60,7 +60,8 @@ class CellIndexMethod:
             max_radius = max((max_radius, particle.radius))
 
         # Compute optimal board parameters
-        width, height = ceil(max(xs)), ceil(max(ys))  # No negative positions allowed, no need to subtract min(xs|ys)
+        epsilon = 1e-5  # Quick fix to prevent bugs when particles are at EXACTLY the board limit
+        width, height = ceil(max(xs)) + epsilon, ceil(max(ys) + epsilon)  # No negative positions allowed, no need to subtract min(xs|ys)
         self.l = max((width, height))
         # TODO support rectangular boards
         self.cells_per_row = int(ceil(self.l / (interaction_radius + 2 * max_radius)))
