@@ -24,7 +24,7 @@ class FileReader:
             positions.append(list(map(float, numbers)))     # Convert each string to number
 
         num_particles = len(positions)
-        radii = [0.0] * num_particles
+        radii = []
         properties = []
         if not static_file is None:
             static_particles = int(static_file.readline())
