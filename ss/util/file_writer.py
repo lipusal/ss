@@ -19,7 +19,12 @@ class FileWriter:
         file.write('ys = [%s];\n' % (" ".join(str(y) for y in ys)))
         # Draw the selected particle in a special color and its neighbors in another color; all others black
         colors = []
-        selected_neighbors = neighbors[particles[selected_particle].id]
+        selected_neighbors = []
+        # Put only real particles in selected_neighbors
+        for i in range(len(neighbors[particles[selected_particle].id])):
+            particle = neighbors[particles[selected_particle].id][i]
+            selected_neighbors.append(particle.original_particle if particle.is_fake else particle)
+
         for i in range(len(particles)):
             if i == selected_particle:
                 color = '1 0 0'  # Red

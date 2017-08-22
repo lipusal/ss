@@ -14,6 +14,7 @@ parser.add_argument("static", nargs="?",
                     default=None)
 parser.add_argument("radius", help="Interaction radius for all particles.", type=float)
 parser.add_argument("--output", "-o", help="Path of output file. Defaults to './output.txt'", default="./output.txt")
+parser.add_argument("--periodic", "-p", help="Make the board periodic (particles that go \"out of board\" come in from the other side", action="store_true", default=False)
 args = parser.parse_args()
 pprint.pprint(args)
 
@@ -26,7 +27,7 @@ if not args.static is None:
 imported_data = FileReader.import_particles(args.dynamic, args.static)
 particles = imported_data['particles']
 
-data = CellIndexMethod(*particles, interaction_radius=args.radius)
+data = CellIndexMethod(*particles, interaction_radius=args.radius, is_periodic=args.periodic)
 
 for i in range(len(particles)):
     print('#%i: %s' % (i + 1, particles[i]))
@@ -43,4 +44,4 @@ print('Distances:')
 pprint.pprint(data.distances)
 
 print('Writing MATLAB output')
-FileWriter.export_positions_matlab(data, 75, args.output)
+FileWriter.export_positions_matlab(data, 23, args.output)

@@ -1,12 +1,14 @@
 from math import ceil
 from ss.util.ddict import Ddict
 from collections import defaultdict
+from ss.cim.particle import Particle
 
 
 class CellIndexMethod:
-    def __init__(self, *particles, interaction_radius):
+    def __init__(self, *particles, interaction_radius, is_periodic=False):
         self.particles = particles
         self.interaction_radius = interaction_radius
+        self.is_periodic = is_periodic
         self.l = -1
         self.cells_per_row = -1
         self.board = self.particles_in_cells(particles, interaction_radius)
@@ -18,7 +20,7 @@ class CellIndexMethod:
         for row in self.board:
             for cell in row:
                 for me in cell.particles:
-                    for neighbor in cell.getNeighborParticles(self.board):
+                    for neighbor in cell.getNeighborParticles(self):
                         if me == neighbor or neighbor in result[me.id]:
                             continue
 
@@ -32,7 +34,7 @@ class CellIndexMethod:
         for row in self.board:
             for cell in row:
                 for me in cell.particles:
-                    for neighbor in cell.getNeighborParticles(self.board):
+                    for neighbor in cell.getNeighborParticles(self):
                         if me == neighbor or neighbor in result[me.id]:
                             continue
                         distance = me.distance_to(neighbor)
@@ -89,12 +91,13 @@ class CellIndexMethod:
 
     class Cell:
 
-        def __init__(self, row, col, particles=None):
+        def __init__(self, row, col, particles=None, is_fake= False):
             if particles is None:
                 particles = []
             self.row = row
             self.col = col
             self.particles = particles
+            self.is_fake = is_fake
 
         # def getNeighborCells(self, board: CellIndexMethod):
         def getNeighborCells(self, board):
@@ -102,18 +105,34 @@ class CellIndexMethod:
             filmina 24. """
 
             result = []
-            for deltaY in [1, 0, -1]:
-                for deltaX in [0, 1]:
+            for delta_row in [1, 0, -1]:
+                for delta_col in [0, 1]:
                     # Skip self and neighbor directly below
-                    if deltaY == deltaX == 0 or (deltaY == -1 and deltaX == 0):
+                    if delta_row == delta_col == 0 or (delta_row == -1 and delta_col == 0):
                         continue
 
-                    x, y, = self.col + deltaX, self.row + deltaY
-                    cells_per_row = len(board)
+                    col, row, = self.col + delta_col, self.row + delta_row
+                    cells_per_row = board.cells_per_row
                     # Only add cells within the board
-                    # TODO: Support infinite boards
-                    if 0 <= x < cells_per_row and 0 <= y < cells_per_row:
-                        result.append(board[y][x])
+                    if 0 <= col < cells_per_row and 0 <= row < cells_per_row:
+                        result.append(board.board[row][col])
+                    elif board.is_periodic:
+                        particles = []
+                        # Create fake cells with fake coordinates for infinite boards
+                        delta_x = delta_y = 0
+                        if col < 0:
+                            delta_x = -board.l
+                        elif col >= board.cells_per_row:
+                            delta_x = board.l
+                        if row < 0:
+                            delta_y = -board.l
+                        elif row >= board.cells_per_row:
+                            delta_y = board.l
+
+                        for original_particle in board.board[row % board.cells_per_row][col % board.cells_per_row].particles:
+                            particles.append(Particle(original_particle.x + delta_x, original_particle.y + delta_y, original_particle.radius, True, original_particle))
+
+                        result.append(CellIndexMethod.Cell(row, col, particles, True))
 
             return result
 
@@ -124,3 +143,6 @@ class CellIndexMethod:
                 result += cell.particles
 
             return result
+
+        def __str__(self):
+            return "%sCell @ (%i, %i) with %i particles" % ("Fake " if self.is_fake else "", self.col, self.row, len(self.particles))
