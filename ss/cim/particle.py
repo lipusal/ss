@@ -8,7 +8,7 @@ class Particle:
 
     _global_id = 1
 
-    def __init__(self, x, y, radius=0):
+    def __init__(self, x, y, radius=0.0):
         self._id = Particle._global_id
         Particle._global_id += 1
         self.radius = radius
