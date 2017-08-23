@@ -54,7 +54,8 @@ if args.verbose:
         pprint.pprint(data.distances)
 
         print('Writing MATLAB output')
-FileWriter.export_positions_matlab(data, 0, args.output)
-# FileWriter.export_positions_matlab(data, 23, args.output)
+# FileWriter.export_positions_matlab(data, 0, args.output)
+FileWriter.export_positions_matlab(data, 23, args.output)
+FileWriter.export_positions_ovito(data.particles, output=args.output + ".ovito.txt")
 
 print("Done")

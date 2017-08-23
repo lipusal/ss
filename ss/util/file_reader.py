@@ -20,7 +20,7 @@ class FileReader:
         t = int(dynamic_file.readline())        # Unused?
         positions = []
         for line in dynamic_file:
-            numbers = re.split(" +", line.strip())          # Get X and Y
+            numbers = re.split("[ \t]+", line.strip())          # Get X and Y
             positions.append(list(map(float, numbers)))     # Convert each string to number
 
         num_particles = len(positions)
@@ -35,7 +35,7 @@ class FileReader:
             board_side_length = int(static_file.readline())  # Unused
             i = 0
             for line in static_file:
-                radius, property = re.split(" +", line.strip())
+                radius, property = re.split("[ \t]+", line.strip())
                 radii[i] = float(radius)
                 i += 1
                 # TODO what to do with property?
