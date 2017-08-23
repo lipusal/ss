@@ -41,8 +41,9 @@ class FileWriter:
         file.close()
 
     @staticmethod
-    def export_positions_ovito(particles, t=0, output='dynamic.txt'):
-        file = open(output, 'w')
+    def export_positions_ovito(particles, t=0, output='dynamic.txt', mode="w"):
+        file = open(output, mode)
+        file.write('%i\n' % len(particles))
         file.write('%i\n' % t)
         for particle in particles:
             file.write('%g\t%g\n' % (particle.x, particle.y))
