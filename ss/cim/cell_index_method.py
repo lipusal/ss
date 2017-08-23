@@ -92,3 +92,12 @@ class CellIndexMethod:
                 board[y].append(Cell(y, x))
 
         return board
+
+    def __str__(self):
+        result = ""
+        for row in reversed(range(self.cells_per_row)):
+            result += '|'
+            for col in range(self.cells_per_row):
+                result += "%i|" % len(self.board[row][col].particles)
+            result += "\n"
+        return result

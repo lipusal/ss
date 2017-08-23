@@ -1,24 +1,13 @@
-import argparse
 import pprint
+from ss.tp01 import args
 from os import path
 
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.util.file_reader import FileReader
 from ss.util.file_writer import FileWriter
 
-# Prepare argument parser
-parser = argparse.ArgumentParser(description="Cell Index Method program, runs method on a given set of particles")
-parser.add_argument("dynamic", help="Path of dynamic file from which to read time and particle positions")
-parser.add_argument("static", nargs="?",
-                    help="(Optional) Path of static file from which to read particle radii and properties",
-                    default=None)
-parser.add_argument("radius", help="Interaction radius for all particles.", type=float)
-parser.add_argument("--output", "-o", help="Path of output file. Defaults to './output.txt'", default="./output.txt")
-parser.add_argument("--periodic", "-p", help="Make the board periodic (particles that go \"out of board\" come in from"
-                                             "the other side", action="store_true", default=False)
-parser.add_argument("--verbose", "-v", help="Print verbose information while running", action="store_true", default=False)
-parser.add_argument("--time", "-t", help="Print elapsed program time", action="store_true", default=False)
-args = parser.parse_args()
+# Parse args
+args = args.parse_args()
 
 if args.time:
     import ss.util.timer
@@ -42,20 +31,12 @@ if args.verbose:
     for i in range(len(particles)):
         print('#%i: %s' % (i + 1, particles[i]))
 
-        print('# of particles per cell:')
-        # TODO: Move this to CellIndexMethod#__str__
-        for row in reversed(range(data.cells_per_row)):
-            print('|', end='')
-            for col in range(data.cells_per_row):
-                print("%i|" % len(data.board[row][col].particles), end='')
-            print()
+    print('# of particles per cell:')
+    print(data)
 
-        print('Distances:')
-        pprint.pprint(data.distances)
+    print('Writing MATLAB output')
 
-        print('Writing MATLAB output')
-# FileWriter.export_positions_matlab(data, 0, args.output)
-FileWriter.export_positions_matlab(data, 23, args.output)
-FileWriter.export_positions_ovito(data.particles, output=args.output + ".ovito.txt")
-
+FileWriter.export_positions_matlab(data, 0, args.output)    # Paint the first particle and all its neighbors
+# FileWriter.export_positions_matlab(data, 23, args.output)
+# FileWriter.export_positions_ovito(data.particles, output=args.output + ".ovito.txt")
 print("Done")
