@@ -19,7 +19,7 @@ class FileWriter:
         file.write('ys = [%s];\n' % (" ".join(str(y) for y in ys)))
         # Draw the selected particle in a special color and its neighbors in another color; all others black
         colors = []
-        selected_neighbors = neighbors[particles[selected_particle].id]
+        selected_neighbors = [x[0] for x in neighbors[particles[selected_particle].id]]
 
         for i in range(len(particles)):
             if i == selected_particle:

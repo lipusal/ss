@@ -11,7 +11,6 @@ class CellIndexMethod:
         self.l = -1
         self.cells_per_row = -1
         self.board = self.particles_in_cells(particles, interaction_radius)
-        self.distances = self.calculate_distances() # TODO stop using this, it's only used for debugging
         self.neighbors = self.calculate_neighbors()
 
     def calculate_distances(self):
@@ -39,8 +38,8 @@ class CellIndexMethod:
                         distance = me.distance_to(neighbor)
                         if distance <= self.interaction_radius:
                             # Put only real particles in result
-                            result[me.id].append(neighbor.original_particle if neighbor.is_fake else neighbor)
-                            result[neighbor.original_particle.id if neighbor.is_fake else neighbor.id].append(me)
+                            result[me.id].append((neighbor.original_particle if neighbor.is_fake else neighbor, distance))
+                            result[neighbor.original_particle.id if neighbor.is_fake else neighbor.id].append((me, distance))
         # Don't convert to plain dict because caller doesn't know which particles have neighbors and which don't. Keep
         # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
         # also return empty list)
@@ -80,6 +79,10 @@ class CellIndexMethod:
 
         row, col = int(particle.y / side_length * self.cells_per_row), int(particle.x / side_length * self.cells_per_row)
         return row, col  # Return array indices rather than raw (x,y)
+
+    #list with distances of particle with id to its corresponding neighbors
+    def get_distances(self, id):
+        return [x[1] for x in self.neighbors[id]]
 
     def create_board(self, width, height):
         board = []
