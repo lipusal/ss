@@ -44,13 +44,18 @@ class Particle:
 
     @velocity.setter
     def velocity(self, value):
-        """Sets velocity. Value should be a tuple of the form `(mod, degree)`"""
+        """Sets velocity. Value should be a tuple of the form `(mod, angle)`"""
 
         self._velocity = self.to_x_y(value[0], value[1])
 
+    def vel_angle(self):
+        """Returns the angle of the particle's velocity"""
+        # return math.atan(self._velocity.y / self._velocity.x)
+        return math.atan2(self._velocity.y, self._velocity.x)
+
     @staticmethod
     def to_x_y(mod, deg):
-        """Constructs a vector with a given modulus and degree (converts to (x,y))"""
+        """Constructs a vector with a given modulus and angle (converts to (x,y))"""
         return Vector2(math.cos(deg)*mod, math.sin(deg)*mod)
 
     def __str__(self) -> str:
