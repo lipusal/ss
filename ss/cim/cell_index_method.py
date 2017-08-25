@@ -73,9 +73,9 @@ class CellIndexMethod:
                 # TODO support rectangular boards?
                 self.cells_per_row = int(ceil(self.l / (self.interaction_radius + 2 * max_radius)))
 
-        if self.l / self.cells_per_row <= self.interaction_radius:
-            raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
-                            "Rc = %g)" % (self.l, self.cells_per_row, self.interaction_radius))
+        # if self.l / self.cells_per_row <= self.interaction_radius:
+        #     raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
+        #                     "Rc = %g)" % (self.l, self.cells_per_row, self.interaction_radius))
 
         # Create board and put particles in it
         board = self.create_board(self.cells_per_row, self.cells_per_row)

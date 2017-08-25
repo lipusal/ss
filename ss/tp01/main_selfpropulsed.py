@@ -8,7 +8,7 @@ import random
 
 # Parse args
 parser = argparse.ArgumentParser(description="------")# TODO
-parser.add_argument("radius", help="Interaction radius for all particles.", type=float)
+parser.add_argument("radius", help="Interaction radius for all particles.", type=float, default=1.0)
 parser.add_argument("eta", help="Noise that will be added when calculating the variation in angles of each particle", type=float)
 parser.add_argument("-l", help="Board side length. Integer. If not provided, will calculate a minimum bounding box "
                                "containing all particles", type=float, default=100.0)
@@ -60,8 +60,8 @@ for i in range (1,args.iterations):
             particle.move_to(newPositionX, newPositionY)
 
             #change direction
-            noise =
-            newVelAngle = particle.vel_angle() + avg_angle(data.neighbors[n])
+            noise = random.uniform((-args.eta / 2), args.eta/2)
+            newVelAngle = noise + avg_angle(data.neighbors[n])
             particle.velocity = (particle_velocity, newVelAngle)
             print(particle.velocity)
 
