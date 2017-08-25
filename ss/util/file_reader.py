@@ -17,20 +17,19 @@ class FileReader:
             static_file = None
             print('Static file not found, falling back to radius = 0')
 
-        t = int(dynamic_file.readline())        # Unused?
+        num_particles = int(dynamic_file.readline())    # Even if there are multiple frames, only read the first one
+        t = int(dynamic_file.readline())                # Unused?
         positions = []
-        for line in dynamic_file:
-            numbers = re.split("[ \t]+", line.strip())          # Get X and Y
-            positions.append(list(map(float, numbers)))     # Convert each string to number
+        for i in range(num_particles):
+            numbers = re.split("[ \t]+", dynamic_file.readline().strip())   # Get X and Y
+            positions.append(list(map(float, numbers)))                     # Convert each string to number
 
-        num_particles = len(positions)
         radii = [0] * num_particles
         properties = []
-        if not static_file is None:
+        if static_file is not None:
             static_particles = int(static_file.readline())
             if static_particles != num_particles:
-                raise Exception("Static file has %i particles while dynamic file has %i, aborting." % (
-                static_particles, num_particles))
+                raise Exception("Static file has %i particles while dynamic file has %i, aborting." % (static_particles, num_particles))
 
             board_side_length = int(static_file.readline())  # Unused
             i = 0
