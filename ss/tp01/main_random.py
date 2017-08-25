@@ -28,6 +28,7 @@ for i in range(args.amount):
     print(particles[-1])
 print()
 
+# FIXME fix method call, use same args from args.py
 data = CellIndexMethod(*particles,interaction_radius=r, is_periodic=args.periodic)
 
 print('Writing MATLAB output')

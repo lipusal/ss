@@ -25,7 +25,7 @@ if not args.static is None:
 imported_data = FileReader.import_particles(args.dynamic, args.static) if args.static else FileReader.import_particles(args.dynamic)
 particles = imported_data['particles']
 
-data = CellIndexMethod(*particles, interaction_radius=args.radius, is_periodic=args.periodic)
+data = CellIndexMethod(particles, args)
 
 if args.verbose:
     for i in range(len(particles)):
