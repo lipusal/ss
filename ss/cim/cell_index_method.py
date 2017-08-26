@@ -1,4 +1,4 @@
-from math import ceil
+import math
 from ss.util.ddict import Ddict
 from collections import defaultdict
 from ss.cim.cell import Cell
@@ -64,7 +64,7 @@ class CellIndexMethod:
 
             if self.l == -1:
                 # Compute optimal board parameters
-                width, height = ceil(max(xs)), ceil(max(ys))
+                width, height = math.ceil(max(xs)), math.ceil(max(ys))
                 self.l = max((width, height))
 
             # Quick fix to prevent out-of-range bugs when particles are at EXACTLY the board limit
@@ -73,8 +73,12 @@ class CellIndexMethod:
 
             if self.cells_per_row == -1:
                 # Compute optimal board parameters
-                # TODO support rectangular boards?
-                self.cells_per_row = ceil(self.l / (self.interaction_radius + 2 * max_radius))
+                self.cells_per_row = math.ceil(self.l / (self.interaction_radius + 2 * max_radius))
+                if self.l / self.cells_per_row <= self.interaction_radius:
+                    # FIXME: This shouldn't happen, revise previous formula
+                    print("WARNING: The calculated M (%i) is over limit, restricting to " % self.cells_per_row, end="")
+                    self.cells_per_row = math.floor(self.l / self.interaction_radius) - 1
+                    print(self.cells_per_row)
 
         if self.l / self.cells_per_row <= self.interaction_radius:
             raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
