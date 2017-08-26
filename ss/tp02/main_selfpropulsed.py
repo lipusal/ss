@@ -21,10 +21,6 @@ arguments = args.parse_args()
 if arguments.time:
     import ss.util.timer
 
-# TODO randomize
-# imported_data = FileReader.import_particles("../../ex/01/Dynamic100.txt", "../../ex/01/Static100.txt")
-# particles = imported_data['particles']
-
 particle_velocity = 0.3
 side_length = arguments.l if 'l' in arguments and arguments.l is not None else 100
 particles = list()
