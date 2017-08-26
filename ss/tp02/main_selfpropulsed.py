@@ -7,7 +7,6 @@ from ss.util.file_writer import FileWriter
 
 import ss.util.args as args
 
-
 # Custom arguments
 args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
                           "changes over time, and whose change is influenced by other particles within a radius"
@@ -44,11 +43,11 @@ def avg_angle(neighbors):
         angle = tuple[0].vel_angle()
         sin_accum += math.sin(angle)
         cos_accum += math.cos(angle)
-    return math.atan2(sin_accum/length, cos_accum/length)
+    return math.atan2(sin_accum / length, cos_accum / length)
 
 
 for i in range(arguments.iterations):
-    print("Processing frame #%i" % (i+1))
+    print("Processing frame #%i" % (i + 1))
     data = CellIndexMethod(particles, arguments)
 
     for particle in particles:
@@ -64,7 +63,6 @@ for i in range(arguments.iterations):
         particle.velocity = (particle_velocity, newVelAngle)
         if arguments.verbose:
             print("Velocity of particle #%i: %s" % (particle.id, particle.velocity))
-
 
     # Truncate file for first frame, append for following frames
     FileWriter.export_positions_ovito(particles, i, 'output.txt', 'w' if i == 0 else 'a')
