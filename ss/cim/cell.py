@@ -1,5 +1,6 @@
 from ss.cim.particle import Particle
 
+
 class Cell:
     def __init__(self, row, col, particles=None, is_fake=False):
         if particles is None:
@@ -42,7 +43,8 @@ class Cell:
                     for original_particle in board.board[row % board.cells_per_row][
                                 col % board.cells_per_row].particles:
                         particles.append(Particle(original_particle.x + delta_x, original_particle.y + delta_y,
-                                                  original_particle.radius, True, original_particle))
+                                                  original_particle.radius, original_particle.velocity.magnitude(),
+                                                  original_particle.vel_angle(), True, original_particle))
 
                     result.append(Cell(row, col, particles, True))
 
@@ -58,4 +60,4 @@ class Cell:
 
     def __str__(self):
         return "%sCell @ (%i, %i) with %i particles" % (
-        "Fake " if self.is_fake else "", self.col, self.row, len(self.particles))
+            "Fake " if self.is_fake else "", self.col, self.row, len(self.particles))

@@ -62,16 +62,19 @@ class CellIndexMethod:
                 ys.append(particle.y)
                 max_radius = max((max_radius, particle.radius))
 
-            # Compute optimal board parameters
-
-            # Quick fix to prevent bugs when particles are at EXACTLY the board limit
-            epsilon = 1e-5
-            width, height = ceil(max(xs)) + epsilon, ceil(max(ys)) + epsilon
             if self.l == -1:
+                # Compute optimal board parameters
+                width, height = ceil(max(xs)), ceil(max(ys))
                 self.l = max((width, height))
+
+            # Quick fix to prevent out-of-range bugs when particles are at EXACTLY the board limit
+            epsilon = 1e-5
+            self.l += epsilon
+
             if self.cells_per_row == -1:
+                # Compute optimal board parameters
                 # TODO support rectangular boards?
-                self.cells_per_row = int(ceil(self.l / (self.interaction_radius + 2 * max_radius)))
+                self.cells_per_row = ceil(self.l / (self.interaction_radius + 2 * max_radius))
 
         if self.l / self.cells_per_row <= self.interaction_radius:
             raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
@@ -89,6 +92,10 @@ class CellIndexMethod:
         """Gets the cell to which a given particle belongs in the current board"""
 
         row, col = int(particle.y / self.l * self.cells_per_row), int(particle.x / self.l * self.cells_per_row)
+        if self.is_periodic:
+            row %= self.cells_per_row
+            col %= self.cells_per_row
+
         return row, col  # Return array indices rather than raw (x,y)
 
     # list with distances of particle with id to its corresponding neighbors
