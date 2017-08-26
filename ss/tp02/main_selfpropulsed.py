@@ -1,30 +1,24 @@
+import math
+import random
+
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.cim.particle import Particle
 from ss.util.file_writer import FileWriter
 
-import argparse
-import math
-import random
+import ss.util.args as args
 
-# Parse args
-parser = argparse.ArgumentParser(description="------")  # TODO
-parser.add_argument("radius", help="Interaction radius for all particles.", type=float, default=1.0)
-parser.add_argument("eta", help="Noise that will be added when calculating the variation in angles of each particle",
-                    type=float)
-parser.add_argument("-l", help="Board side length. Integer. If not provided, will calculate a minimum bounding box "
-                               "containing all particles", type=float)
-parser.add_argument("-n", help="Amount of particles", type=int, default=100)
-parser.add_argument("--iterations", "-i", help="Amount of iterations", type=int, default=100)
-parser.add_argument("--time", "-t", help="Print elapsed program time", action="store_true", default=False)
-parser.add_argument("--periodic", "-p", help="Make the board periodic (particles that go \"out of board\" come in from"
-                                             "the other side", action="store_true", default=False)
-parser.add_argument("-m", help="Cells per row. Integer. If not provided, will calculate an optimal value for the "
-                               "particles", type=int)
-parser.add_argument("--verbose", "-v", help="Print verbose information while running", action="store_true",
-                    default=False)
-args = parser.parse_args()
 
-if args.time:
+# Custom arguments
+args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
+                          "changes over time, and whose change is influenced by other particles within a radius"
+args.parser.add_argument("radius", help="Interaction radius for all particles.", type=float, default=1.0)
+args.parser.add_argument("eta", help="Noise that will be added when calculating the variation in angles of each "
+                                     "particle", type=float)
+args.parser.add_argument("-n", help="Amount of particles", type=int, default=100)
+args.parser.add_argument("--iterations", "-i", help="Amount of iterations", type=int, default=100)
+arguments = args.parse_args()
+
+if arguments.time:
     import ss.util.timer
 
 # TODO randomize
@@ -32,9 +26,9 @@ if args.time:
 # particles = imported_data['particles']
 
 particle_velocity = 0.3
-side_length = args.l if 'l' in args and args.l is not None else 100
+side_length = arguments.l if 'l' in arguments and arguments.l is not None else 100
 particles = list()
-for particle_count in range(args.iterations):
+for particle_count in range(arguments.iterations):
     x = random.uniform(0.0, side_length)
     y = random.uniform(0.0, side_length)
     o = random.uniform(0.0, 2 * math.pi)
@@ -57,9 +51,9 @@ def avg_angle(neighbors):
     return (sin_accum / length) / (cos_accum / length)
 
 
-for i in range(args.iterations):
+for i in range(arguments.iterations):
     print("Processing frame #%i" % (i+1))
-    data = CellIndexMethod(particles, args)
+    data = CellIndexMethod(particles, arguments)
     for n in data.neighbors:
         for particleTuple in data.neighbors[n]:
             particle = particleTuple[0]
@@ -71,10 +65,10 @@ for i in range(args.iterations):
             particle.move_to(newPositionX % data.l, newPositionY % data.l)
 
             # change direction
-            noise = random.uniform((-args.eta / 2), args.eta / 2)
+            noise = random.uniform((-arguments.eta / 2), arguments.eta / 2)
             newVelAngle = noise + avg_angle(data.neighbors[n])
             particle.velocity = (particle_velocity, newVelAngle)
-            if args.verbose:
+            if arguments.verbose:
                 print("Velocity of particle #%i: %s" % (particle.id, particle.velocity))
 
     # Truncate file for first frame, append for following frames
