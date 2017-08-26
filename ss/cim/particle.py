@@ -31,6 +31,10 @@ class Particle:
         return self._id
 
     @property
+    def position(self):
+        return self._position
+
+    @property
     def x(self):
         return self._position.x
 
