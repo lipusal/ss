@@ -26,13 +26,13 @@ if args.time:
 
 particle_velocity = 0.3
 particles = list()
-for particle_count in range (0, args.iterations):
+for particle_count in range (args.iterations):
     x = random.uniform(0.0, args.l)
     y = random.uniform(0.0, args.l)
-    o = random.uniform(0.0, 360.0)
+    o = random.uniform(0.0, 2*math.pi)
     particles.append(Particle(x, y, 0.0, particle_velocity, o))
 
-delta_t = 1 #TODO siempre usamos 1 no?
+delta_t = 1
 
 # TODO TEST
 
