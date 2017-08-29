@@ -1,5 +1,6 @@
 import math
 import random
+import colorsys
 
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.cim.particle import Particle
@@ -32,8 +33,6 @@ for particle_count in range(arguments.n):
 delta_t = 1
 
 
-# TODO TEST
-
 def avg_angle(neighbors):
     sin_accum = 0
     cos_accum = 0
@@ -46,9 +45,20 @@ def avg_angle(neighbors):
     return math.atan2(sin_accum / length, cos_accum / length)
 
 
+def radians_to_rgb(theta):
+    """Converts an angle (in radians, (-pi, pi]) to a color using the HSV scale, and converts that to an RGB color
+    which is compatible with Ovito"""
+
+    # HSV -> RGB function requires values between 0 and 1, so map -pi < theta <= pi to 0 <= theta <= 1
+    # https://stackoverflow.com/questions/345187/math-mapping-numbers#comment36962941_345204
+    mapped_theta = (theta + math.pi) / (math.pi + math.pi)
+    return colorsys.hsv_to_rgb(mapped_theta, 1, 1)
+
+
 for i in range(arguments.iterations):
     print("Processing frame #%i" % (i + 1))
     data = CellIndexMethod(particles, arguments)
+    colors = []
 
     for particle in particles:
         # Move particle
@@ -64,8 +74,11 @@ for i in range(arguments.iterations):
         if arguments.verbose:
             print("Velocity of particle #%i: %s" % (particle.id, particle.velocity))
 
+        # Color particle according to its angle
+        colors.append(radians_to_rgb(newVelAngle))
+
     # Truncate file for first frame, append for following frames
-    FileWriter.export_positions_ovito(particles, i, 'output.txt', 'w' if i == 0 else 'a')
+    FileWriter.export_positions_ovito(particles, i, colors, 'output.txt', 'w' if i == 0 else 'a')
 
 if arguments.verbose:
     print("Output written to %s", arguments.output)

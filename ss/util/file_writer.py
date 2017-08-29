@@ -41,9 +41,18 @@ class FileWriter:
         file.close()
 
     @staticmethod
-    def export_positions_ovito(particles, t=0, output='dynamic.txt', mode="w"):
+    def export_positions_ovito(particles, t=0, colors=None, output='dynamic.txt', mode="w"):
+        if colors is not None and len(colors) != len(particles):
+            raise Exception('Colors length (%i) doesn\'t match particles length (%i), can\'t write Ovito file.'
+                            % (len(colors), len(particles)))
+
         file = open(output, mode)
         file.write('%i\n' % len(particles))
         file.write('%i\n' % t)
-        for particle in particles:
-            file.write('%g\t%g\n' % (particle.x, particle.y))
+        for i in range(len(particles)):
+            particle = particles[i]
+            file.write('%g\t%g' % (particle.x, particle.y))
+            # Write colors if present, else white
+            r, g, b = colors[i] if colors is not None else (255, 255, 255)
+            file.write('\t%g\t%g\t%g' % (r, g, b))
+            file.write('\n')
