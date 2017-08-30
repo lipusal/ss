@@ -3,7 +3,7 @@ import random
 import colorsys
 import euclid3
 import datetime
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.cim.particle import Particle
