@@ -42,7 +42,7 @@ for particle_count in range(arguments.n):
     particles.append(Particle(x, y, 0.0, particle_velocity, o))
 
 delta_t = 1
-start_time = datetime.datetime.now().isoformat()
+run_params_output = "%s.txt" % datetime.datetime.now().isoformat()
 
 
 def avg_angle(neighbors):
@@ -100,7 +100,14 @@ for i in range(arguments.iterations):
     v_a = v_accum.magnitude() / (arguments.n * particle_velocity)
     v_as[0].append(i)
     v_as[1].append(v_a)
-    FileWriter.export_tuple((i, v_a), start_time, 'w' if i == 0 else 'a')
+    # Write this run's parameters to output file
+    if i == 0:
+        file = open(run_params_output, 'w')
+        density = arguments.n / (arguments.l**2)
+        file.write("N = %i, L = %i, density = %g, eta = %g\n" % (arguments.n, arguments.l, density, arguments.eta))
+        file.close()
+    # Append Va for current time
+    FileWriter.export_tuple((i, v_a), run_params_output, 'a')
 
     # Truncate file for first frame, append for following frames
     FileWriter.export_positions_ovito(particles, i, colors, 'output.txt', 'w' if i == 0 else 'a')
