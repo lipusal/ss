@@ -1,6 +1,9 @@
 import math
 import random
 import colorsys
+import euclid3
+import datetime
+import matplotlib.pyplot as plt
 
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.cim.particle import Particle
@@ -31,6 +34,7 @@ for particle_count in range(arguments.n):
     particles.append(Particle(x, y, 0.0, particle_velocity, o))
 
 delta_t = 1
+start_time = datetime.datetime.now().isoformat()
 
 
 def avg_angle(neighbors):
@@ -55,10 +59,15 @@ def radians_to_rgb(theta):
     return colorsys.hsv_to_rgb(mapped_theta, 1, 1)
 
 
+# MAIN
+v_as = [[], []] # "Tuples" of the form (t, Va)
 for i in range(arguments.iterations):
     print("Processing frame #%i" % (i + 1))
     data = CellIndexMethod(particles, arguments)
+    # Color each particle according to its direction
     colors = []
+    # For calculating Va
+    v_accum = euclid3.Vector2()
 
     for particle in particles:
         # Move particle
@@ -77,10 +86,22 @@ for i in range(arguments.iterations):
         # Color particle according to its angle
         colors.append(radians_to_rgb(newVelAngle))
 
+        v_accum += particle.velocity
+
+    # Process Va, absolute value of average normalized velocity
+    v_a = v_accum.magnitude() / (arguments.n * particle_velocity)
+    v_as[0].append(i)
+    v_as[1].append(v_a)
+    FileWriter.export_tuple((i, v_a), start_time, 'w' if i == 0 else 'a')
+
     # Truncate file for first frame, append for following frames
     FileWriter.export_positions_ovito(particles, i, colors, 'output.txt', 'w' if i == 0 else 'a')
 
 if arguments.verbose:
     print("Output written to %s", arguments.output)
+
+# Plot iteration / Va
+# plt.plot(v_as[0], v_as[1])
+# plt.show()
 
 print("Done")

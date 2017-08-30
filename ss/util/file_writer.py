@@ -1,3 +1,6 @@
+import datetime
+
+
 class FileWriter:
     """Utility class used for exporting results to Ovito-compatible formats"""
 
@@ -56,3 +59,9 @@ class FileWriter:
             r, g, b = colors[i] if colors is not None else (255, 255, 255)
             file.write('\t%g\t%g\t%g' % (r, g, b))
             file.write('\n')
+
+    @staticmethod
+    def export_tuple(tuple, output='%s_va.txt' % datetime.datetime.now().isoformat(), mode="w"):
+        file = open(output, mode)
+        file.write("%i\t%g\n" % tuple)
+        file.close()
