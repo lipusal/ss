@@ -99,6 +99,9 @@ class CellIndexMethod:
         if self.is_periodic:
             row %= self.cells_per_row
             col %= self.cells_per_row
+        elif not 0 <= row < self.cells_per_row or not 0 <= col < self.cells_per_row:
+                raise Exception("%s is outside the board, and board is not periodic; max valid coordinates are (%g, %g)"
+                                % (particle, self.l, self.l))
 
         return row, col  # Return array indices rather than raw (x,y)
 
