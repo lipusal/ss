@@ -64,8 +64,8 @@ class CellIndexMethod:
 
             if self.l == -1:
                 # Compute optimal board parameters
-                width, height = math.ceil(max(xs)), math.ceil(max(ys))
-                self.l = max((width, height))
+                width, height = max(xs), max(ys)
+                self.l = max(width, height)
 
             # Quick fix to prevent out-of-range bugs when particles are at EXACTLY the board limit
             epsilon = 1e-5
