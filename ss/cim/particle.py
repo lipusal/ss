@@ -7,12 +7,13 @@ class Particle:
 
     _global_id = 1
 
-    def __init__(self, x, y, radius=0.0, v=0.0, o=0.0, is_fake=False, original_particle=None):
+    def __init__(self, x, y, radius=0.0, mass=0.0, v=0.0, o=0.0, is_fake=False, original_particle=None):
         self._id = Particle._global_id
         Particle._global_id += 1
         self.radius = radius
         self._position = Vector2(x, y)
         self._velocity = self.to_x_y(v, o)
+        self.mass = mass
         self.is_fake = is_fake
         self.original_particle = original_particle
         if not original_particle is None and not self.is_fake:
