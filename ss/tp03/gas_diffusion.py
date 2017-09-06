@@ -7,7 +7,7 @@ from ss.util.file_writer import FileWriter
 
 args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
                           "changes over time, and whose change is influenced by other particles within a radius"
-args.parser.add_argument("-n", help="Amount of particles", type=int, default=3)
+args.parser.add_argument("-n", help="Amount of particles", type=int, default=20)
 arguments = args.parse_args()
 
 # Box dimensions
@@ -47,18 +47,12 @@ def evolve_particles(time):
         particle.move_to(particle.x + (particle.velocity.x * time), particle.y + (particle.velocity.y * time))
 
         # When the particle crashes into a wall the velocity should change direction
-        if particle.y >= height - particle_radius:
+        if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
             particle.velocity.y = - particle.velocity.y
-
-        elif particle.y <= 0 + particle_radius:
-            particle.velocity.y = - particle.velocity.y
-
-        elif particle.x  >= width - particle_radius:
+        elif particle.x  >= width - particle_radius or particle.x  <= 0 + particle_radius:
             particle.velocity.x = - particle.velocity.x
 
-        elif particle.x  <= 0 + particle_radius:
-            particle.velocity.x = - particle.velocity.x
-
+        #TODO ver que corrobore tambien el tema del radio onda que la posicion no sea 0.5 cuando el radio es 1.
         # Raise an exception when the particle is outside the board limits
         if particle.y > height:
             raise ValueError('The position of the particle cannot be outside the box, the y position must be smaller than the height')
@@ -93,7 +87,8 @@ particle_mass = 1.0
 particles = list()
 colors = list()
 for particle_count in range(arguments.n):
-    x = random.uniform(particle_radius, (width / 2) - particle_radius)
+    #TODO dividir width por dos para que este en la mitad de la caja
+    x = random.uniform(particle_radius, (width) - particle_radius)
     y = random.uniform(particle_radius, height - particle_radius)
     o = random.uniform(0.0, 2 * math.pi)
     particles.append(Particle(x, y, particle_radius, particle_mass, particle_velocity, o))
