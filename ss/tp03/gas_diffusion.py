@@ -25,12 +25,16 @@ def calculate_collision_times(min_collision_times):
             collision_time_x = (width - particle.radius - particle.position.x) / particle.velocity.x
         elif particle.velocity.x < 0:
             collision_time_x = (0 + particle.radius - particle.position.x) / particle.velocity.x
+        else:
+            collision_time_x = math.inf
 
         # Calculate minimum collision time in y axis
         if particle.velocity.y >= 0:
             collision_time_y = (height - particle.radius - particle.position.y) / particle.velocity.y
         elif particle.velocity.y < 0:
             collision_time_y = (0 + particle.radius - particle.position.y) / particle.velocity.y
+        else:
+            collision_time_y = math.inf
 
         # Set minimum time for collision on either axis
         min_collision_times[particle.id] = min(collision_time_x, collision_time_y)
@@ -44,7 +48,7 @@ def evolve_particles(time):
     for particle in particles:
 
         # Move particle position
-        particle.move_to(particle.x + (particle.velocity.x * time), particle.y + (particle.velocity.y * time))
+        particle.move(particle.velocity.x * time, particle.velocity.y * time)
 
         # When the particle crashes into a wall the velocity should change direction
         if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:

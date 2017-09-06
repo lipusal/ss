@@ -20,7 +20,14 @@ class Particle:
             raise Exception("Can't have original particle and not be fake")
 
     def move_to(self, x, y):
+        """Moves this particle to the specified position"""
+
         self._position = Vector2(x, y)
+
+    def move(self, delta_x, delta_y):
+        """Moves this particle the specified amounts in X and Y from its current position"""
+
+        self.move_to(self.x + delta_x, self.y + delta_y)
 
     def distance_to(self, other):
         # centerDistance = sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
