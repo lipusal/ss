@@ -2,6 +2,7 @@ import math
 from ss.util.ddict import Ddict
 from collections import defaultdict
 from ss.cim.cell import Cell
+from ss.cim.board import Board
 
 
 class CellIndexMethod:
@@ -9,16 +10,15 @@ class CellIndexMethod:
         self.particles = particles
         self.interaction_radius = args.radius
         self.is_periodic = args.periodic if 'periodic' in args else False
-        self.width = args.w if 'w' in args and args.w is not None else -1
-        self.height = args.h if 'h' in args and args.h is not None else -1
+        self.width = args.width if 'width' in args and args.width is not None else -1
+        self.height = args.height if 'height' in args and args.height is not None else -1
         self.m = args.m if 'm' in args and args.m is not None else -1
-        self.board = [[]]
-        self.particles_in_cells()
+        self.board = self.create_board()
         self.neighbors = self.calculate_neighbors()
 
     def calculate_distances(self):
         result = Ddict.ddict()  # Dictionary that returns a new dictionary when accessing a nonexistent key
-        for row in self.board:
+        for row in self.board.cells:
             for cell in row:
                 for me in cell.particles:
                     for neighbor in cell.getNeighborParticles(self):
@@ -32,7 +32,7 @@ class CellIndexMethod:
 
     def calculate_neighbors(self):
         result = defaultdict(list)
-        for row in self.board:
+        for row in self.board.cells:
             for cell in row:
                 for me in cell.particles:
                     for neighbor in cell.getNeighborParticles(self):
@@ -50,11 +50,7 @@ class CellIndexMethod:
         # also return empty list)
         return result
 
-    def particles_in_cells(self):
-        """If side_length and cells_per_row are both not -1, creates a corresponding board with cells. Otherwise,
-        calculates a minimum bounding rectangle that contains the specified particles, and calculates the side length
-        and number of cells per row. In either case, places all particles in their corresponding cell."""
-
+    def optimal_board_params(self):
         l = max(self.width, self.height)
         if self.width == -1 or self.height == -1 or self.m == -1:
             # Calculate minimum bounding rectangle for particles
@@ -66,7 +62,7 @@ class CellIndexMethod:
                 max_radius = max((max_radius, particle.radius))
 
             # Compute optimal board parameters
-            width, height = max(xs), max(ys)    # TODO: If min(xs) >> 0 we will have a lot of empty space; ídem ys
+            width, height = max(xs), max(ys)  # TODO: If min(xs) >> 0 we will have a lot of empty space; ídem ys
             if self.width == -1:
                 self.width = width
             if self.height == -1:
@@ -94,54 +90,57 @@ class CellIndexMethod:
             raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
                             "Rc = %g)" % (l, self.m, self.interaction_radius))
 
-        # Create board and put particles in it
-        self.board = self.create_board(self.width, self.height, l / self.m)
-        for particle in self.particles:
-            row, col = self.get_cell(particle)
-            self.board[row][col].particles.append(particle)
-
-    def get_cell(self, particle):
-        """Gets the cell to which a given particle belongs in the current board"""
-
-        # TODO: Ensure that when the board is periodic and width or height are not a multiple of M, the part of the cell
-        # TODO: that may be uncovered is never used; the particle should go around immediately
-
-        row, col = int(particle.y / self.height * self.num_rows()), int(particle.x / self.width * self.num_cols())
-        if self.is_periodic:
-            row %= self.num_rows()
-            col %= self.num_cols()
-        elif not 0 <= row < self.m or not 0 <= col < self.m:
-                raise Exception("%s is outside the board, and board is not periodic; max valid coordinates are (%g, %g)"
-                                % (particle, self.width, self.height))
-
-        return row, col  # Return array indices rather than raw (x,y)
-
-    # list with distances of particle with id to its corresponding neighbors
     def get_distances(self, id):
+        """List with distances of particle with id to its corresponding neighbors"""
         return [x[1] for x in self.neighbors[id]]
 
-    def create_board(self, width, height, cell_side_length):
-        """Creates a board of the given size, filling each dimension with as many cells are needed"""
+    def create_board(self):
+        """Creates the board to be used for this run of the Cell Index Method. Fills in missing board parameters if
+        necessary:
+            - Width
+            - Height
+            - M
 
-        board = []
-        for y in range(int(math.ceil(height / cell_side_length))):
-            board.append([])
-            for x in range(int(math.ceil(width / cell_side_length))):
-                board[y].append(Cell(y, x))
+        :return The created board
+        """
 
+        if self.width == -1 or self.height == -1:
+            width, height = Board.calculate_mbb(self.particles)
+            if self.width == -1:
+                self.width = width
+            if self.height == -1:
+                # TODO: If height not provided, assume square board unless the particles would end up outside the board?
+                # i.e:  self.height = max(self.width, height)
+                self.height = height
+
+        l = max(self.width, self.height)
+        if self.m == -1:
+            # Calculate max particle radius
+            max_radius = 0
+            for particle in self.particles:
+                max_radius = max((max_radius, particle.radius))
+
+            # Compute optimal board parameters
+            self.m = math.ceil(l / (self.interaction_radius + 2 * max_radius))
+            if l / self.m <= self.interaction_radius:
+                # FIXME: This shouldn't happen, revise previous formula
+                print("WARNING: The calculated M (%i) is over limit, restricting to " % self.m, end="")
+                self.m = math.floor(l / self.interaction_radius) - 1
+                print(self.m)
+
+        if l / self.m <= self.interaction_radius:
+            raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
+                            "Rc = %g)" % (l, self.m, self.interaction_radius))
+
+        board = Board(self.particles, width=self.width, height=self.height, is_periodic=self.is_periodic,
+                      cell_side_length=l/self.m)
         return board
-
-    def num_rows(self):
-        return len(self.board)
-
-    def num_cols(self):
-        return len(self.board[0])
 
     def __str__(self):
         result = ""
-        for row in reversed(range(self.num_rows())):
+        for row in reversed(range(self.board.num_rows)):
             result += '|'
-            for col in range(self.num_cols()):
-                result += "%i|" % len(self.board[row][col].particles)
+            for col in range(self.board.num_cols):
+                result += "%i|" % len(self.board.cells[row][col].particles)
             result += "\n"
         return result

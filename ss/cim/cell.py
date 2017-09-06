@@ -24,7 +24,7 @@ class Cell:
 
                 col, row, = self.col + delta_col, self.row + delta_row
                 # Only add cells within the board
-                if 0 <= col < board.num_cols() and 0 <= row < board.num_rows():
+                if 0 <= col < board.num_cols and 0 <= row < board.num_rows:
                     result.append(board.board[row][col])
                 elif board.is_periodic:
                     particles = []
