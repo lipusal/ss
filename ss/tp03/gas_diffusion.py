@@ -3,6 +3,7 @@ import math
 
 import ss.util.args as args
 from ss.cim.particle import Particle
+from ss.util.file_writer import FileWriter
 
 args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
                           "changes over time, and whose change is influenced by other particles within a radius"
@@ -33,8 +34,9 @@ def calculate_collision_times(min_collision_times):
 def evolve_particles(time):
 
     for particle in particles:
-        particle.position.x += particle.velocity.x * time
-        particle.position.y += particle.velocity.y * time
+        particle.move_to(particle.velocity.x * time, particle.velocity.y * time)
+        # particle.position.x += particle.velocity.x * time
+        # particle.position.y += particle.velocity.y * time
 
 # Box dimensions
 height = 0.09
@@ -57,7 +59,6 @@ def recalculate_fp():
     fp_left = left / arguments.n
     fp_right = right / arguments.n
 
-
 # Generate particles with random velocity direction
 particle_velocity = 0.01
 particle_radius = 0.006
@@ -69,15 +70,14 @@ for particle_count in range(arguments.n):
     o = random.uniform(0.0, 2 * math.pi)
     particles.append(Particle(x, y, particle_radius, particle_mass, particle_velocity, o))
 
+min_collision_times = dict()
 
-
-min_collision_times = list()
-
-while fp_left > 0.5:
+#while fp_left > 0.5:
+for i in range(100):
     calculate_collision_times(min_collision_times)
-    min_time = min(min_collision_times)
+    min_time = min(min_collision_times.values())
     evolve_particles(min_time)
     recalculate_fp()
-    print(fp_left)
+    FileWriter.export_positions_ovito(particles, t=i, output=("output.txt"), mode='w' if i == 0 else 'a')
 
 
