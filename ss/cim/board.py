@@ -20,6 +20,8 @@ class Board:
         self.populate()
 
     def to_col_row(self, x, y):
+        """Converts an (X, Y) coordinate to a (row, col) coordinate within this board."""
+
         row, col = int(y / self.height * self.num_rows), int(x / self.width * self.num_cols)
         if self.is_periodic:
             row %= self.num_rows
@@ -51,7 +53,7 @@ class Board:
         """Populates cells with the particles self was initialized with."""
 
         for particle in self.particles:
-            row, col = self.get_cell(particle)
+            col, row = self.get_cell(particle)
             self.cells[row][col].particles.append(particle)
 
         return self

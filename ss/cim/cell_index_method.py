@@ -21,7 +21,7 @@ class CellIndexMethod:
         for row in self.board.cells:
             for cell in row:
                 for me in cell.particles:
-                    for neighbor in cell.getNeighborParticles(self):
+                    for neighbor in cell.getNeighborParticles(self.board):
                         if me == neighbor or neighbor in result[me.id]:
                             continue
 
@@ -35,7 +35,7 @@ class CellIndexMethod:
         for row in self.board.cells:
             for cell in row:
                 for me in cell.particles:
-                    for neighbor in cell.getNeighborParticles(self):
+                    for neighbor in cell.getNeighborParticles(self.board):
                         if me == neighbor or neighbor in result[me.id]:
                             continue
                         distance = me.distance_to(neighbor)
