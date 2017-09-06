@@ -15,57 +15,62 @@ height = 0.09
 width = 0.24
 
 def calculate_collision_times(min_collision_times):
+
     # TODO ver donde estan las paredes, esta muy hardcodeado el width y el 0! y donde hay ranuras y otras particulas
+
     for particle in particles:
 
         # Calculate minimum collision time in x axis
-        if particle.velocity.x > 0:
+        if particle.velocity.x >= 0:
             collision_time_x = (width - particle.radius - particle.position.x) / particle.velocity.x
         elif particle.velocity.x < 0:
             collision_time_x = (0 + particle.radius - particle.position.x) / particle.velocity.x
 
         # Calculate minimum collision time in y axis
-        if particle.velocity.y > 0:
+        if particle.velocity.y >= 0:
             collision_time_y = (height - particle.radius - particle.position.y) / particle.velocity.y
         elif particle.velocity.y < 0:
             collision_time_y = (0 + particle.radius - particle.position.y) / particle.velocity.y
 
         # Set minimum time for collision on either axis
         min_collision_times[particle.id] = min(collision_time_x, collision_time_y)
+
         if(min_collision_times[particle.id] < 0):
-            print('ola', particle.id,  min_collision_times[particle.id])
+            raise ValueError('Collision time should never be a negative value')
 
 def evolve_particles(time):
-    for particle in particles:
 
+    for particle in particles:
         particle.move_to(particle.x + (particle.velocity.x * time), particle.y + (particle.velocity.y * time))
-        print("Cambio la posicion de la particula ", particle.id)
-        
-        if particle.y + particle_radius + (particle.velocity.y * time) >= height:
+
+        # When the particle crashes into a wall the velocity should change direction
+        #if particle.y +  particle_radius + (particle.velocity.y * time) >= height:
+
+        if particle.y >= height - particle_radius:
             particle.velocity.y = - particle.velocity.y
-            print("Doy vuelta la velocidad de la particula ", particle.id)
             # y_displacement = (particle.velocity.y * time) - 2((height-particle.y) - particle_radius)
             # particle.position.y -= y_displacement
 
-        elif particle.y - particle_radius - (particle.velocity.y * time) <= 0:
+        # elif particle.y - particle_radius - (particle.velocity.y * time) <= 0:
+
+        elif particle.y <= 0 + particle_radius:
             particle.velocity.y = - particle.velocity.y
-            print("Doy vuelta la velocidad de la particula ", particle.id)
             # y_displacement = (particle.velocity.y * time) - 2(particle.position.y - particle_radius)
             # particle.position.y += y_displacement
 
-
-        elif particle.x + particle_radius + (particle.velocity.x * time) >= width:
+        # elif particle.x + particle_radius + (particle.velocity.x * time) >= width:
+        elif particle.x  >= width - particle_radius:
             particle.velocity.x = - particle.velocity.x
-            print("Doy vuelta la velocidad de la particula ", particle.id)
             # x_displacement = (particle.velocity.x * time) - 2((width - particle.x) - particle_radius)
             # particle.position.x -= x_displacement
 
-        elif particle.x - particle_radius - (particle.velocity.x * time) <= 0:
+        # elif particle.x - particle_radius - (particle.velocity.x * time) <= 0:
+        elif particle.x  <= 0 + particle_radius:
             particle.velocity.x = - particle.velocity.x
-            print("Doy vuelta la velocidad de la particula ", particle.id)
             # x_displacement = (particle.velocity.x * time) - 2(particle.x - particle_radius)
             # particle.position.x -= x_displacement
-        print('----')
+
+        # Raise an exception when the particle is outside the board limits
         if particle.y > height:
             raise ValueError('The position of the particle cannot be outside the box, the y position must be smaller than the height')
         if particle.x > width:
@@ -110,9 +115,7 @@ for i in range(50):
     # TODO: cambiar solo los que iban a chocar con algo que choco no fuerza bruta a lo loco
     min_collision_times = dict()
     calculate_collision_times(min_collision_times)
-    print(min_collision_times)
     min_time = min(min_collision_times.values())
-    print('min time', min_time)
     evolve_particles(min_time)
     # recalculate_fp()
     FileWriter.export_positions_ovito(particles, t=i, colors=colors, output=("output.txt"), mode='w' if i == 0 else 'a')
