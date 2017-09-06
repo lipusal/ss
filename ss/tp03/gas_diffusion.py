@@ -35,40 +35,29 @@ def calculate_collision_times(min_collision_times):
         # Set minimum time for collision on either axis
         min_collision_times[particle.id] = min(collision_time_x, collision_time_y)
 
+        # Raise an exception when the collision time is negative
         if(min_collision_times[particle.id] < 0):
             raise ValueError('Collision time should never be a negative value')
 
 def evolve_particles(time):
 
     for particle in particles:
+
+        # Move particle position
         particle.move_to(particle.x + (particle.velocity.x * time), particle.y + (particle.velocity.y * time))
 
         # When the particle crashes into a wall the velocity should change direction
-        #if particle.y +  particle_radius + (particle.velocity.y * time) >= height:
-
         if particle.y >= height - particle_radius:
             particle.velocity.y = - particle.velocity.y
-            # y_displacement = (particle.velocity.y * time) - 2((height-particle.y) - particle_radius)
-            # particle.position.y -= y_displacement
-
-        # elif particle.y - particle_radius - (particle.velocity.y * time) <= 0:
 
         elif particle.y <= 0 + particle_radius:
             particle.velocity.y = - particle.velocity.y
-            # y_displacement = (particle.velocity.y * time) - 2(particle.position.y - particle_radius)
-            # particle.position.y += y_displacement
 
-        # elif particle.x + particle_radius + (particle.velocity.x * time) >= width:
         elif particle.x  >= width - particle_radius:
             particle.velocity.x = - particle.velocity.x
-            # x_displacement = (particle.velocity.x * time) - 2((width - particle.x) - particle_radius)
-            # particle.position.x -= x_displacement
 
-        # elif particle.x - particle_radius - (particle.velocity.x * time) <= 0:
         elif particle.x  <= 0 + particle_radius:
             particle.velocity.x = - particle.velocity.x
-            # x_displacement = (particle.velocity.x * time) - 2(particle.x - particle_radius)
-            # particle.position.x -= x_displacement
 
         # Raise an exception when the particle is outside the board limits
         if particle.y > height:
@@ -117,5 +106,5 @@ for i in range(50):
     calculate_collision_times(min_collision_times)
     min_time = min(min_collision_times.values())
     evolve_particles(min_time)
-    # recalculate_fp()
+    recalculate_fp()
     FileWriter.export_positions_ovito(particles, t=i, colors=colors, output=("output.txt"), mode='w' if i == 0 else 'a')
