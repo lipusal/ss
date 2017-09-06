@@ -1,7 +1,6 @@
 import math
 from ss.util.ddict import Ddict
 from collections import defaultdict
-from ss.cim.cell import Cell
 from ss.cim.board import Board
 
 
@@ -49,46 +48,6 @@ class CellIndexMethod:
         # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
         # also return empty list)
         return result
-
-    def optimal_board_params(self):
-        l = max(self.width, self.height)
-        if self.width == -1 or self.height == -1 or self.m == -1:
-            # Calculate minimum bounding rectangle for particles
-            xs, ys = [], []
-            max_radius = 0
-            for particle in self.particles:
-                xs.append(particle.x)
-                ys.append(particle.y)
-                max_radius = max((max_radius, particle.radius))
-
-            # Compute optimal board parameters
-            width, height = max(xs), max(ys)  # TODO: If min(xs) >> 0 we will have a lot of empty space; ídem ys
-            if self.width == -1:
-                self.width = width
-            if self.height == -1:
-                # If height not provided, assume square board unless the particles would end up outside the board
-                self.height = max(self.width, height)
-
-            # Quick fix to prevent out-of-range bugs when particles are at EXACTLY the board limit
-            epsilon = 1e-5
-            self.width += epsilon
-            self.height += epsilon
-
-            # Recalculate in case width or height were -1 before
-            l = max(self.width, self.height)
-
-            if self.m == -1:
-                # Compute optimal board parameters
-                self.m = math.ceil(l / (self.interaction_radius + 2 * max_radius))
-                if l / self.m <= self.interaction_radius:
-                    # FIXME: This shouldn't happen, revise previous formula
-                    print("WARNING: The calculated M (%i) is over limit, restricting to " % self.m, end="")
-                    self.m = math.floor(l / self.interaction_radius) - 1
-                    print(self.m)
-
-        if l / self.m <= self.interaction_radius:
-            raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
-                            "Rc = %g)" % (l, self.m, self.interaction_radius))
 
     def get_distances(self, id):
         """List with distances of particle with id to its corresponding neighbors"""
