@@ -39,7 +39,7 @@ for particle_count in range(arguments.n):
     x = random.uniform(0.0, side_length)
     y = random.uniform(0.0, side_length)
     o = random.uniform(0.0, 2 * math.pi)
-    particles.append(Particle(x, y, 0.0, particle_velocity, o))
+    particles.append(Particle(x, y, radius=0.0, v=particle_velocity, o=o))
 
 delta_t = 1
 start_time = datetime.datetime.now().isoformat("_").replace(":", "-")
@@ -81,7 +81,7 @@ for i in range(arguments.iterations):
         # Move particle
         new_position = particle.position + (particle.velocity * delta_t)
         # Use modulo because board is periodic
-        particle.move_to(new_position.x % data.l, new_position.y % data.l)
+        particle.move_to(new_position.x % data.width, new_position.y % data.width)
 
         # Change direction using neighbors
         noise = random.uniform(-arguments.eta / 2, arguments.eta / 2)

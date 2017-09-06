@@ -41,6 +41,6 @@ class FileReader:
 
         particles = []
         for i in range(num_particles):
-            particles.append(Particle(positions[i][0], positions[i][1], radii[i]))
+            particles.append(Particle(positions[i][0], positions[i][1], radius=radii[i]))
 
         return {'t': t, 'particles': particles, 'properties': properties}

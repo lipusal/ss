@@ -7,8 +7,8 @@ parser = argparse.ArgumentParser(description="Cell Index Method base argument pa
                                              "all projects. Projects should override this description to their need.")
 parser.add_argument("-l", help="Board side length. Decimal. If not provided, will calculate a minimum bounding box "
                                "containing all particles", type=float)
-parser.add_argument("-m", help="Cells per row. Integer. If not provided, will calculate an optimal value for the "
-                               "particles", type=int)
+parser.add_argument("-m", help="Cells per longest side (width or height). Integer. If not provided, will calculate an"
+                               "optimal value for the particles of the simulation", type=int)
 parser.add_argument("--output", "-o", help="Path of output file, if the script generates an output. Defaults to "
                                            "'./output.txt'", default="./output.txt")
 parser.add_argument("--periodic", "-p", help="Make the board periodic (particles that go \"out of board\" come in from"

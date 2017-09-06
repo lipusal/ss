@@ -50,7 +50,7 @@ for N,L in [(40, 3), (100, 5), (400, 10), (4000, 31), (10000, 50)]:
             x = random.uniform(0.0, side_length)
             y = random.uniform(0.0, side_length)
             o = random.uniform(0.0, 2 * math.pi)
-            particles.append(Particle(x, y, 0.0, particle_velocity, o))
+            particles.append(Particle(x, y, radius=0.0, v=particle_velocity, o=o))
 
         delta_t = 1
         prefix = "N%i_L%i_eta%g.txt" % (N, L, eta)
@@ -92,7 +92,7 @@ for N,L in [(40, 3), (100, 5), (400, 10), (4000, 31), (10000, 50)]:
                 # Move particle
                 new_position = particle.position + (particle.velocity * delta_t)
                 # Use modulo because board is periodic
-                particle.move_to(new_position.x % data.l, new_position.y % data.l)
+                particle.move_to(new_position.x % data.width, new_position.y % data.width)
 
                 # Change direction using neighbors
                 noise = random.uniform(-arguments.eta / 2, arguments.eta / 2)

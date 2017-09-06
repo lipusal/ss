@@ -23,28 +23,30 @@ class Cell:
                     continue
 
                 col, row, = self.col + delta_col, self.row + delta_row
-                cells_per_row = board.cells_per_row
                 # Only add cells within the board
-                if 0 <= col < cells_per_row and 0 <= row < cells_per_row:
+                if 0 <= col < board.num_cols() and 0 <= row < board.num_rows():
                     result.append(board.board[row][col])
                 elif board.is_periodic:
                     particles = []
                     # Create fake cells with fake coordinates for infinite boards
                     delta_x = delta_y = 0
                     if col < 0:
-                        delta_x = -board.l
-                    elif col >= board.cells_per_row:
-                        delta_x = board.l
+                        delta_x = -board.width
+                    elif col >= board.num_cols():
+                        delta_x = board.width
                     if row < 0:
-                        delta_y = -board.l
-                    elif row >= board.cells_per_row:
-                        delta_y = board.l
+                        delta_y = -board.height
+                    elif row >= board.num_rows():
+                        delta_y = board.height
 
-                    for original_particle in board.board[row % board.cells_per_row][
-                                col % board.cells_per_row].particles:
+                    for original_particle in board.board[row % board.num_rows()][col % board.num_cols()].particles:
                         particles.append(Particle(original_particle.x + delta_x, original_particle.y + delta_y,
-                                                  original_particle.radius, original_particle.velocity.magnitude(),
-                                                  original_particle.vel_angle(), True, original_particle))
+                                                  radius=original_particle.radius,
+                                                  mass=original_particle.mass,
+                                                  v=original_particle.velocity.magnitude(),
+                                                  o=original_particle.vel_angle(),
+                                                  is_fake=True,
+                                                  original_particle=original_particle))
 
                     result.append(Cell(row, col, particles, True))
 
