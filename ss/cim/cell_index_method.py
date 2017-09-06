@@ -9,8 +9,7 @@ class CellIndexMethod:
         self.particles = particles
         self.interaction_radius = args.radius
         self.is_periodic = args.periodic if 'periodic' in args else False
-        self.width = args.l if 'l' in args and args.l is not None else -1
-        # TODO: Change arg names
+        self.width = args.w if 'w' in args and args.w is not None else -1
         self.height = args.h if 'h' in args and args.h is not None else -1
         self.m = args.m if 'm' in args and args.m is not None else -1
         self.board = [[]]

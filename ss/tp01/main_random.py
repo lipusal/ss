@@ -10,13 +10,13 @@ arg_utils.parser.add_argument("amount", help="Amount of particles to generate", 
 arg_utils.parser.add_argument("radius", help="Interaction radius for all particles.", default=10.0, type=float)
 args = arg_utils.parse_args()
 
-if args.l is None:
-    raise Exception("-l argument is required for this program")
+if args.w is None:
+    raise Exception("-w argument is required for this program")
 
 if args.time:
     import ss.util.timer
 
-l = args.l
+l = args.w
 r = args.radius
 
 particles = []

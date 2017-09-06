@@ -103,8 +103,9 @@ for i in range(arguments.iterations):
     # Write this run's parameters to output file
     if i == 0:
         file = open(("%s_va.txt" % start_time), 'w')
-        density = arguments.n / (arguments.l**2)
-        file.write("N = %i, L = %i, density = %g, eta = %g\n" % (arguments.n, arguments.l, density, arguments.eta))
+        density = arguments.n / (data.width * data.height)
+        file.write("N = %i, L = %gx%g, density = %g, eta = %g\n" % (arguments.n, data.width, data.height,
+                                                                    density, arguments.eta))
         file.close()
     # Append Va for current time
     FileWriter.export_tuple((i, v_a), ("%s_va.txt" % start_time), 'a')

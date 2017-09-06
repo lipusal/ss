@@ -38,8 +38,9 @@ class FileWriter:
         file.write('scatter(xs, ys, circle_size, colors, \'filled\')\n')
         # Set custom axis values to match cells
         file.write('ax = gca;\n')
-        file.write('ax.XLim = [0 %i]; ax.YLim = ax.XLim;\n' % board.l)
-        file.write('ax.XTick = [0:%g:%i]; ax.YTick = ax.XTick;\n' % (board.l / board.cells_per_row, board.l))
+        file.write('ax.XLim = [0 %g]; ax.YLim = [0 %g];\n' % (board.width, board.height))
+        file.write('ax.XTick = [0:%g:%g]; ax.YTick = [0:%g:%g];\n' % ((board.width / board.m), board.width,
+                                                                      (board.height / board.m), board.height))
         file.write('grid on;\n')
         file.close()
 
