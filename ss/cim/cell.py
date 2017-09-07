@@ -24,22 +24,22 @@ class Cell:
 
                 col, row, = self.col + delta_col, self.row + delta_row
                 # Only add cells within the board
-                if 0 <= col < board.num_cols() and 0 <= row < board.num_rows():
-                    result.append(board.board[row][col])
+                if 0 <= col < board.num_cols and 0 <= row < board.num_rows:
+                    result.append(board.cells[row][col])
                 elif board.is_periodic:
                     particles = []
                     # Create fake cells with fake coordinates for infinite boards
                     delta_x = delta_y = 0
                     if col < 0:
                         delta_x = -board.width
-                    elif col >= board.num_cols():
+                    elif col >= board.num_cols:
                         delta_x = board.width
                     if row < 0:
                         delta_y = -board.height
-                    elif row >= board.num_rows():
+                    elif row >= board.num_rows:
                         delta_y = board.height
 
-                    for original_particle in board.board[row % board.num_rows()][col % board.num_cols()].particles:
+                    for original_particle in board.cells[row % board.num_rows][col % board.num_cols].particles:
                         particles.append(Particle(original_particle.x + delta_x, original_particle.y + delta_y,
                                                   radius=original_particle.radius,
                                                   mass=original_particle.mass,
