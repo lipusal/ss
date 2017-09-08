@@ -52,7 +52,7 @@ class FileWriter:
 
         file = open(output, mode)
         file.write('%i\n' % len(particles))
-        file.write('%i\n' % t)
+        file.write('%g\n' % t)
         for i in range(len(particles)):
             particle = particles[i]
             file.write('%g\t%g' % (particle.x, particle.y))

@@ -8,7 +8,6 @@ sys.path.append(os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__
 
 import math
 import random
-import colorsys
 import euclid3
 import datetime
 # import matplotlib.pyplot as plt
@@ -16,6 +15,7 @@ import datetime
 from ss.cim.cell_index_method import CellIndexMethod
 from ss.cim.particle import Particle
 from ss.util.file_writer import FileWriter
+from ss.util.colors import radians_to_rgb
 
 import ss.util.args as args
 
@@ -55,16 +55,6 @@ def avg_angle(neighbors):
         sin_accum += math.sin(angle)
         cos_accum += math.cos(angle)
     return math.atan2(sin_accum / length, cos_accum / length)
-
-
-def radians_to_rgb(theta):
-    """Converts an angle (in radians, (-pi, pi]) to a color using the HSV scale, and converts that to an RGB color
-    which is compatible with Ovito"""
-
-    # HSV -> RGB function requires values between 0 and 1, so map -pi < theta <= pi to 0 <= theta <= 1
-    # https://stackoverflow.com/questions/345187/math-mapping-numbers#comment36962941_345204
-    mapped_theta = (theta + math.pi) / (math.pi + math.pi)
-    return colorsys.hsv_to_rgb(mapped_theta, 1, 1)
 
 
 # MAIN
