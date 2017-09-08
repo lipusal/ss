@@ -1,4 +1,6 @@
 import math
+import random
+
 from euclid3 import Vector2
 
 
@@ -33,6 +35,14 @@ class Particle:
         # centerDistance = sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
         center_distance = abs(other._position - self._position)
         return center_distance - self.radius - other.radius
+
+    #Returns a particle with a random position in the given space, and a random direction.
+    @classmethod
+    def get_random_particle(cls, max_height, max_width, radius, speed, mass=0.0):
+        x = random.uniform(radius, max_width - radius)
+        y = random.uniform(radius, max_height - radius)
+        o = random.uniform(0.0, 2 * math.pi)
+        return cls(x=x, y=y, radius=radius, mass=mass, v=speed, o=o, is_fake=False, original_particle=None )
 
     @property
     def id(self):
