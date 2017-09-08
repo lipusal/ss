@@ -179,7 +179,17 @@ particles = list()
 colors = list()
 for particle_count in range(arguments.n):
     # TODO dividir width por dos para que este en la mitad de la caja
+
     new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity)
+
+    # Check if a particle is superposed with another one
+    for i in range(len(particles)):
+        particle = particles[i]
+        if new_particle.distance_to(particle) < particle_radius:
+            new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius,
+                                                        speed=particle_velocity)
+            i=0
+
     particles.append(new_particle)
     # TODO: Consider making Ovito color particles so we don't have to recalculate colors all the time
     colors.append(radians_to_rgb(new_particle.vel_angle()))
