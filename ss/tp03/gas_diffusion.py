@@ -194,7 +194,7 @@ particle_velocity = 0.01
 particle_radius = 0.006
 particle_mass = 1.0
 particles = list()
-colors = list()
+# colors = list()
 for particle_count in range(arguments.n):
     # TODO dividir width por dos para que este en la mitad de la caja
 
@@ -209,8 +209,8 @@ for particle_count in range(arguments.n):
             i=0
 
     particles.append(new_particle)
-    # TODO: Consider making Ovito color particles so we don't have to recalculate colors all the time
-    colors.append(radians_to_rgb(new_particle.vel_angle()))
+    # Color particles according to initial direction
+    # colors.append(radians_to_rgb(new_particle.vel_angle()))
 
 t = 0
 collision_times = all_min_collision_times(particles)
@@ -242,5 +242,14 @@ for i in range(500):
 
     t += min_time
     recalculate_fp()
+
+    # Color the collided particle(s) red and blue
+    colors = [(255, 255, 255)] * arguments.n
+    for j in range(len(particles)):
+        if particles[j] == collided_particle:
+            colors[j] = (255, 0, 0)
+        elif target is not None and particles[j] == target:
+            colors[j] = (0, 255, 0)
+
     FileWriter.export_positions_ovito(particles, t=t, colors=colors, output=arguments.output,
                                       mode='w' if i == 0 else 'a')
