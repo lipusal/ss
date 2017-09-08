@@ -179,12 +179,10 @@ particles = list()
 colors = list()
 for particle_count in range(arguments.n):
     # TODO dividir width por dos para que este en la mitad de la caja
-    x = random.uniform(particle_radius, width - particle_radius)
-    y = random.uniform(particle_radius, height - particle_radius)
-    o = random.uniform(0.0, 2 * math.pi)
-    particles.append(Particle(x, y, particle_radius, particle_mass, particle_velocity, o))
+    new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity)
+    particles.append(new_particle)
     # TODO: Consider making Ovito color particles so we don't have to recalculate colors all the time
-    colors.append(radians_to_rgb(o))
+    colors.append(radians_to_rgb(new_particle.vel_angle()))
 
 t = 0
 collision_times = min_collision_times(particles)
