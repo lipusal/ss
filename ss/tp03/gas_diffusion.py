@@ -225,8 +225,7 @@ for i in range(500):
     for particle_id, (time, target) in collision_times.items():
         collision_times[particle_id] = (time - min_time, target)
         if collision_times[particle_id][0] == 0:
-            # TODO: This will not work if Particle #i is no longer in particles[i-1]
-            collided_particle = particles[particle_id - 1]
+            collided_particle = next(x for x in particles if x.id == particle_id)
 
     # TODO Nati: Simulate collision between wall and collided_particle, or between collided_particle and target
 
