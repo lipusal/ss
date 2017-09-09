@@ -175,10 +175,11 @@ def evolve_particles(particles, time, colliding_particle, target):
 
 
 def wall_collision(particle):
-    # When the particle crashes into a wall, one of its velocity's components should change direction
+    # When the particle crashes into a wall, one of its velocity's components should change direction (both if crashing
+    # against a corner)
     if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
         particle.velocity.y *= -1
-    elif particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
+    if particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
         particle.velocity.x *= -1
 
 
