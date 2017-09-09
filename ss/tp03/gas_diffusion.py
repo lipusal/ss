@@ -208,13 +208,18 @@ for particle_count in range(arguments.n):
 
     new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity)
 
-    # Check if a particle is superposed with another one
-    for i in range(len(particles)):
-        particle = particles[i]
-        if new_particle.distance_to(particle) < particle_radius:
-            new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius,
-                                                        speed=particle_velocity)
-            i=0
+    done = False
+    while not done:
+        overlap = False
+        # Make sure the new particle doesn't overlap with any other existing particle
+        for existing_particle in particles:
+            if new_particle.distance_to(existing_particle) < 0:
+                overlap = True
+                new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius,
+                                                            speed=particle_velocity)
+                break
+
+        done = not overlap
 
     particles.append(new_particle)
     # Color particles according to initial direction

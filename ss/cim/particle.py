@@ -33,7 +33,7 @@ class Particle:
 
     def distance_to(self, other):
         # centerDistance = sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
-        center_distance = abs(other._position - self._position)
+        center_distance = (other.position - self.position).magnitude()
         return center_distance - self.radius - other.radius
 
     #Returns a particle with a random position in the given space, and a random direction.
