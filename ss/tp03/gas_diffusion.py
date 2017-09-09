@@ -1,4 +1,3 @@
-import random
 import math
 
 import ss.util.args as args
@@ -74,9 +73,10 @@ def time_to_particle_collision(particle1, particle2):
 
 
 def all_min_collision_times(particles):
-    """Return a dictionary of the form (particle_id, (min_collision_time, collision_target)). That is, for each
-    particle, the minimum time for it to collide against a wall or a particle, and against what it will collide at that
-    time."""
+    """Return a dictionary of the form (particle_id, (particle, min_collision_time, collision_target)). That is, for
+    each particle, save its ID as key, and as value store the Particle itself, the minimum time for it to collide
+    against a wall or a particle, and against what it will collide at that time (None for walls and Particles for other
+    particles)."""
 
     result = dict()
     for i in range(len(particles) - 1):
@@ -86,11 +86,14 @@ def all_min_collision_times(particles):
         # there's no need to loop over all particles again, since time_to_collision(x, y) == time_to_collision(y, x)
         collision_time, target = min_collision_time(me, particles[i+1:])
 
-        result[me.id] = (collision_time, target)
-        if target is not None:
-            # If target will collide against a wall before colliding with me, when it gets processed in a following
-            # iteration it will overwrite its collision time with the wall's.
-            result[target.id] = (collision_time, me)
+        result[me.id] = (me, collision_time, target)
+
+        # TODO: Check whether this is necessary, delete if not
+        # if target is not None:
+        #     # time_to_collision(x, y) == time_to_collision(y, x), so save the same collision time for the target. If the
+        #     # target will collide against a wall before colliding with me, when it gets processed in a following
+        #     # iteration it will overwrite its collision time with the wall's.
+        #     result[target.id] = (target, collision_time, me)
 
     return result
 
@@ -110,8 +113,7 @@ def min_collision_time(self, other_particles):
         t = time_to_particle_collision(self, particle)
         if t < particle_time:
             particle_time = t
-            # Find in list, https://stackoverflow.com/a/9542768/2333689
-            other_particle = next(x for x in other_particles if x.id == particle.id)
+            other_particle = particle
 
     if wall_time <= particle_time or math.inf:
         # Contemplates the (very rare) case in which a particle will never collide against anything, will insert
@@ -125,15 +127,21 @@ def min_collision_time(self, other_particles):
 
 def next_collision(data):
     """Get the minimum collision time of all times in the specified data, where data has the form of what is returned
-    by #min_collision_times. Return (min_time, target)"""
+    by #min_collision_times. Return (particle, min_time, target)"""
 
     result = None
     min_time = math.inf
 
-    for particle_id, (time, target) in data.items():
+    for particle_id, (particle, time, target) in data.items():
         if time < min_time:
             min_time = time
-            result = (min_time, target)
+            result = (particle, min_time, target)
+        elif time == min_time:
+            print("***************************************************************************************************")
+            print("WARNING!!!! Found two collisions at the same time: %s <-> %s and %s <-> %s. Can we go to Jamaica?" % (result[0], result[2], particle, target))
+            print("No but seriously, ignoring second collision. If this happens a lot, consider contemplating "
+                  "multiple collisions!")
+            print("***************************************************************************************************")
 
     return result
 
@@ -217,15 +225,12 @@ collision_times = all_min_collision_times(particles)
 
 # while fp_left > 0.5:
 for i in range(500):
-    min_time, target = next_collision(collision_times)
+    collided_particle, min_time, target = next_collision(collision_times)
     evolve_particles(particles, min_time)
 
-    collided_particle = None
     # Subtract min_time from all collision times; colliding particle(s) will have their collision time set to 0
-    for particle_id, (time, target) in collision_times.items():
-        collision_times[particle_id] = (time - min_time, target)
-        if collision_times[particle_id][0] == 0:
-            collided_particle = next(x for x in particles if x.id == particle_id)
+    for particle_id, (particle, time, target) in collision_times.items():
+        collision_times[particle_id] = (particle, time - min_time, target)
 
     # TODO Nati: Simulate collision between wall and collided_particle, or between collided_particle and target
 
@@ -233,12 +238,12 @@ for i in range(500):
     for particle in [collided_particle, target]:
         if particle is not None:
             next_collision_time, next_target = min_collision_time(particle, particles)
-            collision_times[particle.id] = (next_collision_time, next_target)
+            collision_times[particle.id] = (particle, next_collision_time, next_target)
 
             # If next collision is with another particle, and if it will now happen sooner than when that other particle
             # was going to collide before, also update that particle's collision time
             if next_target is not None and next_collision_time < collision_times[next_target.id]:
-                collision_times[next_target.id] = (next_collision_time, particle)
+                collision_times[next_target.id] = (next_target, next_collision_time, particle)
 
     t += min_time
     recalculate_fp()
