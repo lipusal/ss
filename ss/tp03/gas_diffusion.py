@@ -115,7 +115,7 @@ def min_collision_time(self, other_particles):
             particle_time = t
             other_particle = particle
 
-    if wall_time <= particle_time or math.inf:
+    if wall_time <= (particle_time or math.inf):
         # Contemplates the (very rare) case in which a particle will never collide against anything, will insert
         # (math.inf, None). Ignores cases in which a particle collides against a wall and another particle at the
         # same time; takes only the wall collision
@@ -230,24 +230,24 @@ collision_times = all_min_collision_times(particles)
 
 # while fp_left > 0.5:
 for i in range(500):
-    collided_particle, min_time, target = next_collision(collision_times)
-    evolve_particles(particles, min_time)
+    colliding_particle, min_time, target = next_collision(collision_times)
 
     # Subtract min_time from all collision times; colliding particle(s) will have their collision time set to 0
-    for particle_id, (particle, time, target) in collision_times.items():
-        collision_times[particle_id] = (particle, time - min_time, target)
+    for particle_id, (particle, time, target2) in collision_times.items():
+        collision_times[particle_id] = (particle, time - min_time, target2)
 
     # TODO Nati: Simulate collision between wall and collided_particle, or between collided_particle and target
+    evolve_particles(particles, min_time)
 
     # Update next collision of collided particle(s), and any other particles they may now collide with
-    for particle in [collided_particle, target]:
+    for particle in [colliding_particle, target]:
         if particle is not None:
             next_collision_time, next_target = min_collision_time(particle, particles)
             collision_times[particle.id] = (particle, next_collision_time, next_target)
 
             # If next collision is with another particle, and if it will now happen sooner than when that other particle
             # was going to collide before, also update that particle's collision time
-            if next_target is not None and next_collision_time < collision_times[next_target.id]:
+            if next_target is not None and next_collision_time < collision_times[next_target.id][1]:
                 collision_times[next_target.id] = (next_target, next_collision_time, particle)
 
     t += min_time
@@ -256,10 +256,10 @@ for i in range(500):
     # Color the collided particle(s) red and blue
     colors = [(255, 255, 255)] * arguments.n
     for j in range(len(particles)):
-        if particles[j] == collided_particle:
+        if particles[j] == colliding_particle:
             colors[j] = (255, 0, 0)
         elif target is not None and particles[j] == target:
-            colors[j] = (0, 255, 0)
+            colors[j] = (0, 0, 255)
 
     FileWriter.export_positions_ovito(particles, t=t, colors=colors, output=arguments.output,
                                       mode='w' if i == 0 else 'a')
