@@ -79,21 +79,12 @@ def all_min_collision_times(particles):
     particles)."""
 
     result = dict()
-    for i in range(len(particles) - 1):
-        me = particles[i]
-
-        # Get the other particle that this particle will first collide with. Iterate from the next particle to the end;
-        # there's no need to loop over all particles again, since time_to_collision(x, y) == time_to_collision(y, x)
-        collision_time, target = min_collision_time(me, particles[i+1:])
-
+    for me in particles:
+        # Get the time until this particle first collides against a wall or against another particle. Always need to
+        # compare with all other particles because it is not necessarily true that
+        # time_to_collision(x, y) == time_to_collision(y, x)
+        collision_time, target = min_collision_time(me, particles)
         result[me.id] = (me, collision_time, target)
-
-        # TODO: Check whether this is necessary, delete if not
-        # if target is not None:
-        #     # time_to_collision(x, y) == time_to_collision(y, x), so save the same collision time for the target. If the
-        #     # target will collide against a wall before colliding with me, when it gets processed in a following
-        #     # iteration it will overwrite its collision time with the wall's.
-        #     result[target.id] = (target, collision_time, me)
 
     return result
 
@@ -136,9 +127,11 @@ def next_collision(data):
         if time < min_time:
             min_time = time
             result = (particle, min_time, target)
-        elif time == min_time:
+        elif time == min_time and result is not None and particle_id != result[2].id:
+            # Two collisions at the same time with different pairs of particles (otherwise particle_id == result[2].id)
             print("***************************************************************************************************")
-            print("WARNING!!!! Found two collisions at the same time: %s <-> %s and %s <-> %s. Can we go to Jamaica?" % (result[0], result[2], particle, target))
+            print("WARNING!!!! Found two collisions at the same time: %s <-> %s and %s <-> %s. Do we get to go to "
+                  "Jamaica?" % (result[0], result[2], particle, target))
             print("No but seriously, ignoring second collision. If this happens a lot, consider contemplating "
                   "multiple collisions!")
             print("***************************************************************************************************")
@@ -146,17 +139,11 @@ def next_collision(data):
     return result
 
 
-def evolve_particles(particles, time):
+def evolve_particles(particles, time, colliding_particle, target):
     for particle in particles:
 
         # Move particle
         particle.move(particle.velocity.x * time, particle.velocity.y * time)
-
-        # When the particle crashes into a wall, one of its velocity's components should change direction
-        if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
-            particle.velocity.y *= -1
-        elif particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
-            particle.velocity.x *= -1
 
         # TODO ver que corrobore tambien el tema del radio onda que la posicion no sea 0.5 cuando el radio es 1.
 
@@ -176,6 +163,38 @@ def evolve_particles(particles, time):
         if particle.y < 0:
             raise ValueError(
                 'The position of the particle cannot be outside the box, the y position must be more than 0')
+
+    # Particles move, simulate collisions
+    if target is None:
+        wall_collision(colliding_particle)
+    else:
+        particle_collision(colliding_particle, target)
+
+
+def wall_collision(particle):
+    # When the particle crashes into a wall, one of its velocity's components should change direction
+    if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
+        particle.velocity.y *= -1
+    elif particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
+        particle.velocity.x *= -1
+
+
+def particle_collision(particle1, particle2):
+
+    # Filmina 20 de teórica 3
+    delta_r = particle2.position - particle1.position
+    delta_v = particle2.velocity - particle1.velocity
+    o = particle1.radius + particle2.radius
+
+    j = 2 * particle1.mass * particle2.mass * delta_v.dot(delta_r) / (o * (particle1.mass + particle2.mass))
+    j_x = j * delta_r.x / o
+    j_y = j * delta_r.y / o
+
+    particle1.velocity.x += j_x / particle1.mass
+    particle1.velocity.y += j_y / particle1.mass
+
+    particle2.velocity.x -= j_x / particle2.mass
+    particle2.velocity.y -= j_y / particle2.mass
 
 
 # Particle ratio on each side of the box
@@ -206,7 +225,7 @@ particles = list()
 for particle_count in range(arguments.n):
     # TODO dividir width por dos para que este en la mitad de la caja
 
-    new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity)
+    new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity, mass=particle_mass)
 
     done = False
     while not done:
@@ -216,7 +235,7 @@ for particle_count in range(arguments.n):
             if new_particle.distance_to(existing_particle) < 0:
                 overlap = True
                 new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius,
-                                                            speed=particle_velocity)
+                                                            speed=particle_velocity, mass=particle_mass)
                 break
 
         done = not overlap
@@ -226,10 +245,10 @@ for particle_count in range(arguments.n):
     # colors.append(radians_to_rgb(new_particle.vel_angle()))
 
 t = 0
-collision_times = all_min_collision_times(particles)
 
 # while fp_left > 0.5:
 for i in range(500):
+    collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
 
     # Subtract min_time from all collision times; colliding particle(s) will have their collision time set to 0
@@ -237,7 +256,7 @@ for i in range(500):
         collision_times[particle_id] = (particle, time - min_time, target2)
 
     # TODO Nati: Simulate collision between wall and collided_particle, or between collided_particle and target
-    evolve_particles(particles, min_time)
+    evolve_particles(particles, min_time, colliding_particle, target)
 
     # Update next collision of collided particle(s), and any other particles they may now collide with
     for particle in [colliding_particle, target]:
