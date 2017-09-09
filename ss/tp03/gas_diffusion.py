@@ -11,6 +11,9 @@ args.parser.description = "Self-propulsed particles program. Simulates particles
 args.parser.add_argument("-n", help="Amount of particles", type=int, default=20)
 arguments = args.parse_args()
 
+if arguments.time:
+    import ss.util.timer
+
 # Box dimensions (meters)
 height = 0.09
 width = 0.24
@@ -248,6 +251,9 @@ t = 0
 
 # while fp_left > 0.5:
 for i in range(500):
+    if arguments.verbose:
+        print("Processing frame #%i" % i)
+
     collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
 
