@@ -19,12 +19,13 @@ height = 0.09
 width = 0.24
 aperture_width = 0.006
 
+
 def get_compartment(particle):
     """Return which compartment the specified particle is in. 0 for left, 1 for exact middle, 2 for right."""
-    if particle.x == width/2:
+    if particle.x == width / 2:
         return 1
 
-    return 0 if particle.x < width/2 else 2
+    return 0 if particle.x < width / 2 else 2
 
 
 def time_to_border_wall_collision(particle):
@@ -63,17 +64,18 @@ def time_to_middle_wall_collision(particle):
     # Get time for particle to reach middle wall in X
     if compartment == 0:
         if particle.velocity.x <= 0:
-            return math.inf     # Will collide against a wall first (or is not moving in X)
+            return math.inf  # Will collide against a wall first (or is not moving in X)
         time = (width / 2 - particle.radius - particle.position.x) / particle.velocity.x
     elif compartment == 2:
         if particle.velocity.x >= 0:
             return math.inf
         time = (width / 2 + particle.radius - particle.position.x) / particle.velocity.x
     else:
-        return math.inf    # Should only happen when inside the aperture
+        return math.inf  # Should only happen when inside the aperture
 
     new_y = particle.position.y + particle.velocity.y * time
-    if (height/2) - (aperture_width/2) - particle.radius <= new_y <= (height/2) - (aperture_width/2) + particle.radius:
+    if (height / 2) - (aperture_width / 2) - particle.radius <= new_y <= (height / 2) - (
+        aperture_width / 2) + particle.radius:
         # Particle will go through aperture
         return math.inf
 
@@ -232,7 +234,6 @@ def wall_collision(particle):
 
 
 def particle_collision(particle1, particle2):
-
     # Filmina 20 de teórica 3
     delta_r = particle2.position - particle1.position
     delta_v = particle2.velocity - particle1.velocity
@@ -274,11 +275,14 @@ particle_radius = 0.0015
 particle_mass = 1.0
 particles = list()
 # Particles for aperture borders, needed for more realistic collisions
-aperture_top_particle = Particle(width/2, height/2 + aperture_width/2, radius=0, mass=math.inf, v=0, o=0, is_fake=True)
-aperture_bottom_particle = Particle(width/2, height/2 - aperture_width/2, radius=0, mass=math.inf, v=0, o=0, is_fake=True)
+aperture_top_particle = Particle(width / 2, height / 2 + aperture_width / 2, radius=0, mass=math.inf, v=0, o=0,
+                                 is_fake=True)
+aperture_bottom_particle = Particle(width / 2, height / 2 - aperture_width / 2, radius=0, mass=math.inf, v=0, o=0,
+                                    is_fake=True)
 # colors = list()
 for particle_count in range(arguments.n):
-    new_particle = Particle.get_random_particle(max_height=height, max_width=width/2 - particle_radius, radius=particle_radius, speed=particle_velocity, mass=particle_mass)
+    new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
+                                                radius=particle_radius, speed=particle_velocity, mass=particle_mass)
 
     done = False
     while not done:
@@ -287,7 +291,7 @@ for particle_count in range(arguments.n):
         for existing_particle in particles:
             if new_particle.distance_to(existing_particle) < 0:
                 overlap = True
-                new_particle = Particle.get_random_particle(max_height=height, max_width=width/2 - particle_radius,
+                new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
                                                             radius=particle_radius, speed=particle_velocity,
                                                             mass=particle_mass)
                 break
