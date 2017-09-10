@@ -28,10 +28,8 @@ def get_compartment(particle):
 
 
 def time_to_border_wall_collision(particle):
-    """Calculate time for the given particle to collide against any wall. Return infinity if particle will not collide
-    with a wall (e.g. if Vx = Vy = 0)."""
-    # TODO: Return which wall the collision will be with?
-    # TODO ver donde estan las paredes, esta muy hardcodeado el width y el 0! y donde hay ranuras y otras particulas
+    """Calculate time for the given particle to collide against any border wall. Return infinity if particle will not
+    collide with a wall (e.g. if Vx = Vy = 0)."""
 
     # Calculate minimum collision time in x axis
     if particle.velocity.x > 0:
@@ -100,7 +98,6 @@ def time_to_particle_collision(particle1, particle2):
 
     result = -(v_r + math.sqrt(d)) / v2
     if result < 0:
-        # TODO: Make sure particles are not generate with overlap
         print("WARNING: %s and %s overlap, giving a negative collision time. Ignoring and returning infinity, "
               "make sure particles are not generated with overlap!" % (particle1, particle2))
         return math.inf
@@ -194,8 +191,6 @@ def evolve_particles(particles, time, colliding_particle, target):
         # Move particle
         particle.move(particle.velocity.x * time, particle.velocity.y * time)
 
-        # TODO ver que corrobore tambien el tema del radio onda que la posicion no sea 0.5 cuando el radio es 1.
-
         # Raise an exception when the particle is outside the board limits
 
         # This can be simplified by changing >=, <=, etc. above to just ==, and adding else: "Outside of board".
@@ -213,7 +208,7 @@ def evolve_particles(particles, time, colliding_particle, target):
             raise ValueError(
                 'The position of the particle cannot be outside the box, the y position must be more than 0')
 
-    # Particles move, simulate collisions
+    # Particles moved, simulate collisions
     if target is None:
         wall_collision(colliding_particle)
     else:
@@ -283,8 +278,6 @@ aperture_top_particle = Particle(width/2, height/2 + aperture_width/2, radius=0,
 aperture_bottom_particle = Particle(width/2, height/2 - aperture_width/2, radius=0, mass=math.inf, v=0, o=0, is_fake=True)
 # colors = list()
 for particle_count in range(arguments.n):
-    # TODO dividir width por dos para que este en la mitad de la caja
-
     new_particle = Particle.get_random_particle(max_height=height, max_width=width/2 - particle_radius, radius=particle_radius, speed=particle_velocity, mass=particle_mass)
 
     done = False
@@ -319,7 +312,6 @@ for i in range(500):
     for particle_id, (particle, time, target2) in collision_times.items():
         collision_times[particle_id] = (particle, time - min_time, target2)
 
-    # TODO Nati: Simulate collision between wall and collided_particle, or between collided_particle and target
     evolve_particles(particles, min_time, colliding_particle, target)
 
     # Update next collision of collided particle(s), and any other particles they may now collide with
