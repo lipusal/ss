@@ -9,6 +9,19 @@ from ss.util.colors import radians_to_rgb
 args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
                           "changes over time, and whose change is influenced by other particles within a radius"
 args.parser.add_argument("-n", help="Amount of particles", type=int, default=20)
+args.parser.add_argument("--aperture", "-a", help="Aperture size (meters), default is 0.006", type=float, default=0.006)
+args.parser.add_argument("--radius", "-r", help="Particle radius (meters), default is 0.0015", type=float,
+                         default=0.0015)
+args.parser.add_argument("--mass", "-k", help="Particle mass (kilograms), default is 1", type=float, default=1)
+args.parser.add_argument("--speed", "-s", help="Particle speed (meters per second), default is 0.01", type=float,
+                         default=0.001)
+args.parser.add_argument("--cutoff", "-f", help="Distribution cutoff. When the left particles/total particles ratio is "
+                                                "below the cutoff, simulation will stop. Default is 0.5",
+                         type=float, default=0.5)
+args.parser.add_argument("--delta", "-d", help="Approximate delta t between rendered frames (seconds). Note that frames"
+                                               " may be further apart, but never closer together. Default is 0.5",
+                         type=float, default=0.5)
+
 arguments = args.parse_args()
 
 if arguments.time:
@@ -17,7 +30,7 @@ if arguments.time:
 # Box dimensions (meters)
 height = 0.09
 width = 0.24
-aperture_width = 0.006
+aperture_width = arguments.aperture
 
 
 def get_compartment(particle):
@@ -75,7 +88,7 @@ def time_to_middle_wall_collision(particle):
 
     new_y = particle.position.y + particle.velocity.y * time
     if (height / 2) - (aperture_width / 2) + particle.radius <= new_y <= (height / 2) + (
-        aperture_width / 2) - particle.radius:
+                aperture_width / 2) - particle.radius:
         # Particle will go through aperture
         return math.inf
 
@@ -270,14 +283,16 @@ def recalculate_fp():
 
 
 # Generate particles with random velocity direction
-particle_velocity = 0.01
-particle_radius = 0.0015
-particle_mass = 1.0
+particle_speed = arguments.speed
+particle_radius = arguments.radius
+particle_mass = arguments.mass
 particles = list()
 # Particles for aperture borders, needed for more realistic collisions
-aperture_top_particle = Particle(width / 2, (height / 2) + (aperture_width / 2) - particle_radius, radius=0, mass=math.inf,
+aperture_top_particle = Particle(width / 2, (height / 2) + (aperture_width / 2) - particle_radius, radius=0,
+                                 mass=math.inf,
                                  v=0, o=0, is_fake=True)
-aperture_bottom_particle = Particle(width / 2, (height / 2) - (aperture_width / 2) + particle_radius, radius=0, mass=math.inf, v=0, o=0,
+aperture_bottom_particle = Particle(width / 2, (height / 2) - (aperture_width / 2) + particle_radius, radius=0,
+                                    mass=math.inf, v=0, o=0,
                                     is_fake=True)
 # colors = list()
 
@@ -285,8 +300,8 @@ aperture_bottom_particle = Particle(width / 2, (height / 2) - (aperture_width / 
 y = 0.0
 fake_particles = list()
 while y <= height:
-    if not height/2 - aperture_width/2 + particle_radius < y < height/2 + aperture_width/2 - particle_radius:
-        fake_particles.append(Particle(width/2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    if not height / 2 - aperture_width / 2 + particle_radius < y < height / 2 + aperture_width / 2 - particle_radius:
+        fake_particles.append(Particle(width / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
     y += particle_radius
 
 fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
@@ -297,7 +312,7 @@ fake_particles.append(Particle(width, height, radius=0, mass=math.inf, v=0, o=0,
 # Create particles
 for particle_count in range(arguments.n):
     new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
-                                                radius=particle_radius, speed=particle_velocity, mass=particle_mass)
+                                                radius=particle_radius, speed=particle_speed, mass=particle_mass)
 
     done = False
     while not done:
@@ -307,7 +322,7 @@ for particle_count in range(arguments.n):
             if new_particle.distance_to(existing_particle) < 0:
                 overlap = True
                 new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
-                                                            radius=particle_radius, speed=particle_velocity,
+                                                            radius=particle_radius, speed=particle_speed,
                                                             mass=particle_mass)
                 break
 
@@ -318,11 +333,13 @@ for particle_count in range(arguments.n):
     # colors.append(radians_to_rgb(new_particle.vel_angle()))
 
 t = 0
+delta_t = 0
+first_frame = True
 
-# while fp_left > 0.5:
-for i in range(1000):
+while fp_left > arguments.cutoff:
+# for i in range(1000):
     if arguments.verbose:
-        print("Processing frame #%i" % i)
+        print("Processing t=%g" % t)
 
     collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
@@ -332,6 +349,10 @@ for i in range(1000):
         collision_times[particle_id] = (particle, time - min_time, target2)
 
     evolve_particles(particles, min_time, colliding_particle, target)
+
+    t += min_time
+    delta_t += min_time
+    recalculate_fp()
 
     # Update next collision of collided particle(s), and any other particles they may now collide with
     for particle in [colliding_particle, target]:
@@ -344,19 +365,27 @@ for i in range(1000):
             if next_target is not None and next_collision_time < collision_times[next_target.id][1]:
                 collision_times[next_target.id] = (next_target, next_collision_time, particle)
 
-    t += min_time
-    recalculate_fp()
+    if delta_t >= arguments.delta:
+        # Render frame
+        print("Rendering frame, t=%g, fp=%g" % (t, fp_left))
 
-    # Color the collided particle(s) red and blue
-    colors = [(255, 255, 255)] * arguments.n
-    for j in range(len(particles)):
-        if particles[j] == colliding_particle:
-            colors[j] = (255, 0, 0)
-        elif target is not None and particles[j] == target:
-            colors[j] = (0, 0, 255)
+        # Color the collided particle(s) red and blue, others in white
+        colors = [(255, 255, 255)] * arguments.n
+        for j in range(len(particles)):
+            if particles[j] == colliding_particle:
+                colors[j] = (255, 0, 0)
+            elif target is not None and particles[j] == target:
+                colors[j] = (0, 0, 255)
 
-    # Color the fake middle wall particles green
-    colors += [(0, 255, 0)] * len(fake_particles)
+        # Color the fake middle wall particles green
+        colors += [(0, 255, 0)] * len(fake_particles)
 
-    FileWriter.export_positions_ovito(particles + fake_particles, t=t, colors=colors, output=arguments.output,
-                                      mode='w' if i == 0 else 'a')
+        FileWriter.export_positions_ovito(particles + fake_particles, t=t, colors=colors, output=arguments.output,
+                                          mode='w' if first_frame else 'a')
+        delta_t = 0
+        first_frame = False
+
+if arguments.verbose:
+    print("Cutoff of %g reached, stopping." % arguments.cutoff)
+
+print("Done")
