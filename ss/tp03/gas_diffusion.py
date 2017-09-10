@@ -17,9 +17,17 @@ if arguments.time:
 # Box dimensions (meters)
 height = 0.09
 width = 0.24
+aperture_width = 0.006
+
+def get_compartment(particle):
+    """Return which compartment the specified particle is in. 0 for left, 1 for exact middle, 2 for right."""
+    if particle.x == width/2:
+        return 1
+
+    return 0 if particle.x < width/2 else 2
 
 
-def time_to_wall_collision(particle):
+def time_to_border_wall_collision(particle):
     """Calculate time for the given particle to collide against any wall. Return infinity if particle will not collide
     with a wall (e.g. if Vx = Vy = 0)."""
     # TODO: Return which wall the collision will be with?
@@ -47,6 +55,31 @@ def time_to_wall_collision(particle):
         raise ValueError('Collision time should never be a negative value')
 
     return result
+
+
+def time_to_middle_wall_collision(particle):
+    """Calculate time for the given particle to collide against the middle wall, taking in consideration the aperture
+    size. Return infinity if particle will not collide with middle wall, or if particle will go through aperture."""
+
+    compartment = get_compartment(particle)
+    # Get time for particle to reach middle wall in X
+    if compartment == 0:
+        if particle.velocity.x <= 0:
+            return math.inf     # Will collide against a wall first (or is not moving in X)
+        time = (width / 2 - particle.radius - particle.position.x) / particle.velocity.x
+    elif compartment == 2:
+        if particle.velocity.x >= 0:
+            return math.inf
+        time = (width / 2 + particle.radius - particle.position.x) / particle.velocity.x
+    else:
+        return math.inf    # Should only happen when inside the aperture
+
+    new_y = particle.position.y + particle.velocity.y * time
+    if (height/2) - (aperture_width/2) - particle.radius <= new_y <= (height/2) - (aperture_width/2) + particle.radius:
+        # Particle will go through aperture
+        return math.inf
+
+    return time
 
 
 def time_to_particle_collision(particle1, particle2):
@@ -96,7 +129,8 @@ def min_collision_time(self, other_particles):
     """For the given particle self, return a tuple of the form (min_collision_time, target), where min_collision_time is
     a float and target is a particle in other_particles, or None if self will first collide against a wall."""
 
-    wall_time = time_to_wall_collision(self)
+    border_wall_time = time_to_border_wall_collision(self)
+    middle_wall_time = time_to_middle_wall_collision(self)
     particle_time = math.inf
     other_particle = None
 
@@ -109,12 +143,24 @@ def min_collision_time(self, other_particles):
             particle_time = t
             other_particle = particle
 
-    if wall_time <= (particle_time or math.inf):
+    min_time = min(border_wall_time, middle_wall_time, (particle_time or math.inf))
+    if min_time == border_wall_time:
         # Contemplates the (very rare) case in which a particle will never collide against anything, will insert
         # (math.inf, None). Ignores cases in which a particle collides against a wall and another particle at the
         # same time; takes only the wall collision
-        # TODO mark against which wall it will collide?
-        return wall_time, None
+        return border_wall_time, None
+    elif min_time == middle_wall_time:
+        future_self = Particle(self.x, self.y, self.radius, self.mass, self.velocity, self.vel_angle(), True, self)
+        future_self.move(self.velocity.x * middle_wall_time, self.velocity.y * middle_wall_time)
+        if future_self.distance_to(aperture_top_particle) == 0:
+            # Colliding against top aperture border
+            return middle_wall_time, aperture_top_particle
+        elif future_self.distance_to(aperture_bottom_particle) == 0:
+            # Colliding against bottom aperture border
+            return middle_wall_time, aperture_bottom_particle
+        else:
+            # Colliding against middle wall
+            return middle_wall_time, None
     else:
         return particle_time, other_particle
 
@@ -177,6 +223,13 @@ def evolve_particles(particles, time, colliding_particle, target):
 def wall_collision(particle):
     # When the particle crashes into a wall, one of its velocity's components should change direction (both if crashing
     # against a corner)
+
+    # Middle wall
+    if (width / 2) - particle.radius <= particle.x <= (width / 2) + particle.radius:
+        particle.velocity.x *= -1
+        return
+
+    # Border walls
     if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
         particle.velocity.y *= -1
     if particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
@@ -222,14 +275,17 @@ def recalculate_fp():
 
 # Generate particles with random velocity direction
 particle_velocity = 0.01
-particle_radius = 0.006
+particle_radius = 0.0015
 particle_mass = 1.0
 particles = list()
+# Particles for aperture borders, needed for more realistic collisions
+aperture_top_particle = Particle(width/2, height/2 + aperture_width/2, radius=0, mass=math.inf, v=0, o=0, is_fake=True)
+aperture_bottom_particle = Particle(width/2, height/2 - aperture_width/2, radius=0, mass=math.inf, v=0, o=0, is_fake=True)
 # colors = list()
 for particle_count in range(arguments.n):
     # TODO dividir width por dos para que este en la mitad de la caja
 
-    new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius, speed=particle_velocity, mass=particle_mass)
+    new_particle = Particle.get_random_particle(max_height=height, max_width=width/2 - particle_radius, radius=particle_radius, speed=particle_velocity, mass=particle_mass)
 
     done = False
     while not done:
@@ -238,8 +294,9 @@ for particle_count in range(arguments.n):
         for existing_particle in particles:
             if new_particle.distance_to(existing_particle) < 0:
                 overlap = True
-                new_particle = Particle.get_random_particle(max_height=height, max_width=width, radius=particle_radius,
-                                                            speed=particle_velocity, mass=particle_mass)
+                new_particle = Particle.get_random_particle(max_height=height, max_width=width/2 - particle_radius,
+                                                            radius=particle_radius, speed=particle_velocity,
+                                                            mass=particle_mass)
                 break
 
         done = not overlap
