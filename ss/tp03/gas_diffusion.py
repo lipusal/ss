@@ -74,8 +74,8 @@ def time_to_middle_wall_collision(particle):
         return math.inf  # Should only happen when inside the aperture
 
     new_y = particle.position.y + particle.velocity.y * time
-    if (height / 2) - (aperture_width / 2) - particle.radius <= new_y <= (height / 2) - (
-        aperture_width / 2) + particle.radius:
+    if (height / 2) - (aperture_width / 2) + particle.radius <= new_y <= (height / 2) + (
+        aperture_width / 2) - particle.radius:
         # Particle will go through aperture
         return math.inf
 
@@ -275,11 +275,26 @@ particle_radius = 0.0015
 particle_mass = 1.0
 particles = list()
 # Particles for aperture borders, needed for more realistic collisions
-aperture_top_particle = Particle(width / 2, height / 2 + aperture_width / 2, radius=0, mass=math.inf, v=0, o=0,
-                                 is_fake=True)
-aperture_bottom_particle = Particle(width / 2, height / 2 - aperture_width / 2, radius=0, mass=math.inf, v=0, o=0,
+aperture_top_particle = Particle(width / 2, (height / 2) + (aperture_width / 2) - particle_radius, radius=0, mass=math.inf,
+                                 v=0, o=0, is_fake=True)
+aperture_bottom_particle = Particle(width / 2, (height / 2) - (aperture_width / 2) + particle_radius, radius=0, mass=math.inf, v=0, o=0,
                                     is_fake=True)
 # colors = list()
+
+# Fake middle wall particles for visualization
+y = 0.0
+fake_particles = list()
+while y <= height:
+    if not height/2 - aperture_width/2 + particle_radius < y < height/2 + aperture_width/2 - particle_radius:
+        fake_particles.append(Particle(width/2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    y += particle_radius
+
+fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+fake_particles.append(Particle(width, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+fake_particles.append(Particle(0, height, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+fake_particles.append(Particle(width, height, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+
+# Create particles
 for particle_count in range(arguments.n):
     new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
                                                 radius=particle_radius, speed=particle_velocity, mass=particle_mass)
@@ -305,7 +320,7 @@ for particle_count in range(arguments.n):
 t = 0
 
 # while fp_left > 0.5:
-for i in range(500):
+for i in range(1000):
     if arguments.verbose:
         print("Processing frame #%i" % i)
 
@@ -340,5 +355,8 @@ for i in range(500):
         elif target is not None and particles[j] == target:
             colors[j] = (0, 0, 255)
 
-    FileWriter.export_positions_ovito(particles, t=t, colors=colors, output=arguments.output,
+    # Color the fake middle wall particles green
+    colors += [(0, 255, 0)] * len(fake_particles)
+
+    FileWriter.export_positions_ovito(particles + fake_particles, t=t, colors=colors, output=arguments.output,
                                       mode='w' if i == 0 else 'a')
