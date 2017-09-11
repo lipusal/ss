@@ -252,7 +252,14 @@ def particle_collision(particle1, particle2):
     delta_v = particle2.velocity - particle1.velocity
     o = particle1.radius + particle2.radius
 
-    j = 2 * particle1.mass * particle2.mass * delta_v.dot(delta_r) / (o * (particle1.mass + particle2.mass))
+    #Check if one of the colliding "particles" is a border "particle
+    if particle1.mass == math.inf:
+        j = 2*particle2.mass * delta_v.dot(delta_r) / o
+    elif particle2.mass == math.inf:
+        j = 2*particle1.mass * delta_v.dot(delta_r) / o
+    else:
+        j = 2 * particle1.mass * particle2.mass * delta_v.dot(delta_r) / (o * (particle1.mass + particle2.mass))
+
     j_x = j * delta_r.x / o
     j_y = j * delta_r.y / o
 
@@ -263,14 +270,8 @@ def particle_collision(particle1, particle2):
     particle2.velocity.y -= j_y / particle2.mass
 
 
-# Particle ratio on each side of the box
-fp_left = 1
-fp_right = 0
-
-
-def recalculate_fp():
-    global fp_left
-    global fp_right
+# Calculate the particle radio on each side
+def recalculate_fp(fp_left, fp_right):
     left = 0
     right = 0
     for particle in particles:
@@ -280,6 +281,7 @@ def recalculate_fp():
             right += 1
     fp_left = left / arguments.n
     fp_right = right / arguments.n
+    return fp_left, fp_right
 
 
 # Generate particles with random velocity direction
@@ -336,10 +338,14 @@ t = 0
 delta_t = 0
 first_frame = True
 
+# Particle ratio on each side of the box
+fp_left = 1
+fp_right = 0
+
 while fp_left > arguments.cutoff:
-# for i in range(1000):
     if arguments.verbose:
         print("Processing t=%g" % t)
+
 
     collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
@@ -352,7 +358,13 @@ while fp_left > arguments.cutoff:
 
     t += min_time
     delta_t += min_time
-    recalculate_fp()
+    fp_left, fp_right = recalculate_fp(fp_left, fp_right)
+
+    #TODO: sacar al final o poner mas lindo
+    # Write fp ratio for each iteration
+    file_fp = open("fp_output0009.txt", 'w' if first_frame else 'a')
+    file_fp.write("%g\t%g\n" %(t, fp_left))
+    file_fp.close()
 
     # Update next collision of collided particle(s), and any other particles they may now collide with
     for particle in [colliding_particle, target]:
