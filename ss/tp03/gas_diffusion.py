@@ -6,8 +6,8 @@ from ss.util.file_writer import FileWriter
 from ss.util.colors import radians_to_rgb
 
 # TODO: Update description
-args.parser.description = "Self-propulsed particles program. Simulates particles with a (random) given velocity that" \
-                          "changes over time, and whose change is influenced by other particles within a radius"
+args.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles difuse " \
+                          "from one compartment to another through a slit"
 args.parser.add_argument("-n", help="Amount of particles", type=int, default=20)
 args.parser.add_argument("--aperture", "-a", help="Aperture size (meters), default is 0.006", type=float, default=0.006)
 args.parser.add_argument("--radius", "-r", help="Particle radius (meters), default is 0.0015", type=float,
@@ -27,18 +27,84 @@ arguments = args.parse_args()
 if arguments.time:
     import ss.util.timer
 
+# Constant values
 # Box dimensions (meters)
-height = 0.09
-width = 0.24
-aperture_width = arguments.aperture
+HEIGHT = 0.09
+WIDTH = 0.24
+# Particle characteristics(m/s, m, kg)))
+PARTICLE_SPEED = arguments.speed
+PARTICLE_RADIUS = arguments.radius
+PARTICLE_MASS = arguments.mass
+# Aperture dimensions(meters)
+APERTURE_WIDTH = arguments.aperture
 
+pressure = 0
+temperature = 0
+
+#TODO ver si sacar global a juancito probablemente no le guste jeje
+aperture_top_particle = None
+aperture_bottom_particle = None
+
+######Functions######
+
+def generate_particles():  # Generate particles with random velocity direction
+    # Generate particles with random velocity direction
+
+    particles = list()
+
+    global aperture_top_particle
+    global aperture_bottom_particle
+
+    # Particles for aperture borders, needed for more realistic collisions
+    aperture_top_particle = Particle(WIDTH / 2, (HEIGHT / 2) + (APERTURE_WIDTH / 2) - PARTICLE_RADIUS, radius=0,
+                                     mass=math.inf,
+                                     v=0, o=0, is_fake=True)
+    aperture_bottom_particle = Particle(WIDTH / 2, (HEIGHT / 2) - (APERTURE_WIDTH / 2) + PARTICLE_RADIUS, radius=0,
+                                        mass=math.inf, v=0, o=0,
+                                        is_fake=True)
+
+    # Fake middle wall particles for visualization
+    y = 0.0
+    fake_particles = list()
+    while y <= HEIGHT:
+        if not HEIGHT / 2 - APERTURE_WIDTH / 2 + PARTICLE_RADIUS < y < HEIGHT / 2 + APERTURE_WIDTH / 2 - PARTICLE_RADIUS:
+            fake_particles.append(Particle(WIDTH / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+        y += PARTICLE_RADIUS
+
+    fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+
+    # Create particles
+    for particle_count in range(arguments.n):
+        new_particle = Particle.get_random_particle(max_height=HEIGHT, max_width=WIDTH / 2 - PARTICLE_RADIUS,
+                                                    radius=PARTICLE_RADIUS, speed=PARTICLE_SPEED, mass=PARTICLE_MASS)
+
+        done = False
+        while not done:
+            overlap = False
+            # Make sure the new particle doesn't overlap with any other existing particle
+            for existing_particle in particles:
+                if new_particle.distance_to(existing_particle) < 0:
+                    overlap = True
+                    new_particle = Particle.get_random_particle(max_height=HEIGHT,
+                                                                max_width=WIDTH / 2 - PARTICLE_RADIUS,
+                                                                radius=PARTICLE_RADIUS, speed=PARTICLE_SPEED,
+                                                                mass=PARTICLE_MASS)
+                    break
+
+            done = not overlap
+
+        particles.append(new_particle)
+    return particles, fake_particles
 
 def get_compartment(particle):
     """Return which compartment the specified particle is in. 0 for left, 1 for exact middle, 2 for right."""
-    if particle.x == width / 2:
+    if particle.x == WIDTH / 2:
         return 1
 
-    return 0 if particle.x < width / 2 else 2
+    return 0 if particle.x < WIDTH / 2 else 2
 
 
 def time_to_border_wall_collision(particle):
@@ -47,7 +113,7 @@ def time_to_border_wall_collision(particle):
 
     # Calculate minimum collision time in x axis
     if particle.velocity.x > 0:
-        collision_time_x = (width - particle.radius - particle.position.x) / particle.velocity.x
+        collision_time_x = (WIDTH - particle.radius - particle.position.x) / particle.velocity.x
     elif particle.velocity.x < 0:
         collision_time_x = (0 + particle.radius - particle.position.x) / particle.velocity.x
     else:
@@ -55,7 +121,7 @@ def time_to_border_wall_collision(particle):
 
     # Calculate minimum collision time in y axis
     if particle.velocity.y > 0:
-        collision_time_y = (height - particle.radius - particle.position.y) / particle.velocity.y
+        collision_time_y = (HEIGHT - particle.radius - particle.position.y) / particle.velocity.y
     elif particle.velocity.y < 0:
         collision_time_y = (0 + particle.radius - particle.position.y) / particle.velocity.y
     else:
@@ -78,17 +144,17 @@ def time_to_middle_wall_collision(particle):
     if compartment == 0:
         if particle.velocity.x <= 0:
             return math.inf  # Will collide against a wall first (or is not moving in X)
-        time = (width / 2 - particle.radius - particle.position.x) / particle.velocity.x
+        time = (WIDTH / 2 - particle.radius - particle.position.x) / particle.velocity.x
     elif compartment == 2:
         if particle.velocity.x >= 0:
             return math.inf
-        time = (width / 2 + particle.radius - particle.position.x) / particle.velocity.x
+        time = (WIDTH / 2 + particle.radius - particle.position.x) / particle.velocity.x
     else:
         return math.inf  # Should only happen when inside the aperture
 
     new_y = particle.position.y + particle.velocity.y * time
-    if (height / 2) - (aperture_width / 2) + particle.radius <= new_y <= (height / 2) + (
-                aperture_width / 2) - particle.radius:
+    if (HEIGHT / 2) - (APERTURE_WIDTH / 2) + particle.radius <= new_y <= (HEIGHT / 2) + (
+                APERTURE_WIDTH / 2) - particle.radius:
         # Particle will go through aperture
         return math.inf
 
@@ -164,6 +230,10 @@ def min_collision_time(self, other_particles):
     elif min_time == middle_wall_time:
         future_self = Particle(self.x, self.y, self.radius, self.mass, self.velocity, self.vel_angle(), True, self)
         future_self.move(self.velocity.x * middle_wall_time, self.velocity.y * middle_wall_time)
+
+        global aperture_bottom_particle
+        global aperture_top_particle
+
         if future_self.distance_to(aperture_top_particle) == 0:
             # Colliding against top aperture border
             return middle_wall_time, aperture_top_particle
@@ -175,6 +245,18 @@ def min_collision_time(self, other_particles):
             return middle_wall_time, None
     else:
         return particle_time, other_particle
+
+def update_collision_times(colliding_particles, particles ):
+    # Update next collision of collided particle(s), and any other particles they may now collide with
+    for particle in colliding_particles:
+        if particle is not None:
+            next_collision_time, next_target = min_collision_time(particle, particles)
+            collision_times[particle.id] = (particle, next_collision_time, next_target)
+
+            # If next collision is with another particle, and if it will now happen sooner than when that other particle
+            # was going to collide before, also update that particle's collision time
+            if next_target is not None and next_collision_time < collision_times[next_target.id][1]:
+                collision_times[next_target.id] = (next_target, next_collision_time, particle)
 
 
 def next_collision(data):
@@ -210,10 +292,10 @@ def evolve_particles(particles, time, colliding_particle, target):
 
         # This can be simplified by changing >=, <=, etc. above to just ==, and adding else: "Outside of board".
         # However, it won't say which side the particle is out from
-        if particle.y > height:
+        if particle.y > HEIGHT:
             raise ValueError(
                 'The position of the particle cannot be outside the box, the y position must be smaller than the height')
-        if particle.x > width:
+        if particle.x > WIDTH:
             raise ValueError(
                 'The position of the particle cannot be outside the box, the x position must be smaller than the width')
         if particle.x < 0:
@@ -235,15 +317,24 @@ def wall_collision(particle):
     # against a corner)
 
     # Middle wall
-    if (width / 2) - particle.radius <= particle.x <= (width / 2) + particle.radius:
+    if (WIDTH / 2) - particle.radius <= particle.x <= (WIDTH / 2) + particle.radius:
         particle.velocity.x *= -1
         return
 
     # Border walls
-    if particle.y >= height - particle_radius or particle.y <= 0 + particle_radius:
+    if particle.y >= HEIGHT - PARTICLE_RADIUS or particle.y <= 0 + PARTICLE_RADIUS:
         particle.velocity.y *= -1
-    if particle.x >= width - particle_radius or particle.x <= 0 + particle_radius:
+    if particle.x >= WIDTH - PARTICLE_RADIUS or particle.x <= 0 + PARTICLE_RADIUS:
         particle.velocity.x *= -1
+
+    # Increase pressure each time a particle collisions with a wall
+    #TODO presion ver bien
+    global pressure, temperature
+    pv_file = open("pv_output", "a")
+    pressure += 2*particle.mass * HEIGHT * (WIDTH / 2) / 2 * (HEIGHT + (WIDTH / 2))
+    temperature = pressure / HEIGHT * (WIDTH / 2)
+    pv_file.write("%g\t%g\n" %(pressure, temperature))
+    pv_file.close()
 
 
 def particle_collision(particle1, particle2):
@@ -269,13 +360,12 @@ def particle_collision(particle1, particle2):
     particle2.velocity.x -= j_x / particle2.mass
     particle2.velocity.y -= j_y / particle2.mass
 
-
-# Calculate the particle radio on each side
 def recalculate_fp(fp_left, fp_right):
+# Calculate the particle ratio on each side
     left = 0
     right = 0
     for particle in particles:
-        if particle.position.x <= width / 2:
+        if particle.position.x <= WIDTH / 2:
             left += 1
         else:
             right += 1
@@ -283,57 +373,28 @@ def recalculate_fp(fp_left, fp_right):
     fp_right = right / arguments.n
     return fp_left, fp_right
 
+def write_positions(t, fp_left, particles, fake_particles, first_frame, colliding_particle, target):
+    # Render frame
+    print("Rendering frame, t=%g, fp=%g" % (t, fp_left))
 
-# Generate particles with random velocity direction
-particle_speed = arguments.speed
-particle_radius = arguments.radius
-particle_mass = arguments.mass
-particles = list()
-# Particles for aperture borders, needed for more realistic collisions
-aperture_top_particle = Particle(width / 2, (height / 2) + (aperture_width / 2) - particle_radius, radius=0,
-                                 mass=math.inf,
-                                 v=0, o=0, is_fake=True)
-aperture_bottom_particle = Particle(width / 2, (height / 2) - (aperture_width / 2) + particle_radius, radius=0,
-                                    mass=math.inf, v=0, o=0,
-                                    is_fake=True)
-# colors = list()
+    # Color the collided particle(s) red and blue, others in white
+    colors = [(255, 255, 255)] * arguments.n
+    for j in range(len(particles)):
+        if particles[j] == colliding_particle:
+            colors[j] = (255, 0, 0)
+        elif target is not None and particles[j] == target:
+            colors[j] = (0, 0, 255)
 
-# Fake middle wall particles for visualization
-y = 0.0
-fake_particles = list()
-while y <= height:
-    if not height / 2 - aperture_width / 2 + particle_radius < y < height / 2 + aperture_width / 2 - particle_radius:
-        fake_particles.append(Particle(width / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    y += particle_radius
+    # Color the fake middle wall particles green
+    colors += [(0, 255, 0)] * len(fake_particles)
 
-fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-fake_particles.append(Particle(width, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-fake_particles.append(Particle(0, height, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-fake_particles.append(Particle(width, height, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    FileWriter.export_positions_ovito(particles + fake_particles, t=t, colors=colors, output=arguments.output,
+                                      mode='w' if first_frame else 'a')
 
-# Create particles
-for particle_count in range(arguments.n):
-    new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
-                                                radius=particle_radius, speed=particle_speed, mass=particle_mass)
 
-    done = False
-    while not done:
-        overlap = False
-        # Make sure the new particle doesn't overlap with any other existing particle
-        for existing_particle in particles:
-            if new_particle.distance_to(existing_particle) < 0:
-                overlap = True
-                new_particle = Particle.get_random_particle(max_height=height, max_width=width / 2 - particle_radius,
-                                                            radius=particle_radius, speed=particle_speed,
-                                                            mass=particle_mass)
-                break
+####################################################################
 
-        done = not overlap
-
-    particles.append(new_particle)
-    # Color particles according to initial direction
-    # colors.append(radians_to_rgb(new_particle.vel_angle()))
-
+# Time variables
 t = 0
 delta_t = 0
 first_frame = True
@@ -342,10 +403,21 @@ first_frame = True
 fp_left = 1
 fp_right = 0
 
+# Generate particles
+particles, fake_particles = generate_particles()
+
+# Calculate collision times initially
+collision_times = all_min_collision_times(particles)
+
+#TODO: ver de meter bien tema de presion
+# pv_file = open("pv_output", "w")
+# pv_file.write("%s\t%s\n" % ("pressure", "temperature"))
+# pv_file.close()
+
+# Algorithm
 while fp_left > arguments.cutoff:
     if arguments.verbose:
         print("Processing t=%g" % t)
-
 
     collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
@@ -360,42 +432,14 @@ while fp_left > arguments.cutoff:
     delta_t += min_time
     fp_left, fp_right = recalculate_fp(fp_left, fp_right)
 
-    #TODO: sacar al final o poner mas lindo
-    # Write fp ratio for each iteration
-    file_fp = open("fp_output0009.txt", 'w' if first_frame else 'a')
-    file_fp.write("%g\t%g\n" %(t, fp_left))
-    file_fp.close()
-
-    # Update next collision of collided particle(s), and any other particles they may now collide with
-    for particle in [colliding_particle, target]:
-        if particle is not None:
-            next_collision_time, next_target = min_collision_time(particle, particles)
-            collision_times[particle.id] = (particle, next_collision_time, next_target)
-
-            # If next collision is with another particle, and if it will now happen sooner than when that other particle
-            # was going to collide before, also update that particle's collision time
-            if next_target is not None and next_collision_time < collision_times[next_target.id][1]:
-                collision_times[next_target.id] = (next_target, next_collision_time, particle)
+    #TODO hacer que ande y deje de hacer fuerza bruta todas las iteraciones
+    update_collision_times(colliding_particles=[colliding_particle, target], particles=particles)
 
     if delta_t >= arguments.delta:
-        # Render frame
-        print("Rendering frame, t=%g, fp=%g" % (t, fp_left))
-
-        # Color the collided particle(s) red and blue, others in white
-        colors = [(255, 255, 255)] * arguments.n
-        for j in range(len(particles)):
-            if particles[j] == colliding_particle:
-                colors[j] = (255, 0, 0)
-            elif target is not None and particles[j] == target:
-                colors[j] = (0, 0, 255)
-
-        # Color the fake middle wall particles green
-        colors += [(0, 255, 0)] * len(fake_particles)
-
-        FileWriter.export_positions_ovito(particles + fake_particles, t=t, colors=colors, output=arguments.output,
-                                          mode='w' if first_frame else 'a')
-        delta_t = 0
+        write_positions(t=t, fp_left=fp_left, particles=particles, fake_particles=fake_particles,
+                        first_frame=first_frame, colliding_particle=colliding_particle, target=target)
         first_frame = False
+        delta_t = 0
 
 if arguments.verbose:
     print("Cutoff of %g reached, stopping." % arguments.cutoff)
