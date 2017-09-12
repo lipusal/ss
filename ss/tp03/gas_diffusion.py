@@ -418,9 +418,6 @@ fp_right = 0
 # Generate particles
 particles, fake_particles = generate_particles()
 
-# Calculate collision times initially
-collision_times = all_min_collision_times(particles)
-
 #TODO: ver de meter bien tema de presion
 # pv_file = open("pv_output", "w")
 # pv_file.write("%s\t%s\n" % ("pressure", "temperature"))
