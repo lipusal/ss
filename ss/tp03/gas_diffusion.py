@@ -192,15 +192,15 @@ def all_min_collision_times(particles):
     against a wall or a particle, and against what it will collide at that time (None for walls and Particles for other
     particles)."""
 
-    result = dict()
+    min_collision_times = dict()
     for me in particles:
         # Get the time until this particle first collides against a wall or against another particle. Always need to
         # compare with all other particles because it is not necessarily true that
         # time_to_collision(x, y) == time_to_collision(y, x)
         collision_time, target = min_collision_time(me, particles)
-        result[me.id] = (me, collision_time, target)
+        min_collision_times[me.id] = (me, collision_time, target)
 
-    return result
+    return min_collision_times
 
 
 def min_collision_time(self, other_particles):
@@ -246,10 +246,12 @@ def min_collision_time(self, other_particles):
     else:
         return particle_time, other_particle
 
-def update_collision_times(colliding_particles, particles ):
+def update_collision_times(colliding_particles, particles, collision_times):
     # Update next collision of collided particle(s), and any other particles they may now collide with
+
     for particle in colliding_particles:
         if particle is not None:
+            # Calculate new colliding times for particle
             next_collision_time, next_target = min_collision_time(particle, particles)
             collision_times[particle.id] = (particle, next_collision_time, next_target)
 
@@ -258,15 +260,24 @@ def update_collision_times(colliding_particles, particles ):
             if next_target is not None and next_collision_time < collision_times[next_target.id][1]:
                 collision_times[next_target.id] = (next_target, next_collision_time, particle)
 
+            # Recalculate next collision for particles that were supposed to collide with this particle
+            for other_particle in particles:
+                if other_particle == particle:
+                    continue
+                if collision_times[other_particle.id][2] == particle:
+                    other_new_collision_time, other_new_target = min_collision_time(other_particle, particles)
+                    collision_times[other_particle.id] = (other_particle, other_new_collision_time, other_new_target)
 
-def next_collision(data):
+    return collision_times
+
+def next_collision(collision_times):
     """Get the minimum collision time of all times in the specified data, where data has the form of what is returned
     by #min_collision_times. Return (particle, min_time, target)"""
 
     result = None
     min_time = math.inf
 
-    for particle_id, (particle, time, target) in data.items():
+    for particle_id, (particle, time, target) in collision_times.items():
         if time < min_time:
             min_time = time
             result = (particle, min_time, target)
@@ -375,7 +386,8 @@ def recalculate_fp(fp_left, fp_right):
 
 def write_positions(t, fp_left, particles, fake_particles, first_frame, colliding_particle, target):
     # Render frame
-    print("Rendering frame, t=%g, fp=%g" % (t, fp_left))
+    if arguments.verbose:
+        print("Rendering frame, t=%g, fp=%g" % (t, fp_left))
 
     # Color the collided particle(s) red and blue, others in white
     colors = [(255, 255, 255)] * arguments.n
@@ -414,12 +426,14 @@ collision_times = all_min_collision_times(particles)
 # pv_file.write("%s\t%s\n" % ("pressure", "temperature"))
 # pv_file.close()
 
+# Calculate initial collision times
+collision_times = all_min_collision_times(particles)
+
 # Algorithm
 while fp_left > arguments.cutoff:
     if arguments.verbose:
         print("Processing t=%g" % t)
 
-    collision_times = all_min_collision_times(particles)
     colliding_particle, min_time, target = next_collision(collision_times)
 
     # Subtract min_time from all collision times; colliding particle(s) will have their collision time set to 0
@@ -428,18 +442,19 @@ while fp_left > arguments.cutoff:
 
     evolve_particles(particles, min_time, colliding_particle, target)
 
+    collision_times = update_collision_times(colliding_particles=[colliding_particle, target], particles=particles,
+                                              collision_times=collision_times)
+
     t += min_time
     delta_t += min_time
     fp_left, fp_right = recalculate_fp(fp_left, fp_right)
-
-    #TODO hacer que ande y deje de hacer fuerza bruta todas las iteraciones
-    update_collision_times(colliding_particles=[colliding_particle, target], particles=particles)
 
     if delta_t >= arguments.delta:
         write_positions(t=t, fp_left=fp_left, particles=particles, fake_particles=fake_particles,
                         first_frame=first_frame, colliding_particle=colliding_particle, target=target)
         first_frame = False
         delta_t = 0
+
 
 if arguments.verbose:
     print("Cutoff of %g reached, stopping." % arguments.cutoff)
