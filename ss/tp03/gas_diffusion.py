@@ -38,7 +38,7 @@ PARTICLE_MASS = arguments.mass
 # Aperture dimensions(meters)
 APERTURE_WIDTH = arguments.aperture
 # Scientific Constants
-K = 1.38 * (10** (-26)) #Boltzmann Constant
+K = 1.38 * 10e-26   # Boltzmann Constant
 
 impulse = 0
 temperature = 0
@@ -335,26 +335,27 @@ def wall_collision(particle):
         return
 
     # Border walls
+    wall_speed = 0
     if particle.y >= HEIGHT - PARTICLE_RADIUS or particle.y <= 0 + PARTICLE_RADIUS:
         particle.velocity.y *= -1
+        wall_speed += math.fabs(particle.velocity.y)
     if particle.x >= WIDTH - PARTICLE_RADIUS or particle.x <= 0 + PARTICLE_RADIUS:
         particle.velocity.x *= -1
+        wall_speed += math.fabs(particle.velocity.x)
 
     # Update pressure each time a particle collisions with a wall
-    #TODO presion ver bien
     global impulse, temperature
     pv_file = open("pv_output.txt", "a")
 
-    #pv = nrt
-
-    if t>0:
-        impulse += 2*particle.mass * HEIGHT * (WIDTH / 2) / (2 * (HEIGHT + (WIDTH / 2)) *t)
-    # t = (1/3) (mvˆ2)/k
+    # Impulse equation from https://www.britannica.com/science/gas-state-of-matter/Kinetic-theory-of-gases
+    if t > 0:
+        impulse += 2 * particle.mass * wall_speed
 
     temperature = calculate_temperature(particles)
 
-    if t!=0:
-        pressure = impulse/t
+    if t != 0:
+        # Pressure = impulse / time / surface
+        pressure = impulse / t / (2 * WIDTH + 2 * HEIGHT + HEIGHT - APERTURE_WIDTH)
         pv_file.write("%g\t%g\n" % (pressure, temperature))
     # print("pressure: %g\t, temperature: %g\n" %(pressure,temperature))
 
