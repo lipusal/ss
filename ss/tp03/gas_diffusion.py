@@ -6,7 +6,7 @@ from ss.util.file_writer import FileWriter
 from ss.util.colors import radians_to_rgb
 
 # TODO: Update description
-args.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles difuse " \
+args.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles diffuse " \
                           "from one compartment to another through a slit"
 args.parser.add_argument("-n", help="Amount of particles", type=int, default=20)
 args.parser.add_argument("--aperture", "-a", help="Aperture size (meters), default is 0.006", type=float, default=0.006)
@@ -37,8 +37,10 @@ PARTICLE_RADIUS = arguments.radius
 PARTICLE_MASS = arguments.mass
 # Aperture dimensions(meters)
 APERTURE_WIDTH = arguments.aperture
+# Scientific Constants
+K = 1.38 * (10** (-26)) #Boltzmann Constant
 
-pressure = 0
+impulse = 0
 temperature = 0
 
 #TODO ver si sacar global a juancito probablemente no le guste jeje
@@ -338,13 +340,24 @@ def wall_collision(particle):
     if particle.x >= WIDTH - PARTICLE_RADIUS or particle.x <= 0 + PARTICLE_RADIUS:
         particle.velocity.x *= -1
 
-    # Increase pressure each time a particle collisions with a wall
+    # Update pressure each time a particle collisions with a wall
     #TODO presion ver bien
-    global pressure, temperature
-    pv_file = open("pv_output", "a")
-    pressure += 2*particle.mass * HEIGHT * (WIDTH / 2) / 2 * (HEIGHT + (WIDTH / 2))
-    temperature = pressure / HEIGHT * (WIDTH / 2)
-    pv_file.write("%g\t%g\n" %(pressure, temperature))
+    global impulse, temperature
+    pv_file = open("pv_output.txt", "a")
+
+    #pv = nrt
+
+    if t>0:
+        impulse += 2*particle.mass * HEIGHT * (WIDTH / 2) / (2 * (HEIGHT + (WIDTH / 2)) *t)
+    # t = (1/3) (mvˆ2)/k
+
+    temperature = calculate_temperature(particles)
+
+    if t!=0:
+        pressure = impulse/t
+        pv_file.write("%g\t%g\n" % (pressure, temperature))
+    # print("pressure: %g\t, temperature: %g\n" %(pressure,temperature))
+
     pv_file.close()
 
 
@@ -371,7 +384,7 @@ def particle_collision(particle1, particle2):
     particle2.velocity.x -= j_x / particle2.mass
     particle2.velocity.y -= j_y / particle2.mass
 
-def recalculate_fp(fp_left, fp_right):
+def recalculate_fp(particles):
 # Calculate the particle ratio on each side
     left = 0
     right = 0
@@ -404,6 +417,21 @@ def write_positions(t, fp_left, particles, fake_particles, first_frame, collidin
                                       mode='w' if first_frame else 'a')
 
 
+def calculate_temperature(particles):
+    dimension = HEIGHT * WIDTH
+    # dk / N sum mv**2
+
+    accum = 0
+
+    for particle in particles:
+        accum += particle.mass * particle.velocity.magnitude() ** 2
+    temperature = (accum / arguments.n) / (2*K)
+
+    temp_path = "temp" + str(PARTICLE_SPEED) + ".txt"
+    temperatures = open(temp_path, "a")
+    temperatures.write("%g\t%g\n" %(t, temperature))
+    return temperature
+
 ####################################################################
 
 # Time variables
@@ -426,6 +454,15 @@ particles, fake_particles = generate_particles()
 # Calculate initial collision times
 collision_times = all_min_collision_times(particles)
 
+pv_output = open("pv_output.txt", "w")
+pv_output.write("presion\ttemperatura\n")
+pv_output.close()
+
+temp_path = "temp" + str(PARTICLE_SPEED) + ".txt"
+temperatures = open(temp_path, "w")
+temperatures.write("time\ttemperature\n")
+temperatures.close()
+
 # Algorithm
 while fp_left > arguments.cutoff:
     if arguments.verbose:
@@ -444,7 +481,7 @@ while fp_left > arguments.cutoff:
 
     t += min_time
     delta_t += min_time
-    fp_left, fp_right = recalculate_fp(fp_left, fp_right)
+    fp_left, fp_right = recalculate_fp(particles)
 
     if delta_t >= arguments.delta:
         write_positions(t=t, fp_left=fp_left, particles=particles, fake_particles=fake_particles,
@@ -452,6 +489,8 @@ while fp_left > arguments.cutoff:
         first_frame = False
         delta_t = 0
 
+
+print("#: %g\t%g" %(arguments.n, t))
 
 if arguments.verbose:
     print("Cutoff of %g reached, stopping." % arguments.cutoff)

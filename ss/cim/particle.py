@@ -75,6 +75,9 @@ class Particle:
         # return math.atan(self._velocity.y / self._velocity.x)
         return math.atan2(self._velocity.y, self._velocity.x)
 
+    def vel_module(self):
+        return self.velocity.magnitude
+
     @staticmethod
     def to_x_y(mod, deg):
         """Constructs a vector with a given modulus and angle (converts to (x,y))"""
