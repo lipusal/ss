@@ -14,7 +14,7 @@ args.parser.add_argument("--radius", "-r", help="Particle radius (meters), defau
                          default=0.0015)
 args.parser.add_argument("--mass", "-k", help="Particle mass (kilograms), default is 1", type=float, default=1)
 args.parser.add_argument("--speed", "-s", help="Particle speed (meters per second), default is 0.01", type=float,
-                         default=0.001)
+                         default=0.01)
 args.parser.add_argument("--cutoff", "-f", help="Distribution cutoff. When the left particles/total particles ratio is "
                                                 "below the cutoff, simulation will stop. Default is 0.5",
                          type=float, default=0.5)
