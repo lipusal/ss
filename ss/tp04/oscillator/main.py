@@ -1,8 +1,9 @@
-import ss.util.args as arg_base
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+import ss.util.args as arg_base
 from ss.tp04.oscillator.constants import *
-from ss.tp04.oscillator.solutions import real
+from ss.tp04.solutions import real
 
 # TODO: Update description
 arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles diffuse " \

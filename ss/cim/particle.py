@@ -21,6 +21,7 @@ class Particle:
         self.original_particle = original_particle
         self.previous_position = None
         self.previous_velocity = None
+        self.previous_acceleration = None
         if not original_particle is None and not self.is_fake:
             raise Exception("Can't have original particle and not be fake")
 
@@ -79,6 +80,11 @@ class Particle:
     @property
     def acceleration(self):
         return self.acceleration
+
+    @acceleration.setter
+    def acceletarion(self, value):
+        self.previous_acceleration = self.acceleration
+        self.acceleration = value
 
     def vel_angle(self):
         """Returns the angle of the particle's velocity"""

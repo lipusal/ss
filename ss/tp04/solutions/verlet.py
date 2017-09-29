@@ -1,5 +1,5 @@
 from ss.tp04.oscillator.constants import *
-from ss.tp04.oscillator.solutions import euler_modified
+from ss.tp04.solutions import euler_modified
 
 
 def x(particle, delta_t):
