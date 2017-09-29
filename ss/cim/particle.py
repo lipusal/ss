@@ -21,7 +21,7 @@ class Particle:
         self.original_particle = original_particle
         self.previous_position = None
         self.previous_velocity = None
-        self.previous_acceleration = self._acceleration
+        self.previous_acceleration = None
         if not original_particle is None and not self.is_fake:
             raise Exception("Can't have original particle and not be fake")
 
@@ -102,6 +102,10 @@ class Particle:
     def to_x_y(mod, deg):
         """Constructs a vector with a given modulus and angle (converts to (x,y))"""
         return Vector2(math.cos(deg)*mod, math.sin(deg)*mod)
+
+    @staticmethod
+    def to_v_o(v):
+        return abs(v), math.atan2(v.y, v.x)
 
     def __str__(self) -> str:
         return "%sParticle #%i @ (%g, %g), r = %g" % ("Fake " if self.is_fake else "", self.id, self._position.x, self._position.y, self.radius)
