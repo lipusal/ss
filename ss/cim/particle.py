@@ -15,13 +15,13 @@ class Particle:
         self.radius = radius
         self._position = Vector2(x, y)
         self._velocity = self.to_x_y(v, o)
-        self._acceleration = 0
+        self._acceleration = self.to_x_y(0, 0)
         self.mass = mass
         self.is_fake = is_fake
         self.original_particle = original_particle
         self.previous_position = None
         self.previous_velocity = None
-        self.previous_acceleration = None
+        self.previous_acceleration = self._acceleration
         if not original_particle is None and not self.is_fake:
             raise Exception("Can't have original particle and not be fake")
 
@@ -57,6 +57,10 @@ class Particle:
     def position(self):
         return self._position
 
+    @position.setter
+    def position(self, value):
+        self._position = value
+
     @property
     def x(self):
         return self._position.x
@@ -79,12 +83,12 @@ class Particle:
 
     @property
     def acceleration(self):
-        return self.acceleration
+        return self._acceleration
 
     @acceleration.setter
     def acceletarion(self, value):
         self.previous_acceleration = self.acceleration
-        self.acceleration = value
+        self._acceleration = value
 
     def vel_angle(self):
         """Returns the angle of the particle's velocity"""

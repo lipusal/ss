@@ -20,6 +20,6 @@ def previous_position(particle, delta_t):
     result = particle.previous_position
     if result is None:
         # We're in initial step, use Euler to simulate backwards
-        result = euler_modified.x(particle, -delta_t)
-
+        # result = euler_modified.x(particle, -delta_t)
+        result = particle.position
     return result
