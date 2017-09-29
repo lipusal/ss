@@ -15,15 +15,19 @@ class Particle:
         self.radius = radius
         self._position = Vector2(x, y)
         self._velocity = self.to_x_y(v, o)
+        self._acceleration = 0
         self.mass = mass
         self.is_fake = is_fake
         self.original_particle = original_particle
+        self.previous_position = None
+        self.previous_velocity = None
         if not original_particle is None and not self.is_fake:
             raise Exception("Can't have original particle and not be fake")
 
     def move_to(self, x, y):
-        """Moves this particle to the specified position"""
+        """Moves this particle to the specified position. Stores current position in previous_position property."""
 
+        self.previous_position = self._position
         self._position = Vector2(x, y)
 
     def move(self, delta_x, delta_y):
@@ -36,7 +40,7 @@ class Particle:
         center_distance = (other.position - self.position).magnitude()
         return center_distance - self.radius - other.radius
 
-    #Returns a particle with a random position in the given space, and a random direction.
+    # Returns a particle with a random position in the given space, and a random direction.
     @classmethod
     def get_random_particle(cls, max_height, max_width, radius, speed, mass=0.0):
         x = random.uniform(radius, max_width - radius)
@@ -66,9 +70,15 @@ class Particle:
 
     @velocity.setter
     def velocity(self, value):
-        """Sets velocity. Value should be a tuple of the form `(mod, angle)`"""
+        """Sets velocity. Value should be a tuple of the form `(mod, angle)`. Stores current velocity in
+        previous_velocity property."""
 
+        self.previous_velocity = self._velocity
         self._velocity = self.to_x_y(value[0], value[1])
+
+    @property
+    def acceleration(self):
+        return self.acceleration
 
     def vel_angle(self):
         """Returns the angle of the particle's velocity"""
