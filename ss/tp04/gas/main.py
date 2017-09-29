@@ -13,7 +13,6 @@ arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a
                               "simulation have interaction forces as modeled by the Lennard-Jones potential model"
 args = arg_base.to_dict_no_none()
 
-
 # Constants
 R_M = 1         # Rm, distance of minimum potential.If particles are closer than this, they are repelled [dimensionless]
 EPSILON = 2     # ε, depth of potential well [J]
@@ -32,9 +31,11 @@ TIME = 1000
 delta_t = 0.0001
 PARTICLE_RADIUS = 0
 
+
 def lennard_jones_force(r):
-    assert(r != 0)
-    return (12*EPSILON/R_M) * (((R_M/r)**13) - ((R_M/r)**7))
+    assert (r != 0)
+    return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
+
 
 def generate_particles():
     """Create particles with random positions in the box"""
@@ -49,7 +50,8 @@ def generate_particles():
             for existing_particle in particles:
                 if new_particle.distance_to(existing_particle) < 0:
                     overlap = True
-                    new_particle = Particle.get_random_particle(max_height=HEIGHT,max_width=WIDTH / 2 - PARTICLE_RADIUS,
+                    new_particle = Particle.get_random_particle(max_height=HEIGHT,
+                                                                max_width=WIDTH / 2 - PARTICLE_RADIUS,
                                                                 radius=PARTICLE_RADIUS, speed=V0, mass=M)
                     break
 
@@ -57,6 +59,7 @@ def generate_particles():
 
         particles.append(new_particle)
     return particles
+
 
 def add_wall_neighbors(particle, neighbors):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
@@ -77,10 +80,11 @@ def add_wall_neighbors(particle, neighbors):
         neighbors.append(Particle(x=particle.position.x, y=HEIGHT, mass=math.inf, is_fake=True))
 
     # Check if there is interaction with the middle wall
-    if particle.x < WIDTH/2 and particle.x + R > WIDTH/2:
-        neighbors.append(Particle(x=WIDTH/2, y=particle.position.y, mass=math.inf, is_fake=True))
-    elif particle.x > WIDTH/2 and particle.x - R < WIDTH/2:
-        neighbors.append(Particle(x=WIDTH/2, y=particle.position.y, mass=math.inf, is_fake=True))
+    if particle.x < WIDTH / 2 and particle.x + R > WIDTH / 2:
+        neighbors.append(Particle(x=WIDTH / 2, y=particle.position.y, mass=math.inf, is_fake=True))
+    elif particle.x > WIDTH / 2 and particle.x - R < WIDTH / 2:
+        neighbors.append(Particle(x=WIDTH / 2, y=particle.position.y, mass=math.inf, is_fake=True))
+
 
 def calculate_force(particle, neighbors):
     """Calculate total force exerted on particle by neighbors with the lennard jones force"""
@@ -97,6 +101,7 @@ def calculate_force(particle, neighbors):
             if dist_y != 0:
                 force_y += lennard_jones_force(dist_y)
     return force_x, force_y
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
