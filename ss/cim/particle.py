@@ -28,7 +28,6 @@ class Particle:
     def move_to(self, x, y):
         """Moves this particle to the specified position. Stores current position in previous_position property."""
 
-        self.previous_position = self._position
         self._position = Vector2(x, y)
 
     def move(self, delta_x, delta_y):
@@ -59,6 +58,7 @@ class Particle:
 
     @position.setter
     def position(self, value):
+        self.previous_position = self._position
         self._position = value
 
     @property
@@ -86,7 +86,7 @@ class Particle:
         return self._acceleration
 
     @acceleration.setter
-    def acceletarion(self, value):
+    def acceleration(self, value):
         self.previous_acceleration = self.acceleration
         self._acceleration = value
 
