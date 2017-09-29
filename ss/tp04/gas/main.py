@@ -120,3 +120,4 @@ for t in np.arange(0, 1, delta_t):
         p.position = new_position
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
+        # TODO write positions in file

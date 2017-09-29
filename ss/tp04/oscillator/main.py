@@ -16,9 +16,7 @@ args = arg_base.parse_args()
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-
-# Set previous acceleration TODO
+# TODO Set previous acceleration
 
 def previous_acceleration(particle, delta_t, force):
     """Get the particle's previous position or use Euler to simulate backwards to where it would have been"""
@@ -36,6 +34,7 @@ def f(position, velocity):
     return (-K * position) - (lamb * velocity)
 
 
+# TODO setear las previos aceleration iniciales usando euler cuando corresponda
 real_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 euler_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 beeman_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
@@ -49,22 +48,25 @@ for t in np.arange(0, 10, delta_t):
     positions_real.append(real.x(t))
 
     # Calculate euler particle new position
-    euler_x = euler_modified.x(particle=euler_particle, delta_t=delta_t)
+    euler_force = f(euler_particle.position, euler_particle.velocity)
+    euler_x = euler_modified.x(particle=euler_particle, delta_t=delta_t, force=euler_force)
     positions_euler.append(euler_x.x)
     euler_particle.position = euler_x
-    euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t)
+    euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t, force=euler_force)
 
     # Calculate beeman particles new position
-    beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t, f=f)
+    beeman_force = f(beeman_particle.position, beeman_particle.velocity)
+    beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
     positions_beeman.append(beeman_x.x)
     beeman_particle.position = beeman_x
-    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, f=f)
+    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t)
 
     # Calculate verlets particle new position
-    verlet_x = verlet.r(particle=verlet_particle, delta_t=delta_t)
+    verlet_force = f(verlet_particle.position, verlet_particle.velocity)
+    verlet_x = verlet.r(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
     positions_verlet.append(verlet_x.x)
     verlet_particle.position = verlet_x
-    verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t)
+    verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
 
     # Calculate euler particle new position
     gear_predictor_derivatives = gear_predictor.run(particle=euler_particle, delta_t=delta_t)
