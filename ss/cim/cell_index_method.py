@@ -5,13 +5,13 @@ from ss.cim.board import Board
 
 
 class CellIndexMethod:
-    def __init__(self, particles, args):
+    def __init__(self, particles, **kwargs):
         self.particles = particles
-        self.interaction_radius = args.radius
-        self.is_periodic = args.periodic if 'periodic' in args else False
-        self.width = args.width if 'width' in args and args.width is not None else -1
-        self.height = args.height if 'height' in args and args.height is not None else -1
-        self.m = args.m if 'm' in args and args.m is not None else -1
+        self.interaction_radius = kwargs['radius']
+        self.is_periodic = kwargs['periodic']
+        self.width = kwargs.get('width', -1)
+        self.height = kwargs.get('height', -1)
+        self.m = kwargs.get('m', -1)
         self.board = self.create_board()
         self.neighbors = self.calculate_neighbors()
 

@@ -22,3 +22,13 @@ parser.add_argument("--time", "-t", help="Print elapsed program time", action="s
 
 def parse_args():
     return parser.parse_args()
+
+
+def to_dict():
+    """Convert parsed arguments to a dictionary"""
+    return {k: v for k, v in vars(parse_args()).items()}
+
+
+def to_dict_no_none():
+    """Convert parsed arguments to a dictionary, discarding None-value keys"""
+    return {k: v for k, v in vars(parse_args()).items() if v is not None}

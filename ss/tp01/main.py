@@ -15,37 +15,37 @@ arg_utils.parser.add_argument("static", nargs="?",
                          default=None)
 arg_utils.parser.add_argument("radius", help="Interaction radius for all particles.", type=float)
 # Parse arguments
-args = arg_utils.parse_args()
+args = arg_utils.to_dict()
 
-if args.time:
+if 'time' in args:
     import ss.util.timer
 
-if args.verbose:
+if args['verbose']:
     print("Received arguments: ", end='')
     pprint.pprint(args)
 
 # Normalize paths so they work in any machine
-args.dynamic = path.normpath(args.dynamic)
-args.output = path.normpath(args.output)
-if not args.static is None:
-    args.static = path.normpath(args.static)
+args['dynamic'] = path.normpath(args['dynamic'])
+args['output'] = path.normpath(args['output'])
+if args['static'] is not None:
+    args['static'] = path.normpath(args['static'])
 
-imported_data = FileReader.import_particles(args.dynamic, args.static) if args.static else FileReader.import_particles(
-    args.dynamic)
+imported_data = FileReader.import_particles(args['dynamic'], args['static']) if args['static'] else FileReader.import_particles(
+    args['dynamic'])
 particles = imported_data['particles']
 
-data = CellIndexMethod(particles, args)
+data = CellIndexMethod(particles, **args)
 
-if args.verbose:
+if args['verbose']:
     for i in range(len(particles)):
         print('#%i: %s' % (i + 1, particles[i]))
 
     print('# of particles per cell:')
     print(data)
 
-    print('Writing MATLAB output to %s' % args.output)
+    print('Writing MATLAB output to %s' % args['output'])
 
-FileWriter.export_positions_matlab(data, 0, args.output)  # Paint the first particle and all its neighbors
-# FileWriter.export_positions_matlab(data, 23, args.output)
-# FileWriter.export_positions_ovito(data.particles, output=args.output + ".ovito.txt")
+FileWriter.export_positions_matlab(data, 0, args['output'])  # Paint the first particle and all its neighbors
+# FileWriter.export_positions_matlab(data, 23, args['output'])
+# FileWriter.export_positions_ovito(data.particles, output=args['output'] + ".ovito.txt")
 print("Done")
