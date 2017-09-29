@@ -8,9 +8,8 @@ from ss.tp04.oscillator.constants import *
 from ss.tp04.solutions import real, euler_modified, beeman, verlet, gear_predictor
 
 # TODO: Update description
-arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles diffuse " \
-                          "from one compartment to another through a slit"
-
+arg_base.parser.description = "Dampened oscillator simulation program. Uses different integration methods to compare " \
+                              "their accuracy by measuring their distance to the analytical (ie. real) solution."
 args = arg_base.parse_args()
 
 # ----------------------------------------------------------------------------------------------------------------------
