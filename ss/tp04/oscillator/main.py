@@ -18,6 +18,19 @@ args = arg_base.parse_args()
 
 
 
+# Set previous acceleration TODO
+
+def previous_acceleration(particle, delta_t, force):
+    """Get the particle's previous position or use Euler to simulate backwards to where it would have been"""
+
+    prev_acceleration = particle.previous_acceleration
+    if prev_acceleration is None:
+        # We're in initial step, use Euler to simulate backwards
+        vel = euler_modified.v(particle, -delta_t)
+        prev_acceleration = f(particle.position, vel) / particle.mass
+    return prev_acceleration
+
+
 # noinspection PyPep8Naming
 def f(position, velocity):
     return (-K * position) - (lamb * velocity)
@@ -48,7 +61,7 @@ for t in np.arange(0, 10, delta_t):
     beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, f=f)
 
     # Calculate verlets particle new position
-    verlet_x = verlet.x(particle=verlet_particle, delta_t=delta_t)
+    verlet_x = verlet.r(particle=verlet_particle, delta_t=delta_t)
     positions_verlet.append(verlet_x.x)
     verlet_particle.position = verlet_x
     verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t)
