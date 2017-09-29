@@ -8,9 +8,8 @@ def x(delta_t, particle):
         # We're in initial step, use Euler to simulate backwards
         previous_position = euler_modified.x(-delta_t, particle)
 
-    return 2*particle.position - previous_position + (delta_t**2 / particle.mass) * F(particle)
+    return 2*particle.position - previous_position + (delta_t**2 / particle.mass) * f(particle)
 
 
-# noinspection PyPep8Naming
-def F(particle):
+def f(particle):
     return (-K * particle.position) - (lamb * particle.velocity)
