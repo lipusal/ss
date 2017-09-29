@@ -20,8 +20,8 @@ args = arg_base.parse_args()
 
 
 # noinspection PyPep8Naming
-def f(particle):
-    return (-K * particle.position) - (lamb * particle.velocity)
+def f(position, velocity):
+    return (-K * position) - (lamb * velocity)
 
 
 real_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
@@ -43,7 +43,7 @@ for t in np.arange(0, 10, delta_t):
     euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t)
 
     # Calculate beeman particles new position
-    beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t)
+    beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t, f=f)
     positions_beeman.append(beeman_x.x)
     beeman_particle.position = beeman_x
     beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, f=f)
