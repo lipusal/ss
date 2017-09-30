@@ -8,7 +8,7 @@ class CellIndexMethod:
     def __init__(self, particles, **kwargs):
         self.particles = particles
         self.interaction_radius = kwargs['radius']
-        self.is_periodic = kwargs['periodic']
+        self.is_periodic = kwargs.get('periodic', False)
         self.width = kwargs.get('width', -1)
         self.height = kwargs.get('height', -1)
         self.m = kwargs.get('m', -1)
@@ -30,6 +30,8 @@ class CellIndexMethod:
         return Ddict.to_dict(result)
 
     def calculate_neighbors(self):
+        """Calculate neighbors of each particle optimally and return a dictionary with particle IDs as keys and neighbor
+        Particle lists as values."""
         result = defaultdict(list)
         for row in self.board.cells:
             for cell in row:
