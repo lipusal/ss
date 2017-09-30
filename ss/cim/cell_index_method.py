@@ -3,8 +3,13 @@ from ss.util.ddict import Ddict
 from collections import defaultdict
 from ss.cim.board import Board
 
-
 class CellIndexMethod:
+
+    def check_particles_in_bounds(self, particles):
+        for p in particles:
+            if p.x < 0 or p.y < 0 or p.y > self.height or p.x > self.width:
+                raise Exception("Particle %s is out of board bounds, board height: %d, board width: %d" %(p, self.height, self.width))
+
     def __init__(self, particles, **kwargs):
         self.particles = particles
         self.interaction_radius = kwargs['radius']
@@ -12,6 +17,7 @@ class CellIndexMethod:
         self.width = kwargs.get('width', -1)
         self.height = kwargs.get('height', -1)
         self.m = kwargs.get('m', -1)
+        self.check_particles_in_bounds(particles)
         self.board = self.create_board()
         self.neighbors = self.calculate_neighbors()
 

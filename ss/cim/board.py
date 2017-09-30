@@ -35,7 +35,8 @@ class Board:
     def get_cell(self, particle):
         if particle not in self.particles:
             raise Exception("%s is not part of this board" % particle)
-
+        if particle.x < 0 or particle.y < 0 or particle.x> self.width or particle.y > self.height:
+            raise Exception("%s is outside the board bounds" %particle)
         return self.to_col_row(particle.x, particle.y)
 
     def create_board(self):
@@ -53,6 +54,7 @@ class Board:
         """Populates cells with the particles self was initialized with."""
 
         for particle in self.particles:
+            assert particle.x > 0 and particle.y >0 and particle.x < self.width and particle.y < self.height
             col, row = self.get_cell(particle)
             self.cells[row][col].particles.append(particle)
 

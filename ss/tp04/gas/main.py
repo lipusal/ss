@@ -20,17 +20,17 @@ R_M = 1         # Rm, distance of minimum potential.If particles are closer than
 EPSILON = 2     # ε, depth of potential well [J]
 M = 0.1         # Particle mass [dimensionless]
 V0 = 10         # Initial particle speed [dimensionless]
-R = 5           # Maximum interaction distance [dimensionless]
+R = 20           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
-NUM_PARTICLES = 1000
+NUM_PARTICLES = 20
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
-delta_t = 0.0001
+delta_t = 0.01
 PARTICLE_RADIUS = 0
 
 
@@ -126,6 +126,43 @@ def calculate_force(particle, neighbors):
                 force_y += lennard_jones_force(dist_y)
     return force_x, force_y
 
+# TODO TEST TEST TESTT
+def move_particle(particle, new_position):
+    # When the particle crashes into a wall, one of its velocity's components should change direction (both if crashing
+    # against a corner) and it should bounce back
+
+    # If the particle moves without colliding change to the given position
+    if new_position.x > 0 and new_position.y > 0 and new_position.x < WIDTH and new_position.y < HEIGHT:
+        particle.position = new_position
+        return
+
+    # TODO middle walls
+    # TODO ver caso donde choca en esquinas o con dos paredes?
+
+    # Check to see if the particle collides with the bottom wall
+    if new_position.y < 0:
+        particle.velocity.y *= -1
+        particle.position.x = new_position.x
+        particle.position.y = abs(new_position.y)
+
+    # Check to see if the particle collides with the left wall
+    if new_position.x < 0:
+        particle.velocity.x *= -1
+        particle.position.y = new_position.y
+        particle.position.x = abs(new_position.x)
+
+    # Check to see if the particle collides with the top wall
+    if new_position.y > HEIGHT:
+        particle.velocity.y *= -1
+        particle.position.x = new_position.x
+        particle.position.y = HEIGHT - (new_position.y - HEIGHT)
+
+    # Check to see if the particle collides with the right wall
+    if new_position.x > WIDTH:
+        particle.velocity.x *= -1
+        particle.position.y = new_position.y
+        particle.position.x = WIDTH - (new_position.x - WIDTH)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -136,12 +173,17 @@ if args['time']:
 # Generate random particles
 particles = generate_random_particles()
 
+# TODO used for debugging
+for p in particles:
+    if p.x > WIDTH or p.x < 0 or p.y > HEIGHT or p.y < 0:
+        raise Exception("Generated particle %p is out of bounds" %p)
+
 # Load particles from file
 # from ss.util.file_reader import FileReader
 # positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
 # particles = load_particles(positions, properties)
 
-for t in np.arange(0, 1, delta_t):
+for t in np.arange(0, 5, delta_t):
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
     # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
@@ -155,8 +197,11 @@ for t in np.arange(0, 1, delta_t):
         # Calculate new position and velocity using Verlet
         # TODO: usar otros?
         new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
-        p.position = new_position
+        move_particle(p, new_position)
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
+        # TODO remove, used for debugging
+        if p.x < 0 or p.y < 0 or p.x > WIDTH or p.y > HEIGHT:
+            raise Exception("The particle moved out of the bounds, x:%d y:%d, width: %d, height: %d" %(p.x, p.y, WIDTH, HEIGHT))
 
     FileWriter.export_positions_ovito(particles, t, mode="w" if t == 0 else "a")
