@@ -1,4 +1,5 @@
 import math
+import random
 
 import numpy as np
 from euclid3 import Vector2
@@ -38,7 +39,7 @@ def lennard_jones_force(r):
     return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
 
-def generate_particles():
+def generate_random_particles():
     """Create particles with random positions in the box"""
 
     result = list()
@@ -67,6 +68,19 @@ def generate_particles():
 
     if args['verbose']:
         print("done")
+
+    return result
+
+
+def load_particles(positions, properties=None):
+    if properties is not None and len(positions) != len(properties):
+        raise Exception("Positions and properties must have the same length")
+
+    result = list()
+    for i in range(len(positions)):
+        position = positions[i]
+        # TODO: Store velocity angle in output
+        result.append(Particle(position[0], position[1], radius=PARTICLE_RADIUS, mass=M, v=V0, o=random.uniform(0, 2*math.pi)))
 
     return result
 
@@ -120,7 +134,12 @@ if args['time']:
     import ss.util.timer
 
 # Generate random particles
-particles = generate_particles()
+particles = generate_random_particles()
+
+# Load particles from file
+# from ss.util.file_reader import FileReader
+# positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
+# particles = load_particles(positions, properties)
 
 for t in np.arange(0, 1, delta_t):
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
