@@ -5,6 +5,7 @@ from euclid3 import Vector2
 
 from ss.cim.cell_index_method import CellIndexMethod
 import ss.util.args as arg_base
+from ss.util.file_writer import FileWriter
 from ss.cim.particle import Particle
 from ss.tp04.solutions import verlet
 
@@ -61,42 +62,42 @@ def generate_particles():
     return particles
 
 
-def add_wall_neighbors(particle, neighbors):
+def add_wall_neighbors(particle, dest):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
+
     # Check if there is interaction with the left wall
-    if particle.position.x - R < 0:
-        neighbors.append(Particle(x=0, y=particle.position.y, mass=math.inf, is_fake=True))
+    if particle.x <= R:
+        dest.append((Particle(x=0, y=particle.y, mass=math.inf, is_fake=True), particle.x))
 
     # Check if there is interaction with the bottom wall
-    if particle.position.y - R < 0:
-        neighbors.append(Particle(x=particle.position.y, y=0, mass=math.inf, is_fake=True))
+    if particle.y <= R:
+        dest.append((Particle(x=particle.y, y=0, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the right wall
-    if particle.position.x + R > WIDTH:
-        neighbors.append(Particle(x=WIDTH, y=particle.position.y, mass=math.inf, is_fake=True))
+    if WIDTH - particle.x <= R:
+        dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), particle.x))
 
     # Check if there is interaction with the top wall
-    if particle.position.y + R > HEIGHT:
-        neighbors.append(Particle(x=particle.position.x, y=HEIGHT, mass=math.inf, is_fake=True))
+    if HEIGHT - particle.y <= R:
+        dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the middle wall
-    if particle.x < WIDTH / 2 and particle.x + R > WIDTH / 2:
-        neighbors.append(Particle(x=WIDTH / 2, y=particle.position.y, mass=math.inf, is_fake=True))
-    elif particle.x > WIDTH / 2 and particle.x - R < WIDTH / 2:
-        neighbors.append(Particle(x=WIDTH / 2, y=particle.position.y, mass=math.inf, is_fake=True))
+    if particle.y > HEIGHT/2 + SLIT_SIZE/2 or particle.y < HEIGHT/2 - SLIT_SIZE/2 and abs(particle.x - WIDTH/2) <= R:
+        dest.append(
+            (Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH/2)))
 
 
 def calculate_force(particle, neighbors):
     """Calculate total force exerted on particle by neighbors with the lennard jones force"""
     force_x = 0
     force_y = 0
-    for n in neighbors:
-        if n != particle:
-            dist_x = abs(particle.position.x - n.position.x)
+    for neighbor, _ in neighbors:
+        if neighbor != particle:
+            dist_x = abs(particle.x - neighbor.x)
             # If they are aligned there will only be one force component
             if dist_x != 0:
                 force_x += lennard_jones_force(dist_x)
-            dist_y = abs(particle.position.y - n.position.y)
+            dist_y = abs(particle.y - neighbor.y)
             # If they are aligned there will only be one force component
             if dist_y != 0:
                 force_y += lennard_jones_force(dist_y)
@@ -111,13 +112,12 @@ def calculate_force(particle, neighbors):
 particles = generate_particles()
 
 for t in np.arange(0, 1, delta_t):
+    neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
 
     for p in particles:
-        # TODO use cell index method
-        neighbors = list()
-        add_wall_neighbors(p, neighbors)
+        add_wall_neighbors(p, neighbors[p.id])
         # Calculate total force exerted on p
-        force_x, force_y = calculate_force(p, neighbors)
+        force_x, force_y = calculate_force(p, neighbors[p.id])
         force = Vector2(force_x, force_y)
         # Calculate new position and velocity using Verlet
         # TODO: usar otros?
@@ -125,4 +125,5 @@ for t in np.arange(0, 1, delta_t):
         p.position = new_position
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
-        # TODO write positions in file
+
+    FileWriter.export_positions_ovito(particles, t, mode="w" if t == 0 else "a")
