@@ -16,16 +16,11 @@ args = arg_base.parse_args()
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
 
-# TODO Set previous acceleration
-
-def previous_acceleration(particle, delta_t, force):
-    """Get the particle's previous position or use Euler to simulate backwards to where it would have been"""
-
-    prev_acceleration = particle.previous_acceleration
-    if prev_acceleration is None:
-        # We're in initial step, use Euler to simulate backwards
-        vel = euler_modified.v(particle, -delta_t)
-        prev_acceleration = f(particle.position, vel) / particle.mass
+def initial_previous_acceleration(particle, delta_t, force):
+    """Use Euler to simulate backwards to where it would have been"""
+    # We're in initial step, use Euler to simulate backwards
+    vel = euler_modified.v(particle, -delta_t, force)
+    prev_acceleration = f(particle.position, vel) / particle.mass
     return prev_acceleration
 
 
@@ -33,15 +28,21 @@ def previous_acceleration(particle, delta_t, force):
 def f(position, velocity):
     return (-K * position) - (lamb * velocity)
 
+delta_t = 0.001
 
-# TODO setear las previos aceleration iniciales usando euler cuando corresponda
 real_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
+# Create particle that will be used to test euler
 euler_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
+euler_particle.previous_acceleration = initial_previous_acceleration(euler_particle, delta_t, f(euler_particle.position, euler_particle.velocity))
+# Create particle that will be used to test beeman
 beeman_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
+beeman_particle.previous_acceleration = initial_previous_acceleration(beeman_particle, delta_t, f(beeman_particle.position, beeman_particle.velocity))
+# Create particle that will be used to test verlet
 verlet_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
+# Create particle that will be used to test gear predictor
 gear_predictor_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 times, positions_real, positions_euler, positions_beeman, positions_verlet, positions_gear_predictor = [], [], [], [], [], []
-delta_t = 0.0001
+
 for t in np.arange(0, 10, delta_t):
 
     times.append(t)
@@ -59,7 +60,7 @@ for t in np.arange(0, 10, delta_t):
     beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
     positions_beeman.append(beeman_x.x)
     beeman_particle.position = beeman_x
-    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t)
+    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
 
     # Calculate verlets particle new position
     verlet_force = f(verlet_particle.position, verlet_particle.velocity)
@@ -78,9 +79,9 @@ for t in np.arange(0, 10, delta_t):
     # print("x(%g) = %g" % (times[-1], positions_real[-1]))
 
 plt.plot(times, positions_real)
-# plt.plot(times, positions_euler)
+plt.plot(times, positions_euler)
 plt.plot(times, positions_beeman)
-# plt.plot(times, positions_verlet)
-# plt.plot(times, positions_gear_predictor)
+plt.plot(times, positions_verlet)
+plt.plot(times, positions_gear_predictor)
 plt.show()
 
