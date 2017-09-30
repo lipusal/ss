@@ -79,9 +79,9 @@ for t in np.arange(0, 10, delta_t):
     # print("x(%g) = %g" % (times[-1], positions_real[-1]))
 
 plt.plot(times, positions_real)
-plt.plot(times, positions_euler)
+# plt.plot(times, positions_euler)
 # plt.plot(times, positions_beeman)
 # plt.plot(times, positions_verlet)
-# plt.plot(times, positions_gear_predictor)
+plt.plot(times, positions_gear_predictor)
 plt.show()
 

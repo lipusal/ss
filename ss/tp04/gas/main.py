@@ -19,7 +19,7 @@ args = arg_base.to_dict_no_none()
 R_M = 1         # Rm, distance of minimum potential.If particles are closer than this, they are repelled [dimensionless]
 EPSILON = 2     # ε, depth of potential well [J]
 M = 0.1         # Particle mass [dimensionless]
-V0 = 10         # Initial particle speed [dimensionless]
+V0 = 30         # Initial particle speed [dimensionless]
 R = 5           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
@@ -31,7 +31,7 @@ fp = 1          # particles on left compartment / total particles (ie. all parti
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
-delta_t = 0.001
+delta_t = 0.0000009
 PARTICLE_RADIUS = 0
 
 
@@ -133,33 +133,33 @@ def move_particle(particle, new_position):
     # against a corner) and it should bounce back
 
     # If the particle moves without colliding change to the given position
-    if new_position[0] > 0 and new_position[1] > 0 and new_position[0] < WIDTH and new_position[1] < HEIGHT:
-        particle.position = new_position
-        return
-
-    # TODO middle walls
-    # TODO ver caso donde choca en esquinas o con dos paredes?
-
-    # Check to see if the particle collides with the bottom wall
-    if new_position[1] < 0:
-        particle.velocity.y *= -1
-        move_particle(particle, (new_position[0], abs(new_position[1])))
-
-    # Check to see if the particle collides with the left wall
-    if new_position[0] < 0:
-        particle.velocity.x *= -1
-        move_particle(particle,(new_position[1],abs(new_position[0])))
-
-    # Check to see if the particle collides with the top wall
-    if new_position[1] > HEIGHT:
-        particle.velocity.y *= -1
-        move_particle(particle, (new_position[0], HEIGHT - (new_position[1] - HEIGHT)))
-
-    # Check to see if the particle collides with the right wall
-    if new_position[0] > WIDTH:
-        particle.velocity.x *= -1
-        move_particle(particle, (WIDTH - (new_position[0] - WIDTH), new_position[1]))
-
+    # if new_position[0] > 0 and new_position[1] > 0 and new_position[0] < WIDTH and new_position[1] < HEIGHT:
+    particle.position = new_position
+    return
+    #
+    # # TODO middle walls
+    # # TODO ver caso donde choca en esquinas o con dos paredes?
+    #
+    # # Check to see if the particle collides with the bottom wall
+    # if new_position[1] < 0:
+    #     particle.velocity.y *= -1
+    #     move_particle(particle, (new_position[0], abs(new_position[1])))
+    #
+    # # Check to see if the particle collides with the left wall
+    # if new_position[0] < 0:
+    #     particle.velocity.x *= -1
+    #     move_particle(particle,(new_position[1],abs(new_position[0])))
+    #
+    # # Check to see if the particle collides with the top wall
+    # if new_position[1] > HEIGHT:
+    #     particle.velocity.y *= -1
+    #     move_particle(particle, (new_position[0], HEIGHT - (new_position[1] - HEIGHT)))
+    #
+    # # Check to see if the particle collides with the right wall
+    # if new_position[0] > WIDTH:
+    #     particle.velocity.x *= -1
+    #     move_particle(particle, (WIDTH - (new_position[0] - WIDTH), new_position[1]))
+    #
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
