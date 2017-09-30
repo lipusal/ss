@@ -25,6 +25,7 @@ WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
 NUM_PARTICLES = 10
+MAX_TIME = 10
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
@@ -179,7 +180,7 @@ for p in particles:
 # positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
 # particles = load_particles(positions, properties)
 
-for t in np.arange(0, 30, delta_t):
+for t in np.arange(0, MAX_TIME, delta_t):
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
     # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
