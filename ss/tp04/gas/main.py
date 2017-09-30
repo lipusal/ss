@@ -24,13 +24,13 @@ R = 20           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
-NUM_PARTICLES = 20
+NUM_PARTICLES = 10
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
-delta_t = 0.01
+delta_t = 0.001
 PARTICLE_RADIUS = 0
 
 
@@ -116,11 +116,11 @@ def calculate_force(particle, neighbors):
     force_y = 0
     for neighbor, _ in neighbors:
         if neighbor != particle:
-            dist_x = abs(particle.x - neighbor.x)
+            dist_x = particle.x - neighbor.x
             # If they are aligned there will only be one force component
             if dist_x != 0:
                 force_x += lennard_jones_force(dist_x)
-            dist_y = abs(particle.y - neighbor.y)
+            dist_y = particle.y - neighbor.y
             # If they are aligned there will only be one force component
             if dist_y != 0:
                 force_y += lennard_jones_force(dist_y)
@@ -193,10 +193,9 @@ for t in np.arange(0, 5, delta_t):
         add_wall_neighbors(p, neighbors[p.id])
         # Calculate total force exerted on p
         force_x, force_y = calculate_force(p, neighbors[p.id])
-        force = Vector2(force_x, force_y)
         # Calculate new position and velocity using Verlet
         # TODO: usar otros?
-        new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
+        new_position = verlet.r(particle=p, delta_t=delta_t, force=Vector2(force_x, force_y))
         move_particle(p, new_position)
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
