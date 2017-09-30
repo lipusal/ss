@@ -40,7 +40,12 @@ def lennard_jones_force(r):
 
 def generate_particles():
     """Create particles with random positions in the box"""
-    particles = list()
+
+    result = list()
+
+    if args['verbose']:
+        print("Generating %i particles without overlap..." % NUM_PARTICLES, end='', flush=True)
+
     for particle_count in range(NUM_PARTICLES):
         new_particle = Particle.get_random_particle(max_height=HEIGHT, max_width=WIDTH / 2 - PARTICLE_RADIUS,
                                                     radius=PARTICLE_RADIUS, speed=V0, mass=M)
@@ -48,7 +53,7 @@ def generate_particles():
         while not done:
             overlap = False
             # Make sure the new particle doesn't overlap with any other existing particle
-            for existing_particle in particles:
+            for existing_particle in result:
                 if new_particle.distance_to(existing_particle) < 0:
                     overlap = True
                     new_particle = Particle.get_random_particle(max_height=HEIGHT,
@@ -58,8 +63,12 @@ def generate_particles():
 
             done = not overlap
 
-        particles.append(new_particle)
-    return particles
+        result.append(new_particle)
+
+    if args['verbose']:
+        print("done")
+
+    return result
 
 
 def add_wall_neighbors(particle, dest):
@@ -107,12 +116,17 @@ def calculate_force(particle, neighbors):
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
+if args['time']:
+    import ss.util.timer
 
 # Generate random particles
 particles = generate_particles()
 
 for t in np.arange(0, 1, delta_t):
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
+    # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
+    # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
+    # TODO: esos casos
 
     for p in particles:
         add_wall_neighbors(p, neighbors[p.id])
