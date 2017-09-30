@@ -20,7 +20,7 @@ R_M = 1         # Rm, distance of minimum potential.If particles are closer than
 EPSILON = 2     # ε, depth of potential well [J]
 M = 0.1         # Particle mass [dimensionless]
 V0 = 10         # Initial particle speed [dimensionless]
-R = 20           # Maximum interaction distance [dimensionless]
+R = 5           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
@@ -132,7 +132,7 @@ def move_particle(particle, new_position):
     # against a corner) and it should bounce back
 
     # If the particle moves without colliding change to the given position
-    if new_position.x > 0 and new_position.y > 0 and new_position.x < WIDTH and new_position.y < HEIGHT:
+    if new_position[0] > 0 and new_position[1] > 0 and new_position[0] < WIDTH and new_position[1] < HEIGHT:
         particle.position = new_position
         return
 
@@ -140,28 +140,24 @@ def move_particle(particle, new_position):
     # TODO ver caso donde choca en esquinas o con dos paredes?
 
     # Check to see if the particle collides with the bottom wall
-    if new_position.y < 0:
+    if new_position[1] < 0:
         particle.velocity.y *= -1
-        particle.position.x = new_position.x
-        particle.position.y = abs(new_position.y)
+        move_particle(particle, (new_position[0], abs(new_position[1])))
 
     # Check to see if the particle collides with the left wall
-    if new_position.x < 0:
+    if new_position[0] < 0:
         particle.velocity.x *= -1
-        particle.position.y = new_position.y
-        particle.position.x = abs(new_position.x)
+        move_particle(particle,(new_position[1],abs(new_position[0])))
 
     # Check to see if the particle collides with the top wall
-    if new_position.y > HEIGHT:
+    if new_position[1] > HEIGHT:
         particle.velocity.y *= -1
-        particle.position.x = new_position.x
-        particle.position.y = HEIGHT - (new_position.y - HEIGHT)
+        move_particle(particle, (new_position[0], HEIGHT - (new_position[1] - HEIGHT)))
 
     # Check to see if the particle collides with the right wall
-    if new_position.x > WIDTH:
+    if new_position[0] > WIDTH:
         particle.velocity.x *= -1
-        particle.position.y = new_position.y
-        particle.position.x = WIDTH - (new_position.x - WIDTH)
+        move_particle(particle, (WIDTH - (new_position[0] - WIDTH), new_position[1]))
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -176,14 +172,14 @@ particles = generate_random_particles()
 # TODO used for debugging
 for p in particles:
     if p.x > WIDTH or p.x < 0 or p.y > HEIGHT or p.y < 0:
-        raise Exception("Generated particle %p is out of bounds" %p)
+        raise Exception("Generated particle %s is out of bounds" %p)
 
 # Load particles from file
 # from ss.util.file_reader import FileReader
 # positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
 # particles = load_particles(positions, properties)
 
-for t in np.arange(0, 5, delta_t):
+for t in np.arange(0, 30, delta_t):
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
     # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
@@ -193,9 +189,10 @@ for t in np.arange(0, 5, delta_t):
         add_wall_neighbors(p, neighbors[p.id])
         # Calculate total force exerted on p
         force_x, force_y = calculate_force(p, neighbors[p.id])
+        force = Vector2(force_x, force_y)
         # Calculate new position and velocity using Verlet
         # TODO: usar otros?
-        new_position = verlet.r(particle=p, delta_t=delta_t, force=Vector2(force_x, force_y))
+        new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
         move_particle(p, new_position)
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
