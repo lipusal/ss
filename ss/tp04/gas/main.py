@@ -197,6 +197,7 @@ for t in np.arange(0, MAX_TIME, delta_t):
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
     # TODO: esos casos
 
+    new_positions, new_velocities = [], []
     for p in particles:
         add_wall_neighbors(p, neighbors[p.id])
         # Calculate total force exerted on p
@@ -211,11 +212,21 @@ for t in np.arange(0, MAX_TIME, delta_t):
         #         force_x, force_y = calculate_force(p, neighbors[p.id])
         #     new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
 
-        move_particle(p, new_position)
+        new_positions.append(new_position)
         new_velocity = verlet.v(p, delta_t, force)
-        p.velocity = new_velocity
+        new_velocities.append(new_velocity)
+
         # TODO remove, used for debugging
         if p.x < 0 or p.y < 0 or p.x > WIDTH or p.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%d y:%d, width: %d, height: %d" %(p.x, p.y, WIDTH, HEIGHT))
+
+    # Debugging Juan
+    delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
+    min_d, max_d = min(delta_positions), max(delta_positions)
+
+    # Evolve particles
+    for i in range(len(particles)):
+        particles[i].position = new_positions[i]
+        particles[i].velocity = new_velocities[i]
 
     FileWriter.export_positions_ovito(particles, t, mode="w" if t == 0 else "a")
