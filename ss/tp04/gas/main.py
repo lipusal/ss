@@ -25,7 +25,6 @@ WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
 NUM_PARTICLES = 1000
-MAX_TIME = 0.5
 # Guard to make sure all particles are at least this distance from each other
 # TODO: Have program work without min_distance = 0
 MIN_DISTANCE = 0.5
@@ -34,13 +33,27 @@ fp = 1          # particles on left compartment / total particles (ie. all parti
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
+MAX_TIME = 0.1
 delta_t = 0.00003
 PARTICLE_RADIUS = 0
-
 
 def generate_random_particles():
     """Create particles with random positions in the box"""
 
+    # Fake middle wall particles for visualization
+    y = 0.0
+    fake_particles = list()
+    while y <= HEIGHT:
+        if not HEIGHT / 2 - SLIT_SIZE / 2 + PARTICLE_RADIUS < y < HEIGHT / 2 + SLIT_SIZE / 2 - PARTICLE_RADIUS:
+            fake_particles.append(Particle(WIDTH / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+        y += 1
+
+    fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    fake_particles.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+
+    # Real particles
     result = list()
 
     if args['verbose']:
@@ -54,11 +67,12 @@ def generate_random_particles():
             overlap = False
             # Make sure the new particle doesn't overlap with any other existing particle
             for existing_particle in result:
-                if new_particle.distance_to(existing_particle) < MIN_DISTANCE:
+                if new_particle.distance_to(existing_particle) < MIN_DISTANCE + PARTICLE_RADIUS:
                     overlap = True
                     new_particle = Particle.get_random_particle(max_height=HEIGHT,
                                                                 max_width=WIDTH / 2 - PARTICLE_RADIUS,
-                                                                radius=PARTICLE_RADIUS, speed=V0, mass=M)
+                                                                radius=PARTICLE_RADIUS, speed=V0, mass=M,
+                                                                min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
                     break
 
             done = not overlap
@@ -68,7 +82,7 @@ def generate_random_particles():
     if args['verbose']:
         print("done")
 
-    return result
+    return result, fake_particles
 
 
 def load_particles(positions, properties=None):
@@ -125,52 +139,11 @@ def calculate_force(particle, neighbors):
             force_x += force * math.cos(angle)
             force_y += force * math.sin(angle)
 
-            # dist_x = particle.x - neighbor.x
-            # # If they are aligned there will only be one force component
-            # if dist_x != 0:
-            #     force_x += lennard_jones_force(dist_x)
-            # dist_y = particle.y - neighbor.y
-            # # If they are aligned there will only be one force component
-            # if dist_y != 0:
-            #     force_y += lennard_jones_force(dist_y)
-
-            # assert force_proy_x == force_x and force_proy_y == force_y
-
     return force_x, force_y
 
-# TODO TEST TEST TESTT
-def move_particle(particle, new_position):
-    # When the particle crashes into a wall, one of its velocity's components should change direction (both if crashing
-    # against a corner) and it should bounce back
-
-    # If the particle moves without colliding change to the given position
-    # if new_position[0] > 0 and new_position[1] > 0 and new_position[0] < WIDTH and new_position[1] < HEIGHT:
-    particle.position = new_position
+# TODO
+def write_fake_particles():
     return
-    #
-    # # TODO middle walls
-    # # TODO ver caso donde choca en esquinas o con dos paredes?
-    #
-    # # Check to see if the particle collides with the bottom wall
-    # if new_position[1] < 0:
-    #     particle.velocity.y *= -1
-    #     move_particle(particle, (new_position[0], abs(new_position[1])))
-    #
-    # # Check to see if the particle collides with the left wall
-    # if new_position[0] < 0:
-    #     particle.velocity.x *= -1
-    #     move_particle(particle,(new_position[1],abs(new_position[0])))
-    #
-    # # Check to see if the particle collides with the top wall
-    # if new_position[1] > HEIGHT:
-    #     particle.velocity.y *= -1
-    #     move_particle(particle, (new_position[0], HEIGHT - (new_position[1] - HEIGHT)))
-    #
-    # # Check to see if the particle collides with the right wall
-    # if new_position[0] > WIDTH:
-    #     particle.velocity.x *= -1
-    #     move_particle(particle, (WIDTH - (new_position[0] - WIDTH), new_position[1]))
-    #
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -179,7 +152,7 @@ if args['time']:
     import ss.util.timer
 
 # Generate random particles
-particles = generate_random_particles()
+particles, fake_particles = generate_random_particles()
 
 # TODO used for debugging
 for p in particles:
@@ -199,6 +172,9 @@ for t in np.arange(0, MAX_TIME, delta_t):
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
     # TODO: esos casos
 
+
+    total_mass = 0
+    total_velocity = 0
     new_positions, new_velocities = [], []
     for p in particles:
         add_wall_neighbors(p, neighbors[p.id])
@@ -217,6 +193,8 @@ for t in np.arange(0, MAX_TIME, delta_t):
         new_positions.append(new_position)
         new_velocity = verlet.v(p, delta_t, force)
         new_velocities.append(new_velocity)
+        total_mass += p.mass
+        total_velocity += new_velocity.magnitude()
 
         # TODO remove, used for debugging
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
@@ -230,5 +208,12 @@ for t in np.arange(0, MAX_TIME, delta_t):
     for i in range(len(particles)):
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
+    colors = [(255, 255, 255)]*NUM_PARTICLES
+    colors += [(0, 255, 0)] * len(fake_particles)
+    FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
 
-    FileWriter.export_positions_ovito(particles, t, mode="w" if t == 0 else "a")
+    # Write total energy in iteration
+    k = 0.5 * total_mass * total_velocity**2
+    file = open("kinetic_energy.txt", "w" if t == 0 else "a")
+    file.write("%i\t%g\n" % (t, k))
+    file.close()

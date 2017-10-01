@@ -108,7 +108,6 @@ def get_compartment(particle):
 
     return 0 if particle.x < WIDTH / 2 else 2
 
-
 def time_to_border_wall_collision(particle):
     """Calculate time for the given particle to collide against any border wall. Return infinity if particle will not
     collide with a wall (e.g. if Vx = Vy = 0)."""
@@ -136,7 +135,6 @@ def time_to_border_wall_collision(particle):
 
     return result
 
-
 def time_to_middle_wall_collision(particle):
     """Calculate time for the given particle to collide against the middle wall, taking in consideration the aperture
     size. Return infinity if particle will not collide with middle wall, or if particle will go through aperture."""
@@ -162,7 +160,6 @@ def time_to_middle_wall_collision(particle):
 
     return time
 
-
 def time_to_particle_collision(particle1, particle2):
     """Calculate time for the two given particles to collide. Return infinity if they will not collide."""
 
@@ -187,7 +184,6 @@ def time_to_particle_collision(particle1, particle2):
 
     return -(v_r + math.sqrt(d)) / v2
 
-
 def all_min_collision_times(particles):
     """Return a dictionary of the form (particle_id, (particle, min_collision_time, collision_target)). That is, for
     each particle, save its ID as key, and as value store the Particle itself, the minimum time for it to collide
@@ -203,7 +199,6 @@ def all_min_collision_times(particles):
         min_collision_times[me.id] = (me, collision_time, target)
 
     return min_collision_times
-
 
 def min_collision_time(self, other_particles):
     """For the given particle self, return a tuple of the form (min_collision_time, target), where min_collision_time is
@@ -294,7 +289,6 @@ def next_collision(collision_times):
 
     return result
 
-
 def evolve_particles(particles, time, colliding_particle, target):
     for particle in particles:
 
@@ -323,7 +317,6 @@ def evolve_particles(particles, time, colliding_particle, target):
         wall_collision(colliding_particle)
     else:
         particle_collision(colliding_particle, target)
-
 
 def wall_collision(particle):
     # When the particle crashes into a wall, one of its velocity's components should change direction (both if crashing

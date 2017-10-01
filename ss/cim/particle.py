@@ -92,6 +92,10 @@ class Particle:
         self.previous_acceleration = self.acceleration
         self._acceleration = value
 
+    # @property
+    def mass(self):
+        return self.mass
+
     def vel_angle(self):
         """Returns the angle of the particle's velocity"""
         # return math.atan(self._velocity.y / self._velocity.x)

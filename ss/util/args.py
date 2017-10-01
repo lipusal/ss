@@ -16,7 +16,7 @@ parser.add_argument("--output", "-o", help="Path of output file, if the script g
 parser.add_argument("--periodic", "-p", help="Make the board periodic (particles that go \"out of board\" come in from"
                                              "the other side)", action="store_true", default=False)
 parser.add_argument("--verbose", "-v", help="Print verbose information while running", action="store_true",
-                    default=False)
+                    default=True)
 parser.add_argument("--time", "-t", help="Print elapsed program time", action="store_true", default=False)
 
 
