@@ -43,7 +43,7 @@ verlet_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, m
 gear_predictor_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 times, positions_real, positions_euler, positions_beeman, positions_verlet, positions_gear_predictor = [], [], [], [], [], []
 
-for t in np.arange(0, 10, delta_t):
+for t in np.arange(0, 4, delta_t):
 
     times.append(t)
     positions_real.append(real.x(t))
@@ -78,10 +78,14 @@ for t in np.arange(0, 10, delta_t):
 
     # print("x(%g) = %g" % (times[-1], positions_real[-1]))
 
-plt.plot(times, positions_real)
-# plt.plot(times, positions_euler)
-# plt.plot(times, positions_beeman)
-# plt.plot(times, positions_verlet)
-plt.plot(times, positions_gear_predictor)
+plt.plot(times, positions_real, 'r--')
+plt.plot(times, positions_euler, 'c--')
+# plt.plot(times, positions_beeman, 'm--')
+plt.plot(times, positions_verlet, 'b--')
+plt.plot(times, positions_gear_predictor, 'g--')
+# TODO poner bien estos titulitos
+plt.ylabel('ylabel')
+plt.xlabel('time')
+plt.title('Oscillator')
 plt.show()
 

@@ -93,9 +93,9 @@ class CellIndexMethod:
             self.m = math.ceil(l / (self.interaction_radius + 2 * max_radius))
             if l / self.m <= self.interaction_radius:
                 # FIXME: This shouldn't happen, revise previous formula
-                print("WARNING: The calculated M (%i) is over limit, restricting to " % self.m, end="")
+                # print("WARNING: The calculated M (%i) is over limit, restricting to " % self.m, end="")
                 self.m = math.floor(l / self.interaction_radius) - 1
-                print(self.m)
+                # print(self.m)
 
         if l / self.m <= self.interaction_radius:
             raise Exception("L / M > Rc is not met, can't perform cell index method, aborting. (L = %g, M = %g, "
