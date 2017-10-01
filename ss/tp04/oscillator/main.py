@@ -84,8 +84,8 @@ plt.plot(times, positions_euler, 'c--')
 plt.plot(times, positions_verlet, 'b--')
 plt.plot(times, positions_gear_predictor, 'g--')
 # TODO poner bien estos titulitos
-plt.ylabel('ylabel')
-plt.xlabel('time')
-plt.title('Oscillator')
+plt.ylabel('amplitud')
+plt.xlabel('tiempo')
+plt.title('Oscilador Armónico Simple')
 plt.show()
 
