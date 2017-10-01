@@ -43,7 +43,8 @@ class CellIndexMethod:
             for cell in row:
                 for me in cell.particles:
                     for neighbor in cell.getNeighborParticles(self.board):
-                        if me == neighbor or neighbor in result[me.id]:
+                        # result[me.id] is a list of tuples, particles are in the 0 position of each tuple.
+                        if me == neighbor or neighbor in [t[0] for t in result[me.id]]:
                             continue
                         distance = me.distance_to(neighbor)
                         if distance <= self.interaction_radius:
@@ -52,6 +53,7 @@ class CellIndexMethod:
                                 (neighbor.original_particle if neighbor.is_fake else neighbor, distance))
                             result[neighbor.original_particle.id if neighbor.is_fake else neighbor.id].append(
                                 (me, distance))
+
         # Don't convert to plain dict because caller doesn't know which particles have neighbors and which don't. Keep
         # behavior of returning empty list when accessing a new key (doesn't contemplate invalid keys though, those will
         # also return empty list)
