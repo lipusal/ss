@@ -24,20 +24,15 @@ R = 5           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
-NUM_PARTICLES = 10
-MAX_TIME = 10
+NUM_PARTICLES = 35
+MAX_TIME = 0.5
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
-delta_t = 0.0000009
+delta_t = 0.00001
 PARTICLE_RADIUS = 0
-
-
-def lennard_jones_force(r):
-    assert (r != 0)
-    return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
 
 def generate_random_particles():
@@ -110,6 +105,10 @@ def add_wall_neighbors(particle, dest):
         dest.append(
             (Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH/2)))
 
+def lennard_jones_force(r):
+    assert (r != 0)
+    return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
+
 
 def calculate_force(particle, neighbors):
     """Calculate total force exerted on particle by neighbors with the lennard jones force"""
@@ -117,14 +116,23 @@ def calculate_force(particle, neighbors):
     force_y = 0
     for neighbor, _ in neighbors:
         if neighbor != particle:
-            dist_x = particle.x - neighbor.x
-            # If they are aligned there will only be one force component
-            if dist_x != 0:
-                force_x += lennard_jones_force(dist_x)
-            dist_y = particle.y - neighbor.y
-            # If they are aligned there will only be one force component
-            if dist_y != 0:
-                force_y += lennard_jones_force(dist_y)
+            dist = particle.distance_to(neighbor)
+            force = lennard_jones_force(dist)
+            angle = math.atan2(particle.y-neighbor.y, particle.x-neighbor.x)
+            force_x += force * math.sin(angle)
+            force_y += force * math.cos(angle)
+
+            # dist_x = particle.x - neighbor.x
+            # # If they are aligned there will only be one force component
+            # if dist_x != 0:
+            #     force_x += lennard_jones_force(dist_x)
+            # dist_y = particle.y - neighbor.y
+            # # If they are aligned there will only be one force component
+            # if dist_y != 0:
+            #     force_y += lennard_jones_force(dist_y)
+
+            # assert force_proy_x == force_x and force_proy_y == force_y
+
     return force_x, force_y
 
 # TODO TEST TEST TESTT
