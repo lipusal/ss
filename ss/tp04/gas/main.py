@@ -19,13 +19,16 @@ args = arg_base.to_dict_no_none()
 R_M = 1         # Rm, distance of minimum potential.If particles are closer than this, they are repelled [dimensionless]
 EPSILON = 2     # ε, depth of potential well [J]
 M = 0.1         # Particle mass [dimensionless]
-V0 = 30         # Initial particle speed [dimensionless]
+V0 = 10         # Initial particle speed [dimensionless]
 R = 5           # Maximum interaction distance [dimensionless]
 WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
 HEIGHT = 200    # Area height [dimensionless]
 SLIT_SIZE = 10  # [dimensionless]
-NUM_PARTICLES = 35
+NUM_PARTICLES = 1000
 MAX_TIME = 0.5
+# Guard to make sure all particles are at least this distance from each other
+# TODO: Have program work without min_distance = 0
+MIN_DISTANCE = 0.5
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
@@ -44,14 +47,14 @@ def generate_random_particles():
         print("Generating %i particles without overlap..." % NUM_PARTICLES, end='', flush=True)
 
     for particle_count in range(NUM_PARTICLES):
-        new_particle = Particle.get_random_particle(max_height=HEIGHT, max_width=WIDTH / 2 - PARTICLE_RADIUS,
+        new_particle = Particle.get_random_particle(max_height=HEIGHT - MIN_DISTANCE, max_width=WIDTH / 2 - PARTICLE_RADIUS - MIN_DISTANCE,
                                                     radius=PARTICLE_RADIUS, speed=V0, mass=M)
         done = False
         while not done:
             overlap = False
             # Make sure the new particle doesn't overlap with any other existing particle
             for existing_particle in result:
-                if new_particle.distance_to(existing_particle) < 0:
+                if new_particle.distance_to(existing_particle) < MIN_DISTANCE:
                     overlap = True
                     new_particle = Particle.get_random_particle(max_height=HEIGHT,
                                                                 max_width=WIDTH / 2 - PARTICLE_RADIUS,
@@ -202,6 +205,12 @@ for t in np.arange(0, MAX_TIME, delta_t):
         # Calculate new position and velocity using Verlet
         # TODO: usar otros?
         new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
+        # # Debugging Juan
+        # if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
+        #     if abs(force_x) > 10 or abs(force_y) > 10:
+        #         force_x, force_y = calculate_force(p, neighbors[p.id])
+        #     new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
+
         move_particle(p, new_position)
         new_velocity = verlet.v(p, delta_t, force)
         p.velocity = new_velocity
