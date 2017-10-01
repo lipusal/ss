@@ -101,7 +101,7 @@ def add_wall_neighbors(particle, dest):
         dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the middle wall
-    if particle.y > HEIGHT/2 + SLIT_SIZE/2 or particle.y < HEIGHT/2 - SLIT_SIZE/2 and abs(particle.x - WIDTH/2) <= R:
+    if (particle.y > HEIGHT/2 + SLIT_SIZE/2 or particle.y < HEIGHT/2 - SLIT_SIZE/2) and abs(particle.x - WIDTH/2) <= R:
         dest.append(
             (Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH/2)))
 
@@ -119,8 +119,8 @@ def calculate_force(particle, neighbors):
             dist = particle.distance_to(neighbor)
             force = lennard_jones_force(dist)
             angle = math.atan2(particle.y-neighbor.y, particle.x-neighbor.x)
-            force_x += force * math.sin(angle)
-            force_y += force * math.cos(angle)
+            force_x += force * math.cos(angle)
+            force_y += force * math.sin(angle)
 
             # dist_x = particle.x - neighbor.x
             # # If they are aligned there will only be one force component
