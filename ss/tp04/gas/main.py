@@ -93,7 +93,7 @@ def add_wall_neighbors(particle, dest):
 
     # Check if there is interaction with the bottom wall
     if particle.y <= R:
-        dest.append((Particle(x=particle.y, y=0, mass=math.inf, is_fake=True), particle.y))
+        dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the right wall
     if WIDTH - particle.x <= R:
@@ -192,6 +192,8 @@ for p in particles:
 # particles = load_particles(positions, properties)
 
 for t in np.arange(0, MAX_TIME, delta_t):
+    print("Processing t=%f..." % t)
+
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
     # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
@@ -218,7 +220,7 @@ for t in np.arange(0, MAX_TIME, delta_t):
 
         # TODO remove, used for debugging
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
-            raise Exception("The particle moved out of the bounds, x:%d y:%d, width: %d, height: %d" %(new_position.x, new_position.y, WIDTH, HEIGHT))
+            raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Debugging Juan
     delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
