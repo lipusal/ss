@@ -217,8 +217,8 @@ for t in np.arange(0, MAX_TIME, delta_t):
         new_velocities.append(new_velocity)
 
         # TODO remove, used for debugging
-        if p.x < 0 or p.y < 0 or p.x > WIDTH or p.y > HEIGHT:
-            raise Exception("The particle moved out of the bounds, x:%d y:%d, width: %d, height: %d" %(p.x, p.y, WIDTH, HEIGHT))
+        if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
+            raise Exception("The particle moved out of the bounds, x:%d y:%d, width: %d, height: %d" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Debugging Juan
     delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
