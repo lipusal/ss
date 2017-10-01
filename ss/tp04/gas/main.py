@@ -34,7 +34,7 @@ fp = 1          # particles on left compartment / total particles (ie. all parti
 
 # TODO parametrizar tiempo y delta_t
 TIME = 1000
-delta_t = 0.00001
+delta_t = 0.00003
 PARTICLE_RADIUS = 0
 
 
@@ -48,7 +48,7 @@ def generate_random_particles():
 
     for particle_count in range(NUM_PARTICLES):
         new_particle = Particle.get_random_particle(max_height=HEIGHT - MIN_DISTANCE, max_width=WIDTH / 2 - PARTICLE_RADIUS - MIN_DISTANCE,
-                                                    radius=PARTICLE_RADIUS, speed=V0, mass=M)
+                                                    radius=PARTICLE_RADIUS, speed=V0, mass=M, min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
         done = False
         while not done:
             overlap = False

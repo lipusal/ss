@@ -7,6 +7,8 @@ from euclid3 import Vector2
 class Particle:
     """Model class for particles used in simulations"""
 
+
+
     _global_id = 1
 
     def __init__(self, x, y, radius=0.0, mass=0.0, v=0.0, o=0.0, is_fake=False, original_particle=None):
@@ -42,9 +44,9 @@ class Particle:
 
     # Returns a particle with a random position in the given space, and a random direction.
     @classmethod
-    def get_random_particle(cls, max_height, max_width, radius, speed, mass=0.0):
-        x = random.uniform(radius, max_width - radius)
-        y = random.uniform(radius, max_height - radius)
+    def get_random_particle(cls, max_height, max_width, radius, speed, mass=0.0, min_height=0.0, min_width=0.0):
+        x = random.uniform(min_width+radius, max_width - radius)
+        y = random.uniform(min_height+radius, max_height - radius)
         o = random.uniform(0.0, 2 * math.pi)
         return cls(x=x, y=y, radius=radius, mass=mass, v=speed, o=o, is_fake=False, original_particle=None )
 
