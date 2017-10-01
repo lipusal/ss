@@ -1,4 +1,3 @@
-from ss.tp04.oscillator.constants import *
 from ss.tp04.solutions import euler_modified
 
 
@@ -7,7 +6,7 @@ def r(particle, delta_t, force):
 
 
 def v(particle, delta_t, force):
-    return (r(particle, delta_t, force) - particle.previous_position) / (2 * delta_t)
+    return (r(particle, delta_t, force) - previous_position(particle, delta_t, force)) / (2 * delta_t)
 
 
 def previous_position(particle, delta_t, force):
