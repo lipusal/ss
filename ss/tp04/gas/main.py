@@ -189,6 +189,12 @@ if args['time']:
 # Generate random particles
 particles = generate_random_particles()
 
+# Load particles from file
+# from ss.util.file_reader import FileReader
+# positions, properties = FileReader.import_positions_ovito("/Users/juanlipuma/PycharmProjects/ss/in.txt", frame=1)
+# particles = load_particles(positions, properties)
+# NUM_PARTICLES = 2
+
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
 
@@ -197,10 +203,6 @@ for p in particles:
     if p.x > WIDTH or p.x < 0 or p.y > HEIGHT or p.y < 0:
         raise Exception("Generated particle %s is out of bounds" %p)
 
-# Load particles from file
-# from ss.util.file_reader import FileReader
-# positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
-# particles = load_particles(positions, properties)
 
 t_accum = 0
 fp_left = 1
