@@ -41,9 +41,8 @@ def predict(particle, delta_t):
 
 
 def evaluate(particle, delta_t, r_ps):
-    # Evaluate R2 in RP0, RP1 (predicted position, predicted velocity) -- this is specific to the oscillator
-    a = ((r_ps[0] * -K) - r_ps[1] * lamb) / particle.mass
-    delta_a = a - r_ps[2]
+    # Evaluate R2 in RP0, RP1 (predicted position, predicted velocity) to get future acceleration
+    delta_a = future_a_oscillator(particle, r_ps) - r_ps[2]
 
     return delta_a * (delta_t**2) / math.factorial(2)   # Delta R2
 
@@ -57,9 +56,16 @@ def correct(r_ps, alphas, delta_r2, delta_t):
 
 
 def rs_oscillator(particle):
-    """Calculate the 5 derivatives of the oscillator's position (R's in the Gear Predictor)"""
+    """Calculate the 5 derivatives of the oscillator's position (R's in the Gear Predictor). This is specific to the
+    oscillator."""
 
     result = [particle.position, particle.velocity]     # R0, R1
     for i in range(2, DEGREE+1):   # R2, R3, R4, R5
         result.append(((result[i-2] * -K) - result[i-1] * lamb) / particle.mass)
     return result
+
+
+def future_a_oscillator(particle, r_ps):
+    """Get future acceleration of an oscillator with the given current state and predicted future derivatives. This is
+    specific to the oscillator."""
+    return ((r_ps[0] * -K) - r_ps[1] * lamb) / particle.mass
