@@ -42,9 +42,8 @@ class Board:
     def create_board(self):
         """Creates a board of this instance's size, filling each dimension with as many cells as are needed"""
 
-        self.cells = [[]]
+        self.cells = [[]] * self.num_rows
         for y in range(self.num_rows):
-            self.cells.append([])
             for x in range(int(math.ceil(self.width / self.cell_side_length))):
                 self.cells[y].append(Cell(y, x))
 
