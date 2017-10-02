@@ -140,6 +140,7 @@ def calculate_force(particle, neighbors):
     force_y = 0
     for neighbor, _ in neighbors:
         if neighbor != particle:
+            # TODO hacer lo de barto de la pendiente para ver si se ven las particulas
             # Check if the neighbor particle is not in the same compartment as the original particle
             if not neighbor.is_fake and ((particle.y > HEIGHT/2 + SLIT_SIZE/2) or(particle.y <HEIGHT/2 - SLIT_SIZE/2)) and ((particle.x > WIDTH/2 and neighbor.x < WIDTH/2) or (particle.x < WIDTH/2 and neighbor.x > WIDTH/2)):
                 break
