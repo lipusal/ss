@@ -30,17 +30,19 @@ def predict(particle, delta_t):
 
     result = [0] * (DEGREE + 1)
     rs = rs_oscillator(particle)
-    for i in range(DEGREE + 1):
+    for i in range(DEGREE, -1, -1):
         result[i] = rs[i]
+        k = 1
         for j in range(i+1, DEGREE+1):
-            result[i] += rs[j]*(delta_t**j)/math.factorial(j)
+            result[i] += rs[j]*(delta_t**k)/math.factorial(k)
+            k += 1
 
     return result
 
 
 def evaluate(particle, delta_t, r_ps):
     # Evaluate R2 in RP0, RP1 (predicted position, predicted velocity) -- this is specific to the oscillator
-    a = -1 * ((K/particle.mass*r_ps[0]) + (lamb/particle.mass*r_ps[1]))
+    a = ((r_ps[0] * -K) - r_ps[1] * lamb) / particle.mass
     delta_a = a - r_ps[2]
 
     return delta_a * (delta_t**2) / math.factorial(2)   # Delta R2
@@ -49,7 +51,7 @@ def evaluate(particle, delta_t, r_ps):
 def correct(r_ps, alphas, delta_r2, delta_t):
     result = [0] * (DEGREE + 1)
     for i in range(DEGREE + 1):
-        result[i] = r_ps[i] + alphas[i] * delta_r2 * (math.factorial(i) / delta_t**i)
+        result[i] = r_ps[i] + alphas[i] * delta_r2 * (math.factorial(i) / (delta_t**i))
 
     return result
 
@@ -59,5 +61,5 @@ def rs_oscillator(particle):
 
     result = [particle.position, particle.velocity]     # R0, R1
     for i in range(2, DEGREE+1):   # R2, R3, R4, R5
-        result.append(-1 * ((K/particle.mass*result[i-2]) + (lamb/particle.mass*result[i-1])))
+        result.append(((result[i-2] * -K) - result[i-1] * lamb) / particle.mass)
     return result
