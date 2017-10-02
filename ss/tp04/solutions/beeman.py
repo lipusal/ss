@@ -18,11 +18,9 @@ def v_corrected(particle, delta_t, next_acceleration):
 
 def v(particle, delta_t, force, f):
     predicted_velocity = v_predicted(particle, delta_t)
-    predicted_position = r(particle, delta_t)
-
+    predicted_position = particle.position
     vel, angle = Particle.to_v_o(predicted_velocity)
     predicted_particle = Particle(predicted_position[0], predicted_position[1], particle.radius, particle.mass, vel, angle, is_fake=True)
-
     predicted_acceleration = f(predicted_position, predicted_velocity) / predicted_particle.mass
 
     return v_corrected(particle, delta_t, predicted_acceleration)

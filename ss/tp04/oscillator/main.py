@@ -43,9 +43,11 @@ euler_particle.previous_acceleration = initial_previous_acceleration(euler_parti
                                                                                                 euler_particle.velocity))
 # Create particle that will be used to test beeman
 beeman_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
+
 beeman_particle.previous_acceleration = initial_previous_acceleration(beeman_particle, delta_t,
                                                                       f(beeman_particle.position,
                                                                         beeman_particle.velocity))
+
 # Create particle that will be used to test verlet
 verlet_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 # Create particle that will be used to test gear predictor
@@ -73,11 +75,15 @@ for t in np.arange(0, 4, delta_t):
 
     # Calculate beeman particles new position
     if "beeman" in args.integration_method or "all" in args.integration_method:
+    # Calculate beeman particles new position
+        current_acceleration = beeman_particle.acceleration
         beeman_force = f(beeman_particle.position, beeman_particle.velocity)
+        beeman_particle.acceleration = beeman_force / beeman_particle.mass
         beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t)
         positions_beeman.append(beeman_x.x)
         beeman_particle.position = beeman_x
         beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
+        beeman_particle.previous_acceleration = current_acceleration
         beeman_error += (beeman_x[0] - real.x(t)) ** 2
 
     # Calculate verlet particle new position
