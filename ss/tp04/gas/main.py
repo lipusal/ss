@@ -140,12 +140,17 @@ def calculate_force(particle, neighbors):
     force_y = 0
     for neighbor, _ in neighbors:
         if neighbor != particle:
+            # Check if the neighbor particle is not in the same compartment as the original particle
+            if not neighbor.is_fake and ((particle.y > HEIGHT/2 + SLIT_SIZE/2) or(particle.y <HEIGHT/2 - SLIT_SIZE/2)) and ((particle.x > WIDTH/2 and neighbor.x < WIDTH/2) or (particle.x < WIDTH/2 and neighbor.x > WIDTH/2)):
+                break
+            # Calculate total force magnitude
             dist = particle.distance_to(neighbor)
             force = lennard_jones_force(dist)
+            # Calculate angle between neighbor and particle
             angle = math.atan2(particle.y-neighbor.y, particle.x-neighbor.x)
+            # Project the force on each axis component
             force_x += force * math.cos(angle)
             force_y += force * math.sin(angle)
-
     return force_x, force_y
 
 
@@ -161,6 +166,14 @@ def recalculate_fp(particles):
     fp_left = left / NUM_PARTICLES
     fp_right = right / NUM_PARTICLES
     return fp_left, fp_right
+
+def potential_energy(particle, neighbors):
+    potential = 0
+    for n,_ in neighbors:
+        potential += 12 * EPSILON * (1/R_M) * \
+            (R_M**7 / (6 * particle.distance_to(n)**6) - (R_M**13 / 12 * particle.distance_to(n)**12))
+    return potential
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -187,20 +200,25 @@ for p in particles:
 t_accum = 0
 fp_left = 1
 t = 0
+
+rm17, rm13 = R_M**7, R_M**13
+
 # for t in np.arange(0, MAX_TIME, delta_t):
 while fp_left > 0.5:
     print("Processing t=%f..." % t)
 
+    potential = 0
+    # if args['verbose']:
+        # print("Processing t=%f..." % t)
+
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
-    # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
-    # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
-    # TODO: esos casos
 
     total_mass = 0
     total_velocity = 0
     new_positions, new_velocities = [], []
     for p in particles:
         add_wall_neighbors(p, neighbors[p.id])
+        potential += potential_energy(p, neighbors[p.id])
         # Calculate total force exerted on p
         force_x, force_y = calculate_force(p, neighbors[p.id])
         force = Vector2(force_x, force_y)
@@ -240,8 +258,8 @@ while fp_left > 0.5:
 
         # Save kinetic energy for current time
         k = 0.5 * total_mass * total_velocity ** 2
-        file = open("kinetic_energy.txt", "w" if t == 0 else "a")
-        file.write("%g\t%g\n" % (t, k))
+        file = open("energy.txt", "w" if t == 0 else "a")
+        file.write("%g\t%g\t%g\n" % (t, k, potential))
         file.close()
 
         # Reset counter
