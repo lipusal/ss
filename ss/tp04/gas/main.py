@@ -147,10 +147,11 @@ def calculate_force(particle, neighbors):
     force_y = 0
     for neighbor, _ in neighbors:
         if neighbor != particle:
-            # TODO hacer lo de barto de la pendiente para ver si se ven las particulas
             # Check if the neighbor particle is not in the same compartment as the original particle
-            if not neighbor.is_fake and ((particle.y > HEIGHT/2 + SLIT_SIZE/2) or(particle.y <HEIGHT/2 - SLIT_SIZE/2)) and ((particle.x > WIDTH/2 and neighbor.x < WIDTH/2) or (particle.x < WIDTH/2 and neighbor.x > WIDTH/2)):
-                break
+            if not neighbor.is_fake and compartment(particle) != compartment(neighbor):
+                # TODO hacer lo de Barto de la pendiente para ver si se ven las partículas entre la ranura
+                continue
+
             # Calculate total force magnitude
             dist = particle.distance_to(neighbor)
             force = lennard_jones_force(dist)
@@ -184,6 +185,14 @@ def potential_energy(particle, neighbors):
 
             # (R_M**7 / (6 * dist**6) - (R_M**13 / 12 * dist**12))
     return potential
+
+
+def compartment(particle):
+    """Return which compartment the specified particle is in. 0 for left, 1 for exact middle, 2 for right."""
+    if particle.x == WIDTH / 2:
+        return 1
+
+    return 0 if particle.x < WIDTH / 2 else 2
 
 # return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
