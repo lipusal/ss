@@ -172,10 +172,13 @@ def potential_energy(particle, neighbors):
     """Calculate potential energy for particle"""
     potential = 0
     for n,_ in neighbors:
-        potential += 12 * EPSILON * (1/R_M) * \
-            (R_M**7 / (6 * particle.distance_to(n)**6) - (R_M**13 / 12 * particle.distance_to(n)**12))
+        dist = abs(particle.distance_to(n))
+        potential += (12*EPSILON/R_M) * R_M**7*(2*dist**6 - R_M**6)/12*dist**12
+
+            # (R_M**7 / (6 * dist**6) - (R_M**13 / 12 * dist**12))
     return potential
 
+# return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -204,7 +207,6 @@ fp_left = 1
 t = 0
 
 while fp_left > 0.5:
-    print("Processing t=%f..." % t)
 
     # if args['verbose']:
         # print("Processing t=%f..." % t)
