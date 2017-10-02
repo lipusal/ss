@@ -36,6 +36,8 @@ TIME = 1000
 MAX_TIME = 0.1
 delta_t = 0.00003
 PARTICLE_RADIUS = 0
+DELTA_T_SAVE = 0.01
+
 
 def generate_random_particles():
     """Create particles with random positions in the box"""
@@ -122,6 +124,7 @@ def add_wall_neighbors(particle, dest):
         dest.append(
             (Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH/2)))
 
+
 def lennard_jones_force(r):
     assert (r != 0)
     return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
@@ -164,6 +167,7 @@ for p in particles:
 # positions, properties = FileReader.import_positions_ovito("D:\\Users\\juan_\\Documents\\PycharmProjects\\ss\\ex\\04\\dynamic.txt", frame=1)
 # particles = load_particles(positions, properties)
 
+t_accum = 0
 for t in np.arange(0, MAX_TIME, delta_t):
     print("Processing t=%f..." % t)
 
@@ -171,7 +175,6 @@ for t in np.arange(0, MAX_TIME, delta_t):
     # TODO: Cell Index Method va a hacer que dos partículas separadas por la pared del medio interactúen (si están a
     # TODO: menos de R) pero el profesor dijo que no hacía falta contemplar eso. Para calculate_force habría que filtrar
     # TODO: esos casos
-
 
     total_mass = 0
     total_velocity = 0
@@ -201,19 +204,30 @@ for t in np.arange(0, MAX_TIME, delta_t):
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Debugging Juan
-    delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
-    min_d, max_d = min(delta_positions), max(delta_positions)
+    # delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
+    # min_d, max_d = min(delta_positions), max(delta_positions)
+
+    # Save frame if necessary
+    t_accum += delta_t
+    if t == 0 or t_accum >= DELTA_T_SAVE:
+        if args['verbose']:
+            print("Saving frame")
+
+        # Save positions
+        colors = [(255, 255, 255)] * NUM_PARTICLES
+        colors += [(0, 255, 0)] * len(fake_particles)
+        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
+
+        # Save kinetic energy for current time
+        k = 0.5 * total_mass * total_velocity ** 2
+        file = open("kinetic_energy.txt", "w" if t == 0 else "a")
+        file.write("%g\t%g\n" % (t, k))
+        file.close()
+
+        # Reset counter
+        t_accum = 0
 
     # Evolve particles
     for i in range(len(particles)):
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
-    colors = [(255, 255, 255)]*NUM_PARTICLES
-    colors += [(0, 255, 0)] * len(fake_particles)
-    FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
-
-    # Write total energy in iteration
-    k = 0.5 * total_mass * total_velocity**2
-    file = open("kinetic_energy.txt", "w" if t == 0 else "a")
-    file.write("%i\t%g\n" % (t, k))
-    file.close()
