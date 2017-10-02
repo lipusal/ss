@@ -85,9 +85,7 @@ class CellIndexMethod:
         l = max(self.width, self.height)
         if self.m == -1:
             # Calculate max particle radius
-            max_radius = 0
-            for particle in self.particles:
-                max_radius = max((max_radius, particle.radius))
+            max_radius = max([p.radius for p in self.particles])
 
             # Compute optimal board parameters
             self.m = math.ceil(l / (self.interaction_radius + 2 * max_radius))
