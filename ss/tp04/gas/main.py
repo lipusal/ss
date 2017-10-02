@@ -122,10 +122,17 @@ def add_wall_neighbors(particle, dest):
     if HEIGHT - particle.y <= R:
         dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), particle.y))
 
-    # Check if there is interaction with the middle wall
-    if (particle.y > HEIGHT/2 + SLIT_SIZE/2 or particle.y < HEIGHT/2 - SLIT_SIZE/2) and abs(particle.x - WIDTH/2) <= R:
-        dest.append(
-            (Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH/2)))
+    # Is particle within the slit in Y?
+    if HEIGHT/2 - SLIT_SIZE/2 < particle.y < HEIGHT/2 + SLIT_SIZE/2:
+        # Yes - check interaction with slit corners if appropriate
+        for p2 in [SLIT_TOP, SLIT_BOTTOM]:
+            d = particle.distance_to(p2)
+            if d <= R:
+                dest.append((p2, d))
+    else:
+        # No - check interaction with middle wall horizontally
+        if abs(particle.x - WIDTH/2) <= R:
+            dest.append((Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH / 2)))
 
 
 def lennard_jones_force(r):
@@ -191,12 +198,14 @@ particles = generate_random_particles()
 
 # Load particles from file
 # from ss.util.file_reader import FileReader
-# positions, properties = FileReader.import_positions_ovito("/Users/juanlipuma/PycharmProjects/ss/in.txt", frame=1)
-# particles = load_particles(positions, properties)
-# NUM_PARTICLES = 2
+# positions, properties = FileReader.import_positions_ovito("/Users/juanlipuma/PycharmProjects/ss/in.txt", time=48.444)
+# particles = load_particles(positions, properties)[0:100]
+# NUM_PARTICLES = 100
 
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
+SLIT_TOP = Particle(WIDTH/2, HEIGHT/2 + SLIT_SIZE/2, mass=math.inf, is_fake=True)
+SLIT_BOTTOM = Particle(WIDTH/2, HEIGHT/2 - SLIT_SIZE/2, mass=math.inf, is_fake=True)
 
 # TODO used for debugging
 for p in particles:
