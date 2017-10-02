@@ -1,5 +1,0 @@
-- Poner partículas puntuales de masa infinita en las paredes (incluye pared del medio)
-    - NO crearlas (son puntuales así que necesitaríamos infinitas para cubrir el contorno); al momento de calcular vecinos,
-        agregar partículas falsas que correspondan a las partículas de pared más cercanas
-- Posiblemente cambiar el cell index method para que no reciba ciertos parametros
-- Usar 5 para el lado de celda en el cell index method?
