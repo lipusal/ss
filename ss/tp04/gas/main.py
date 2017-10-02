@@ -227,10 +227,6 @@ fp_left = 1
 t = 0
 
 while fp_left > 0.5:
-
-    # if args['verbose']:
-        # print("Processing t=%f..." % t)
-
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
 
@@ -274,7 +270,7 @@ while fp_left > 0.5:
     t_accum += delta_t
     if t == 0 or t_accum >= DELTA_T_SAVE:
         if args['verbose']:
-            print("Saving frame")
+            print("Saving frame at t=%f" % t)
 
         # Save positions
         colors = [(255, 255, 255)] * NUM_PARTICLES
