@@ -21,13 +21,13 @@ EPSILON = 2     # ε, depth of potential well [J]
 M = 0.1         # Particle mass [dimensionless]
 V0 = 10         # Initial particle speed [dimensionless]
 R = 5           # Maximum interaction distance [dimensionless]
-WIDTH = 400     # Area width. Each compartment has width WIDTH/2 [dimensionless]
-HEIGHT = 200    # Area height [dimensionless]
-SLIT_SIZE = 10  # [dimensionless]
-NUM_PARTICLES = 1000
+WIDTH = 100     # Area width. Each compartment has width WIDTH/2 [dimensionless]
+HEIGHT = 50    # Area height [dimensionless]
+SLIT_SIZE = 5  # [dimensionless]
+NUM_PARTICLES = 100
 # Guard to make sure all particles are at least this distance from each other
 # TODO: Have program work without min_distance = 0
-MIN_DISTANCE = 0.5
+MIN_DISTANCE = 2
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
@@ -54,10 +54,10 @@ def generate_random_particles():
             for existing_particle in result:
                 if new_particle.distance_to(existing_particle) < MIN_DISTANCE + PARTICLE_RADIUS:
                     overlap = True
-                    new_particle = Particle.get_random_particle(max_height=HEIGHT,
-                                                                max_width=WIDTH / 2 - PARTICLE_RADIUS,
+                    new_particle = Particle.get_random_particle(max_height=HEIGHT - MIN_DISTANCE,
+                                                                max_width=WIDTH / 2 - PARTICLE_RADIUS - MIN_DISTANCE,
                                                                 radius=PARTICLE_RADIUS, speed=V0, mass=M,
-                                                                min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                                 min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
                     break
 
             done = not overlap
