@@ -2,7 +2,7 @@ from ss.cim.particle import Particle
 from ss.tp04.solutions import euler_modified
 
 
-def x(particle, delta_t, force):
+def r(particle, delta_t, force):
     return particle.position + particle.velocity*delta_t+((2/3)*particle.acceleration - (1/6)*particle.previous_acceleration)*delta_t**2
 
 
@@ -16,9 +16,13 @@ def v_corrected(particle, delta_t, next_acceleration):
            - (1/6)*particle.previous_acceleration*delta_t
 
 
-def v(particle, delta_t, force):
-    predicted_v = v_predicted(particle, delta_t)
-    v, o = Particle.to_v_o(predicted_v)
-    predicted_particle = Particle(x=particle.position.x, y=particle.position.y, radius=particle.radius, v=v, mass=particle.mass, o=o, is_fake=True)
-    acceleration = force/particle.mass
-    return v_corrected(particle, delta_t, acceleration)
+def v(particle, delta_t, force, f):
+    predicted_velocity = v_predicted(particle, delta_t)
+    predicted_position = r(particle, delta_t, force)
+
+    vel, angle = Particle.to_v_o(predicted_velocity)
+    predicted_particle = Particle(predicted_position[0], predicted_position[1], particle.radius, particle.mass, vel, angle, is_fake=True)
+
+    predicted_acceleration = f(predicted_position, predicted_velocity) / predicted_particle.mass
+
+    return v_corrected(particle, delta_t, predicted_acceleration)

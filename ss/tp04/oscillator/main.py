@@ -57,10 +57,10 @@ for t in np.arange(0, 4, delta_t):
 
     # Calculate beeman particles new position
     beeman_force = f(beeman_particle.position, beeman_particle.velocity)
-    beeman_x = beeman.x(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
+    beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
     positions_beeman.append(beeman_x.x)
     beeman_particle.position = beeman_x
-    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
+    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
 
     # Calculate verlets particle new position
     verlet_force = f(verlet_particle.position, verlet_particle.velocity)
@@ -79,10 +79,10 @@ for t in np.arange(0, 4, delta_t):
     # print("x(%g) = %g" % (times[-1], positions_real[-1]))
 
 plt.plot(times, positions_real, 'r--')
-plt.plot(times, positions_euler, 'c--')
-# plt.plot(times, positions_beeman, 'm--')
-plt.plot(times, positions_verlet, 'b--')
-plt.plot(times, positions_gear_predictor, 'g--')
+# plt.plot(times, positions_euler, 'c--')
+plt.plot(times, positions_beeman, 'm--')
+# plt.plot(times, positions_verlet, 'b--')
+# plt.plot(times, positions_gear_predictor, 'g--')
 # TODO poner bien estos titulitos
 plt.ylabel('amplitud')
 plt.xlabel('tiempo')

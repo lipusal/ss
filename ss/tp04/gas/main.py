@@ -173,7 +173,7 @@ def potential_energy(particle, neighbors):
     potential = 0
     for n,_ in neighbors:
         dist = abs(particle.distance_to(n))
-        potential += (12*EPSILON/R_M) * R_M**7*(2*dist**6 - R_M**6)/12*dist**12
+        potential += (12*EPSILON/R_M) * R_M**7*(R_M**6 - 2*dist**6)/12*dist**12
 
             # (R_M**7 / (6 * dist**6) - (R_M**13 / 12 * dist**12))
     return potential
