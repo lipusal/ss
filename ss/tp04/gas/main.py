@@ -31,7 +31,6 @@ MIN_DISTANCE = 0.5
 
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
-# TODO parametrizar tiempo y delta_t
 delta_t = 0.00003
 PARTICLE_RADIUS = 0
 DELTA_T_SAVE = 0.01
@@ -130,6 +129,7 @@ def add_wall_neighbors(particle, dest):
 
 
 def lennard_jones_force(r):
+    """Calculate lennard jones force for two particles separated by r"""
     assert (r != 0)
     return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
@@ -155,7 +155,7 @@ def calculate_force(particle, neighbors):
 
 
 def recalculate_fp(particles):
-# Calculate the particle ratio on each side
+    """Calculate the particle ratio on each side"""
     left = 0
     right = 0
     for particle in particles:
@@ -168,6 +168,7 @@ def recalculate_fp(particles):
     return fp_left, fp_right
 
 def potential_energy(particle, neighbors):
+    """Calculate potential energy for particle"""
     potential = 0
     for n,_ in neighbors:
         potential += 12 * EPSILON * (1/R_M) * \
@@ -201,24 +202,23 @@ t_accum = 0
 fp_left = 1
 t = 0
 
-rm17, rm13 = R_M**7, R_M**13
-
-# for t in np.arange(0, MAX_TIME, delta_t):
 while fp_left > 0.5:
     print("Processing t=%f..." % t)
 
-    potential = 0
     # if args['verbose']:
         # print("Processing t=%f..." % t)
 
+    # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
 
     total_mass = 0
     total_velocity = 0
+    potential, k = 0,0
     new_positions, new_velocities = [], []
     for p in particles:
+        # Add fake particles to represent walls
         add_wall_neighbors(p, neighbors[p.id])
-        potential += potential_energy(p, neighbors[p.id])
+
         # Calculate total force exerted on p
         force_x, force_y = calculate_force(p, neighbors[p.id])
         force = Vector2(force_x, force_y)
@@ -231,13 +231,15 @@ while fp_left > 0.5:
         #         force_x, force_y = calculate_force(p, neighbors[p.id])
         #     new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
 
+        # Calculate new position and new velocity for particle
         new_positions.append(new_position)
         new_velocity = verlet.v(p, delta_t, force)
         new_velocities.append(new_velocity)
-        total_mass += p.mass
-        total_velocity += new_velocity.magnitude()
+        # Calculate potential energy for particle
+        potential += potential_energy(p, neighbors[p.id])
+        # Calculate kinetic energy for particle
+        k+= 0.5 * p.mass * (new_velocity.magnitude())**2
 
-        # TODO remove, used for debugging
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
@@ -256,10 +258,9 @@ while fp_left > 0.5:
         colors += [(0, 255, 0)] * len(fake_particles)
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
 
-        # Save kinetic energy for current time
-        k = 0.5 * total_mass * total_velocity ** 2
+        # Save kinetic and potential energy for current time
         file = open("energy.txt", "w" if t == 0 else "a")
-        file.write("%g\t%g\t%g\n" % (t, k, potential))
+        file.write("%g,%g,%g\n" % (t, k, potential))
         file.close()
 
         # Reset counter
@@ -270,5 +271,6 @@ while fp_left > 0.5:
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
 
+    # Recalculate particle proportion on each compartment
     fp_left, _ = recalculate_fp(particles=particles)
     t += delta_t
