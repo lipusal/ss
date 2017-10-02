@@ -32,8 +32,6 @@ MIN_DISTANCE = 0.5
 fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
 
 # TODO parametrizar tiempo y delta_t
-TIME = 1000
-MAX_TIME = 0.1
 delta_t = 0.00003
 PARTICLE_RADIUS = 0
 DELTA_T_SAVE = 0.01
@@ -42,20 +40,6 @@ DELTA_T_SAVE = 0.01
 def generate_random_particles():
     """Create particles with random positions in the box"""
 
-    # Fake middle wall particles for visualization
-    y = 0.0
-    fake_particles = list()
-    while y <= HEIGHT:
-        if not HEIGHT / 2 - SLIT_SIZE / 2 + PARTICLE_RADIUS < y < HEIGHT / 2 + SLIT_SIZE / 2 - PARTICLE_RADIUS:
-            fake_particles.append(Particle(WIDTH / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-        y += 1
-
-    fake_particles.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    fake_particles.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    fake_particles.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    fake_particles.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-
-    # Real particles
     result = list()
 
     if args['verbose']:
@@ -84,7 +68,27 @@ def generate_random_particles():
     if args['verbose']:
         print("done")
 
-    return result, fake_particles
+    return result
+
+
+def generate_fake_particles():
+    """Generate fake middle wall particles for visualization, and corner particles for Ovito to create a wall"""
+
+    y = 0.0
+    result = list()
+    # Wall particles
+    while y <= HEIGHT:
+        if not HEIGHT / 2 - SLIT_SIZE / 2 + PARTICLE_RADIUS < y < HEIGHT / 2 + SLIT_SIZE / 2 - PARTICLE_RADIUS:
+            result.append(Particle(WIDTH / 2, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+        y += 1
+
+    # Corner particles
+    result.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+
+    return result
 
 
 def load_particles(positions, properties=None):
@@ -165,7 +169,10 @@ if args['time']:
     import ss.util.timer
 
 # Generate random particles
-particles, fake_particles = generate_random_particles()
+particles = generate_random_particles()
+
+# Generate wall/corner particles
+fake_particles = generate_fake_particles()
 
 # TODO used for debugging
 for p in particles:
@@ -182,7 +189,6 @@ fp_left = 1
 t = 0
 # for t in np.arange(0, MAX_TIME, delta_t):
 while fp_left > 0.5:
-    t += delta_t
     print("Processing t=%f..." % t)
 
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
@@ -247,3 +253,4 @@ while fp_left > 0.5:
         particles[i].velocity = new_velocities[i]
 
     fp_left, _ = recalculate_fp(particles=particles)
+    t += delta_t

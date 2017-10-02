@@ -61,6 +61,8 @@ class FileWriter:
             file.write('\t%g\t%g\t%g' % (r, g, b))
             file.write('\n')
 
+        file.close()
+
     @staticmethod
     def export_tuple(tuple, output='%s_va.txt' % datetime.datetime.now().isoformat(), mode="w"):
         file = open(output, mode)
