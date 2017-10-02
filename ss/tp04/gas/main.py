@@ -144,9 +144,19 @@ def calculate_force(particle, neighbors):
 
     return force_x, force_y
 
-# TODO
-def write_fake_particles():
-    return
+
+def recalculate_fp(particles):
+# Calculate the particle ratio on each side
+    left = 0
+    right = 0
+    for particle in particles:
+        if particle.position.x <= WIDTH / 2:
+            left += 1
+        else:
+            right += 1
+    fp_left = left / NUM_PARTICLES
+    fp_right = right / NUM_PARTICLES
+    return fp_left, fp_right
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -168,7 +178,11 @@ for p in particles:
 # particles = load_particles(positions, properties)
 
 t_accum = 0
-for t in np.arange(0, MAX_TIME, delta_t):
+fp_left = 1
+t = 0
+# for t in np.arange(0, MAX_TIME, delta_t):
+while fp_left > 0.5:
+    t += delta_t
     print("Processing t=%f..." % t)
 
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
@@ -231,3 +245,5 @@ for t in np.arange(0, MAX_TIME, delta_t):
     for i in range(len(particles)):
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
+
+    fp_left, _ = recalculate_fp(particles=particles)
