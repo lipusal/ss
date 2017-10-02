@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
 import ss.util.args as arg_base
@@ -75,7 +74,7 @@ for t in np.arange(0, 4, delta_t):
     # Calculate beeman particles new position
     if "beeman" in args.integration_method or "all" in args.integration_method:
         beeman_force = f(beeman_particle.position, beeman_particle.velocity)
-        beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
+        beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t)
         positions_beeman.append(beeman_x.x)
         beeman_particle.position = beeman_x
         beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
@@ -100,26 +99,26 @@ for t in np.arange(0, 4, delta_t):
 
 plt.plot(times, positions_real, 'r:', label="Analítico")
 
+print("Mean Quadratic Errors")
+
 # Check parameters to see what to graph
 if "euler" in args.integration_method or "all" in args.integration_method:
     plt.plot(times, positions_euler, 'c:', label="Euler")
+    print("Euler: %g" % (euler_error / iteration))
 
 if "beeman" in args.integration_method or "all" in args.integration_method:
     plt.plot(times, positions_beeman, 'm:', label="Beeman")
+    print("Beeman: %g" % (beeman_error / iteration))
 
 if "verlet" in args.integration_method or "all" in args.integration_method:
     plt.plot(times, positions_verlet, 'b:', label="Verlet")
+    print("Verlet: %g" % (verlet_error / iteration))
 
 if "gear" in args.integration_method or "all" in args.integration_method:
     plt.plot(times, positions_gear_predictor, 'g:', label="Gear predictor 5")
+    print("Gear Predictor: %g" % (gear_error / iteration))
 
 plt.legend()
-
-print("Mean Quadratic Errors")
-print("Euler: %f" % (euler_error / iteration))
-print("Beeman: %f" % (beeman_error / iteration))
-print("Verlet: %f" % (verlet_error / iteration))
-print("Gear Predictor: %f" % (gear_error / iteration))
 
 plt.ylabel('Amplitud')
 plt.xlabel('Tiempo')
