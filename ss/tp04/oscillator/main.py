@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 
 import ss.util.args as arg_base
@@ -43,6 +44,8 @@ verlet_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, m
 gear_predictor_particle = Particle(x=constants.X0, y=constants.Y0, radius=constants.R, mass=constants.M, v=constants.V0, o=0.0)
 times, positions_real, positions_euler, positions_beeman, positions_verlet, positions_gear_predictor = [], [], [], [], [], []
 
+euler_error, beeman_error, verlet_error, gear_error = 0,0,0,0
+
 for t in np.arange(0, 4, delta_t):
 
     times.append(t)
@@ -54,6 +57,7 @@ for t in np.arange(0, 4, delta_t):
     positions_euler.append(euler_x.x)
     euler_particle.position = euler_x
     euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t, force=euler_force)
+    euler_error += (euler_x[0] - real.x(t)) ** 2
 
     # Calculate beeman particles new position
     beeman_force = f(beeman_particle.position, beeman_particle.velocity)
@@ -61,6 +65,7 @@ for t in np.arange(0, 4, delta_t):
     positions_beeman.append(beeman_x.x)
     beeman_particle.position = beeman_x
     beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
+    beeman_error += (beeman_x[0] - real.x(t)) ** 2
 
     # Calculate verlets particle new position
     verlet_force = f(verlet_particle.position, verlet_particle.velocity)
@@ -68,24 +73,34 @@ for t in np.arange(0, 4, delta_t):
     positions_verlet.append(verlet_x.x)
     verlet_particle.position = verlet_x
     verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
+    verlet_error += (verlet_x[0] - real.x(t)) ** 2
 
-    # Calculate euler particle new position
+    # Calculate gear predictor particle new position
     gear_predictor_derivatives = gear_predictor.run(particle=euler_particle, delta_t=delta_t)
     positions_gear_predictor.append(gear_predictor_derivatives[0].x)
-    euler_particle.position = gear_predictor_derivatives[0]
-    euler_particle.velocity = gear_predictor_derivatives[1]
+    gear_predictor_particle.position = gear_predictor_derivatives[0]
+    gear_predictor_particle.velocity[0] = gear_predictor_derivatives[1]
+    gear_error += (gear_predictor_derivatives[0].x - real.x(t)) ** 2
 
 
-    # print("x(%g) = %g" % (times[-1], positions_real[-1]))
+plt.plot(times, positions_real, 'r:', label="Analítico")
+# plt.plot(times, positions_euler, 'c:', label="Euler")
+# plt.plot(times, positions_beeman, 'm:', label="Beeman")
+# plt.plot(times, positions_verlet, 'b:', label="Verlet")
+plt.plot(times, positions_gear_predictor, 'g:', label="Gear predictor 5")
 
-plt.plot(times, positions_real, 'r--')
-# plt.plot(times, positions_euler, 'c--')
-plt.plot(times, positions_beeman, 'm--')
-# plt.plot(times, positions_verlet, 'b--')
-# plt.plot(times, positions_gear_predictor, 'g--')
+plt.legend()
+
+print("Mean Quadratic Errors")
+print("Euler: %f" %(euler_error/t))
+print("Beeman: %f" %(beeman_error/t))
+print("Verlet: %f" %(verlet_error/t))
+print("Gear Predictor: %f" %(gear_error/t))
+
 # TODO poner bien estos titulitos
-plt.ylabel('amplitud')
-plt.xlabel('tiempo')
+plt.ylabel('Amplitud')
+plt.xlabel('Tiempo')
 plt.title('Oscilador Armónico Simple')
 plt.show()
+
 
