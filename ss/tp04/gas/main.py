@@ -182,8 +182,6 @@ def potential_energy(particle, neighbors):
     for n,_ in neighbors:
         dist = abs(particle.distance_to(n))
         potential += (12*EPSILON/R_M) * R_M**7*(R_M**6 - 2*dist**6)/12*dist**12
-
-            # (R_M**7 / (6 * dist**6) - (R_M**13 / 12 * dist**12))
     return potential
 
 
@@ -191,10 +189,7 @@ def compartment(particle):
     """Return which compartment the specified particle is in. 0 for left, 1 for exact middle, 2 for right."""
     if particle.x == WIDTH / 2:
         return 1
-
     return 0 if particle.x < WIDTH / 2 else 2
-
-# return (12 * EPSILON / R_M) * (((R_M / r) ** 13) - ((R_M / r) ** 7))
 
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
@@ -216,12 +211,6 @@ fake_particles = generate_fake_particles()
 SLIT_TOP = Particle(WIDTH/2, HEIGHT/2 + SLIT_SIZE/2, mass=math.inf, is_fake=True)
 SLIT_BOTTOM = Particle(WIDTH/2, HEIGHT/2 - SLIT_SIZE/2, mass=math.inf, is_fake=True)
 
-# TODO used for debugging
-for p in particles:
-    if p.x > WIDTH or p.x < 0 or p.y > HEIGHT or p.y < 0:
-        raise Exception("Generated particle %s is out of bounds" %p)
-
-
 t_accum = 0
 fp_left = 1
 t = 0
@@ -242,13 +231,7 @@ while fp_left > 0.5:
         force_x, force_y = calculate_force(p, neighbors[p.id])
         force = Vector2(force_x, force_y)
         # Calculate new position and velocity using Verlet
-        # TODO: usar otros?
         new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
-        # # Debugging Juan
-        # if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
-        #     if abs(force_x) > 10 or abs(force_y) > 10:
-        #         force_x, force_y = calculate_force(p, neighbors[p.id])
-        #     new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
 
         # Calculate new position and new velocity for particle
         new_positions.append(new_position)
@@ -262,10 +245,6 @@ while fp_left > 0.5:
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
-    # Debugging Juan
-    # delta_positions = [abs(new_positions[i] - particles[i].position) for i in range(len(particles))]
-    # min_d, max_d = min(delta_positions), max(delta_positions)
-
     # Save frame if necessary
     t_accum += delta_t
     if t == 0 or t_accum >= DELTA_T_SAVE:
@@ -278,11 +257,12 @@ while fp_left > 0.5:
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
 
         # Save kinetic and potential energy for current time
+        # Used for 2.2
         file = open("energy.txt", "w" if t == 0 else "a")
         file.write("%g,%g,%g\n" % (t, k, potential))
         file.close()
-
         # Reset counter
+
         t_accum = 0
 
     # Evolve particles
@@ -290,6 +270,10 @@ while fp_left > 0.5:
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
 
-    # Recalculate particle proportion on each compartment
+    # Recalculate particle proportion on each compartment and write in file
+    # Used for 2.3
+    file = open("fpleft.txt", "w" if t == 0 else "a")
+    file.write("%g,%g\n" % (t, fp_left))
+    file.close()
     fp_left, _ = recalculate_fp(particles=particles)
     t += delta_t
