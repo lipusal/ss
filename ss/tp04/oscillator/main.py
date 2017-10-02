@@ -11,6 +11,8 @@ from ss.tp04.solutions import real, euler_modified, beeman, verlet, gear_predict
 # TODO: Update description
 arg_base.parser.description = "Dampened oscillator simulation program. Uses different integration methods to compare " \
                               "their accuracy by measuring their distance to the analytical (ie. real) solution."
+arg_base.parser.add_argument("--integration_method", "-im", help="Choose integration method: euler, beeman, verlet, gear or all", type=str, nargs='*', default="all")
+
 args = arg_base.parse_args()
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -46,61 +48,74 @@ times, positions_real, positions_euler, positions_beeman, positions_verlet, posi
 
 euler_error, beeman_error, verlet_error, gear_error = 0,0,0,0
 
-for t in np.arange(0, 4, delta_t):
+iteration = 0
 
+for t in np.arange(0, 4, delta_t):
+    iteration+=1
     times.append(t)
     positions_real.append(real.x(t))
 
+    if "euler" in args.integration_method or "all" in args.integration_method:
     # Calculate euler particle new position
-    euler_force = f(euler_particle.position, euler_particle.velocity)
-    euler_x = euler_modified.x(particle=euler_particle, delta_t=delta_t, force=euler_force)
-    positions_euler.append(euler_x.x)
-    euler_particle.position = euler_x
-    euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t, force=euler_force)
-    euler_error += (euler_x[0] - real.x(t)) ** 2
+        euler_force = f(euler_particle.position, euler_particle.velocity)
+        euler_x = euler_modified.x(particle=euler_particle, delta_t=delta_t, force=euler_force)
+        positions_euler.append(euler_x.x)
+        euler_particle.position = euler_x
+        euler_particle.velocity = euler_modified.v(particle=euler_particle, delta_t=delta_t, force=euler_force)
+        euler_error += (euler_x[0] - real.x(t)) ** 2
 
+    if "beeman" in args.integration_method or "all" in args.integration_method:
     # Calculate beeman particles new position
-    beeman_force = f(beeman_particle.position, beeman_particle.velocity)
-    beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
-    positions_beeman.append(beeman_x.x)
-    beeman_particle.position = beeman_x
-    beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
-    beeman_error += (beeman_x[0] - real.x(t)) ** 2
+        beeman_force = f(beeman_particle.position, beeman_particle.velocity)
+        beeman_x = beeman.r(particle=beeman_particle, delta_t=delta_t, force=beeman_force)
+        positions_beeman.append(beeman_x.x)
+        beeman_particle.position = beeman_x
+        beeman_particle.velocity = beeman.v(particle=beeman_particle, delta_t=delta_t, force=beeman_force, f=f)
+        beeman_error += (beeman_x[0] - real.x(t)) ** 2
 
+    if "verlet" in args.integration_method or "all" in args.integration_method:
     # Calculate verlets particle new position
-    verlet_force = f(verlet_particle.position, verlet_particle.velocity)
-    verlet_x = verlet.r(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
-    positions_verlet.append(verlet_x.x)
-    verlet_particle.position = verlet_x
-    verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
-    verlet_error += (verlet_x[0] - real.x(t)) ** 2
+        verlet_force = f(verlet_particle.position, verlet_particle.velocity)
+        verlet_x = verlet.r(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
+        positions_verlet.append(verlet_x.x)
+        verlet_particle.position = verlet_x
+        verlet_particle.velocity = verlet.v(particle=verlet_particle, delta_t=delta_t, force=verlet_force)
+        verlet_error += (verlet_x[0] - real.x(t)) ** 2
 
+    if "gear" in args.integration_method or "all" in args.integration_method:
     # Calculate gear predictor particle new position
-    gear_predictor_derivatives = gear_predictor.run(particle=euler_particle, delta_t=delta_t)
-    positions_gear_predictor.append(gear_predictor_derivatives[0].x)
-    gear_predictor_particle.position = gear_predictor_derivatives[0]
-    gear_predictor_particle.velocity[0] = gear_predictor_derivatives[1]
-    gear_error += (gear_predictor_derivatives[0].x - real.x(t)) ** 2
-
+        gear_predictor_derivatives = gear_predictor.run(particle=gear_predictor_particle, delta_t=delta_t)
+        positions_gear_predictor.append(gear_predictor_derivatives[0].x)
+        gear_predictor_particle.position = gear_predictor_derivatives[0]
+        gear_predictor_particle.velocity = gear_predictor_derivatives[1]
+        gear_error += (gear_predictor_derivatives[0].x - real.x(t)) ** 2
 
 plt.plot(times, positions_real, 'r:', label="Analítico")
-# plt.plot(times, positions_euler, 'c:', label="Euler")
-# plt.plot(times, positions_beeman, 'm:', label="Beeman")
-# plt.plot(times, positions_verlet, 'b:', label="Verlet")
-plt.plot(times, positions_gear_predictor, 'g:', label="Gear predictor 5")
+
+# Check parameters to see what to graph
+if "euler" in args.integration_method or "all" in args.integration_method:
+    plt.plot(times, positions_euler, 'c:', label="Euler")
+
+if "beeman" in args.integration_method or "all" in args.integration_method:
+    plt.plot(times, positions_beeman, 'm:', label="Beeman")
+
+if "verlet" in args.integration_method or "all" in args.integration_method:
+    plt.plot(times, positions_verlet, 'b:', label="Verlet")
+
+if "gear" in args.integration_method or "all" in args.integration_method:
+    plt.plot(times, positions_gear_predictor, 'g:', label="Gear predictor 5")
 
 plt.legend()
 
 print("Mean Quadratic Errors")
-print("Euler: %f" %(euler_error/t))
-print("Beeman: %f" %(beeman_error/t))
-print("Verlet: %f" %(verlet_error/t))
-print("Gear Predictor: %f" %(gear_error/t))
+print("Euler: %f" %(euler_error/iteration))
+print("Beeman: %f" %(beeman_error/iteration))
+print("Verlet: %f" %(verlet_error/iteration))
+print("Gear Predictor: %f" %(gear_error/iteration))
 
-# TODO poner bien estos titulitos
 plt.ylabel('Amplitud')
 plt.xlabel('Tiempo')
-plt.title('Oscilador Armónico Simple')
+plt.title('Oscilador Amortiguado')
 plt.show()
 
 
