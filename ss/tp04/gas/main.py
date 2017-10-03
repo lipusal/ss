@@ -3,6 +3,8 @@ import random
 
 import numpy as np
 from euclid3 import Vector2
+import matplotlib.pyplot as plt
+import plotly.plotly as py
 
 from ss.cim.cell_index_method import CellIndexMethod
 import ss.util.args as arg_base
@@ -191,6 +193,20 @@ def compartment(particle):
         return 1
     return 0 if particle.x < WIDTH / 2 else 2
 
+def velocity_histogram(particles, filename):
+    if(args['verbose']):
+        print("Generating velocity histogram")
+    velocities = list()
+    for p in particles:
+        velocities.append(p.velocity.magnitude())
+    plt.hist(np.array(velocities), bins=np.arange(np.min(velocities)-1, np.max(velocities)+1, 0.25), histtype='bar',
+             color="orange", align="left", linestyle="solid", edgecolor='black', linewidth=0.8)
+    plt.title("Frecuencia de las velocidades")
+    plt.xlabel("Velocidad")
+    plt.ylabel("Frecuencia")
+    plt.show()
+    plt.savefig(filename)
+
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
@@ -214,6 +230,8 @@ SLIT_BOTTOM = Particle(WIDTH/2, HEIGHT/2 - SLIT_SIZE/2, mass=math.inf, is_fake=T
 t_accum = 0
 fp_left = 1
 t = 0
+
+velocity_histogram(particles, "initial.jpg")
 
 while fp_left > 0.5:
     # Calculate all neighbors for all particles
@@ -254,15 +272,21 @@ while fp_left > 0.5:
         # Save positions
         colors = [(255, 255, 255)] * NUM_PARTICLES
         colors += [(0, 255, 0)] * len(fake_particles)
-        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a")
+        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a", output=args['output'])
 
         # Save kinetic and potential energy for current time
         # Used for 2.2
         file = open("energy.txt", "w" if t == 0 else "a")
         file.write("%g,%g,%g\n" % (t, k, potential))
         file.close()
-        # Reset counter
 
+        # Save fp proportion on the left side of the compartment
+        # Used for 2.3
+        file = open("fpleft.txt", "w" if t == 0 else "a")
+        file.write("%g,%g\n" % (t, fp_left))
+        file.close()
+
+        # Reset counter
         t_accum = 0
 
     # Evolve particles
@@ -270,10 +294,10 @@ while fp_left > 0.5:
         particles[i].position = new_positions[i]
         particles[i].velocity = new_velocities[i]
 
-    # Recalculate particle proportion on each compartment and write in file
-    # Used for 2.3
-    file = open("fpleft.txt", "w" if t == 0 else "a")
-    file.write("%g,%g\n" % (t, fp_left))
-    file.close()
+    # Recalculate particle proportion on each compartment
     fp_left, _ = recalculate_fp(particles=particles)
+
+    # Add delta t to total time
     t += delta_t
+
+# velocity_histogram(particles, "final_velocities.jpg")
