@@ -35,7 +35,7 @@ fp = 1          # particles on left compartment / total particles (ie. all parti
 
 delta_t = 0.00003
 PARTICLE_RADIUS = 0
-DELTA_T_SAVE = 0.01
+DELTA_T_SAVE = 0.05
 
 
 def generate_random_particles():
@@ -204,7 +204,7 @@ def velocity_histogram(particles, filename):
     plt.title("Frecuencia de las velocidades")
     plt.xlabel("Velocidad")
     plt.ylabel("Frecuencia")
-    plt.show()
+    # plt.show()
     plt.savefig(filename)
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -231,9 +231,16 @@ t_accum = 0
 fp_left = 1
 t = 0
 
-velocity_histogram(particles, "initial.jpg")
+velocity_histogram(particles, "initial_velocity_histogram.jpg")
 
+middle_histogram = False
 while fp_left > 0.5:
+
+    if fp_left > 0.25 and not middle_histogram:
+        velocity_histogram(particles, "middle_velocity_histogram.jpg")
+        middle_histogram = True
+
+
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
 
@@ -300,4 +307,4 @@ while fp_left > 0.5:
     # Add delta t to total time
     t += delta_t
 
-# velocity_histogram(particles, "final_velocities.jpg")
+velocity_histogram(particles, "final_velocity_histogram.jpg")
