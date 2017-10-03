@@ -235,7 +235,7 @@ velocity_histogram(particles, "initial_velocity_histogram.jpg")
 middle_histogram = False
 while fp_left > 0.5:
 
-    if fp_left > 0.25 and not middle_histogram:
+    if fp_left < 0.75 and not middle_histogram:
         velocity_histogram(particles, "middle_velocity_histogram.jpg")
         middle_histogram = True
 
