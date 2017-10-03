@@ -4,7 +4,6 @@ import random
 import numpy as np
 from euclid3 import Vector2
 import matplotlib.pyplot as plt
-import plotly.plotly as py
 
 from ss.cim.cell_index_method import CellIndexMethod
 import ss.util.args as arg_base
