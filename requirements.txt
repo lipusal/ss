@@ -1,3 +1,5 @@
 euclid3==0.1
 numpy==1.13.1
-matplotlib=2.0.2
+matplotlib==2.0.2
+plotly==2.0.15
+
