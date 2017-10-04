@@ -70,9 +70,11 @@ def rs_oscillator(particle):
 
     result = [particle.position, particle.velocity]     # R0, R1
     # For oscillator, for every n >= 2, r[n] = (K * r[n-2] + lambda * r[n-1]) / -mass
-    for n in range(2, DEGREE+1):   # R2, R3, R4, R5
-        result.append((K*result[n-2] + lamb*result[n-1]) / -particle.mass)
+    # K = 1
+    for n in range(2, DEGREE + 1):  # R2, R3, R4, R5
+        result.append((K * result[n - 2] + lamb * result[n - 1]) / -particle.mass)
     return result
+
 
 
 def r2_oscillator(particle, r_ps):

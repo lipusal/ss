@@ -23,17 +23,15 @@ M = 0.1         # Particle mass [dimensionless]
 V0 = 10         # Initial particle speed [dimensionless]
 R = 5           # Maximum interaction distance [dimensionless]
 WIDTH = 100     # Area width. Each compartment has width WIDTH/2 [dimensionless]
-HEIGHT = 50    # Area height [dimensionless]
-SLIT_SIZE = 5  # [dimensionless]
+HEIGHT = 50     # Area height [dimensionless]
+SLIT_SIZE = 5   # [dimensionless]
 NUM_PARTICLES = 100
-# Guard to make sure all particles are at least this distance from each other
-# TODO: Have program work without min_distance = 0
+PARTICLE_RADIUS = 0
+# Guard to make sure all particles are at least this distance from each other in
+# the beginning, to avoid really strong forces before the first iteration
 MIN_DISTANCE = 2
 
-fp = 1          # particles on left compartment / total particles (ie. all particles start on the left compartment)
-
-delta_t = 0.00003
-PARTICLE_RADIUS = 0
+delta_t = 0.00006
 DELTA_T_SAVE = 0.05
 
 
@@ -193,6 +191,8 @@ def compartment(particle):
     return 0 if particle.x < WIDTH / 2 else 2
 
 def velocity_histogram(particles, filename):
+    """Save a histogram with the velocity distribution for particles"""
+    # Used for 2.4
     if(args['verbose']):
         print("Generating velocity histogram")
     velocities = list()
@@ -203,7 +203,6 @@ def velocity_histogram(particles, filename):
     plt.title("Frecuencia de las velocidades")
     plt.xlabel("Velocidad")
     plt.ylabel("Frecuencia")
-    # plt.show()
     plt.savefig(filename)
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -229,31 +228,35 @@ SLIT_BOTTOM = Particle(WIDTH/2, HEIGHT/2 - SLIT_SIZE/2, mass=math.inf, is_fake=T
 t_accum = 0
 fp_left = 1
 t = 0
+middle_histogram = False
 
 velocity_histogram(particles, "initial_velocity_histogram.jpg")
 
-middle_histogram = False
+
 while fp_left > 0.5:
 
     if fp_left < 0.75 and not middle_histogram:
+        # Generate a histogram when one fourth of the particles have passed to the right side
         velocity_histogram(particles, "middle_velocity_histogram.jpg")
         middle_histogram = True
-
 
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
 
+    # Initialize variables
     total_mass = 0
     total_velocity = 0
     potential, k = 0,0
     new_positions, new_velocities = [], []
     for p in particles:
+
         # Add fake particles to represent walls
         add_wall_neighbors(p, neighbors[p.id])
 
         # Calculate total force exerted on p
         force_x, force_y = calculate_force(p, neighbors[p.id])
         force = Vector2(force_x, force_y)
+
         # Calculate new position and velocity using Verlet
         new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
 
@@ -261,6 +264,7 @@ while fp_left > 0.5:
         new_positions.append(new_position)
         new_velocity = verlet.v(p, delta_t, force)
         new_velocities.append(new_velocity)
+
         # Calculate potential energy for particle
         potential += potential_energy(p, neighbors[p.id])
         # Calculate kinetic energy for particle
@@ -278,17 +282,17 @@ while fp_left > 0.5:
         # Save positions
         colors = [(255, 255, 255)] * NUM_PARTICLES
         colors += [(0, 255, 0)] * len(fake_particles)
-        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a", output=args['output'])
+        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, mode="w" if t == 0 else "a", output="output2.txt")
 
         # Save kinetic and potential energy for current time
         # Used for 2.2
-        file = open("energy.txt", "w" if t == 0 else "a")
+        file = open("energy2.txt", "w" if t == 0 else "a")
         file.write("%g,%g,%g\n" % (t, k, potential))
         file.close()
 
         # Save fp proportion on the left side of the compartment
         # Used for 2.3
-        file = open("fpleft.txt", "w" if t == 0 else "a")
+        file = open("fpleft2.txt", "w" if t == 0 else "a")
         file.write("%g,%g\n" % (t, fp_left))
         file.close()
 
@@ -306,4 +310,5 @@ while fp_left > 0.5:
     # Add delta t to total time
     t += delta_t
 
-velocity_histogram(particles, "final_velocity_histogram.jpg")
+# Generate a histogram for the particle velocity distribution at the end
+velocity_histogram(particles, "final_velocity_histogram2.jpg")
