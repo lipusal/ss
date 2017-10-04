@@ -175,12 +175,14 @@ def recalculate_fp(particles):
     fp_right = right / NUM_PARTICLES
     return fp_left, fp_right
 
+
 def potential_energy(particle, neighbors):
     """Calculate potential energy for particle"""
+
     potential = 0
-    for n,_ in neighbors:
-        dist = abs(particle.distance_to(n))
-        potential += (12*EPSILON/R_M) * R_M**7*(R_M**6 - 2*dist**6)/12*dist**12
+    for neighbor, dist in neighbors:
+        if neighbor != particle:
+            potential += EPSILON*((R_M/dist)**12 - 2*(R_M/dist)**6)
     return potential
 
 
@@ -190,10 +192,11 @@ def compartment(particle):
         return 1
     return 0 if particle.x < WIDTH / 2 else 2
 
+
 def velocity_histogram(particles, filename):
     """Save a histogram with the velocity distribution for particles"""
     # Used for 2.4
-    if(args['verbose']):
+    if args['verbose']:
         print("Generating velocity histogram")
     velocities = list()
     for p in particles:
@@ -246,9 +249,12 @@ while fp_left > 0.5:
     # Initialize variables
     total_mass = 0
     total_velocity = 0
-    potential, k = 0,0
+    e_u, e_k = 0, 0
     new_positions, new_velocities = [], []
     for p in particles:
+        # Accumulate system energies (do this before adding fake wall particles since those aren't part of the system)
+        e_u += potential_energy(p, neighbors[p.id])
+        e_k += 0.5 * p.mass * (p.velocity.magnitude() ** 2)
 
         # Add fake particles to represent walls
         add_wall_neighbors(p, neighbors[p.id])
@@ -264,11 +270,6 @@ while fp_left > 0.5:
         new_positions.append(new_position)
         new_velocity = verlet.v(p, delta_t, force)
         new_velocities.append(new_velocity)
-
-        # Calculate potential energy for particle
-        potential += potential_energy(p, neighbors[p.id])
-        # Calculate kinetic energy for particle
-        k+= 0.5 * p.mass * (new_velocity.magnitude())**2
 
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
@@ -287,7 +288,7 @@ while fp_left > 0.5:
         # Save kinetic and potential energy for current time
         # Used for 2.2
         file = open("energy2.txt", "w" if t == 0 else "a")
-        file.write("%g,%g,%g\n" % (t, k, potential))
+        file.write("%g,%g,%g\n" % (t, e_k, e_u))
         file.close()
 
         # Save fp proportion on the left side of the compartment
