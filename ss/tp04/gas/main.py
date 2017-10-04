@@ -201,6 +201,7 @@ def velocity_histogram(particles, filename):
     velocities = list()
     for p in particles:
         velocities.append(p.velocity.magnitude())
+    plt.clf()
     plt.hist(np.array(velocities), bins=np.arange(np.min(velocities)-1, np.max(velocities)+1, 0.25), histtype='bar',
              color="orange", align="left", linestyle="solid", edgecolor='black', linewidth=0.8)
     plt.title("Frecuencia de las velocidades")
