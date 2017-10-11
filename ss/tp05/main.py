@@ -18,7 +18,7 @@ arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a
 #                                                    "20", type=float, default=20)
 arg_base.parser.add_argument("--diameter", "-d", help="Diameter of bottom silo opening [meters], float.  Must be less "
                                                       "than width. Default is 0.5", type=float, default=0.5)
-arg_base.parser.add_argument("--num-particles", "-n", help="Number of particles. Default is 500", type=int, default=500)
+arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 500", type=int, default=50)
 
 args = arg_base.to_dict_no_none()
 
@@ -27,7 +27,7 @@ if not args['width'] < args['height']:
     raise Exception("Width (%g) must be less than height (%g)" % (args['width'], args['height']))
 if not args['diameter'] < args['width']:
     raise Exception("Diameter (%g) must be less than width (%g)" % (args['diameter'], args['width']))
-if args['num-particles'] < 0:
+if args['num_particles'] < 0:
     raise Exception("Num particles (%i) must be positive" % args['num-particles'])
 
 
@@ -46,7 +46,7 @@ Y = Vector2(0, 1)           # Unit vector Y
 G = -Y * 9.81               # Gravity vector
 
 # Constants from args, easier to type
-NUM_PARTICLES = args['num-particles']
+NUM_PARTICLES = args['num_particles']
 HEIGHT = args['height']
 WIDTH = args['width']
 DIAMETER = args['diameter']
@@ -243,7 +243,7 @@ while True:
         # Calculate total force exerted on p on the normal and tang
         # TODO check
         f_norm, f_tang = calculate_force(p, neighbors[p.id])
-        force = f_norm + f_tang + p.mass * G
+        force = f_norm + f_tang + (p.mass * G)
 
         # Calculate new position and velocity using Verlet
         # TODO ver lo de usar gear predictor
