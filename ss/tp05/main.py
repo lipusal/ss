@@ -13,12 +13,13 @@ from ss.tp04.solutions import verlet
 arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles " \
                               "diffuse from one compartment to another through a slit. Unlike TP03, particles in this" \
                               "simulation have interaction forces as modeled by the Lennard-Jones potential model"
-arg_base.parser.add_argument("--height", "-h", help="Silo height [meters], float.  Default is 50", type=float, default=50)
-arg_base.parser.add_argument("--width", "-w", help="Silo width [meters], float.  Must be less than height. Default is "
-                                                   "20", type=float, default=20)
+# arg_base.parser.add_argument("--height", "-h", help="Silo height [meters], float.  Default is 50", type=float, default=50)
+# arg_base.parser.add_argument("--width", "-w", help="Silo width [meters], float.  Must be less than height. Default is "
+#                                                    "20", type=float, default=20)
 arg_base.parser.add_argument("--diameter", "-d", help="Diameter of bottom silo opening [meters], float.  Must be less "
                                                       "than width. Default is 0.5", type=float, default=0.5)
 arg_base.parser.add_argument("--num-particles", "-n", help="Number of particles. Default is 500", type=int, default=500)
+
 args = arg_base.to_dict_no_none()
 
 # Validate params
@@ -113,18 +114,18 @@ def generate_fake_particles():
 
     return result
 
-
-def load_particles(positions, properties=None):
-    if properties is not None and len(positions) != len(properties):
-        raise Exception("Positions and properties must have the same length")
-
-    result = list()
-    for i in range(len(positions)):
-        position = positions[i]
-        # TODO: Store velocity angle in output
-        result.append(Particle(position[0], position[1], radius=PARTICLE_RADIUS, mass=PARTICLE_MASS, v=V0, o=random.uniform(0, 2 * math.pi)))
-
-    return result
+#
+# def load_particles(positions, properties=None):
+#     if properties is not None and len(positions) != len(properties):
+#         raise Exception("Positions and properties must have the same length")
+#
+#     result = list()
+#     for i in range(len(positions)):
+#         position = positions[i]
+#         # TODO: Store velocity angle in output
+#         result.append(Particle(position[0], position[1], radius=PARTICLE_RADIUS, mass=PARTICLE_MASS, v=V0, o=random.uniform(0, 2 * math.pi)))
+#
+#     return result
 
 
 # def add_wall_neighbors(particle, dest):
@@ -189,6 +190,21 @@ def superposition(particle, other):
         return particle.radius + other.radius - (other.position - particle.position).magnitude()
 
 
+
+def calculate_force(particle, others):
+    # TODO check
+    fn = 0
+    ft = 0
+    for n in others:
+        v_t = particle.relative_position(n).normalize()
+        v_n = Vector2(-v_t.y, v_t.x)
+        epsilon = superposition(particle, n)
+        if epsilon >= 0:
+            fn += -K_n * epsilon * v_n
+            ft += K_t * epsilon * particle.relative_position(n) * v_t
+    return fn, ft
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
@@ -212,27 +228,25 @@ t = 0
 
 # TODO: Establish end condition
 while True:
+
     # Calculate all neighbors for all particles
-    neighbors = CellIndexMethod(particles, radius=R, width=WIDTH, height=HEIGHT).neighbors
+    neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
 
     # Initialize variables
-    total_mass = 0
-    total_velocity = 0
-    e_u, e_k = 0, 0
     new_positions, new_velocities = [], []
     for p in particles:
-        # Accumulate system energies (do this before adding fake wall particles since those aren't part of the system)
-        e_u += potential_energy(p, neighbors[p.id])
-        e_k += 0.5 * p.mass * (p.velocity.magnitude() ** 2)
 
         # Add fake particles to represent walls
-        add_wall_neighbors(p, neighbors[p.id])
+        #  TODO
+        # add_wall_neighbors(p, neighbors[p.id])
 
-        # Calculate total force exerted on p
-        force_x, force_y = calculate_force(p, neighbors[p.id])
-        force = Vector2(force_x, force_y)
+        # Calculate total force exerted on p on the normal and tang
+        # TODO check
+        f_norm, f_tang = calculate_force(p, neighbors[p.id])
+        force = f_norm + f_tang + p.mass * G
 
         # Calculate new position and velocity using Verlet
+        # TODO ver lo de usar gear predictor
         new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
 
         # Calculate new position and new velocity for particle

@@ -6,9 +6,9 @@ import argparse
 parser = argparse.ArgumentParser(description="Cell Index Method base argument parser, contains basic parameters for "
                                              "all projects. Projects should override this description to their need.")
 parser.add_argument("--height", "-l", help="Board side height. Decimal. If not provided, will calculate a minimum "
-                                           "height containing all particles", type=float)
+                                           "height containing all particles", type=float, default=10)
 parser.add_argument("--width", "-w", help="Board side width. Decimal. If not provided, will calculate a minimum width "
-                                          "containing all particles", type=float)
+                                          "containing all particles", type=float, default=3)
 parser.add_argument("-m", help="Cells per longest side (width or height). Integer. If not provided, will calculate an"
                                "optimal value for the particles of the simulation", type=int)
 parser.add_argument("--output", "-o", help="Path of output file, if the script generates an output. Defaults to "
