@@ -38,14 +38,20 @@ MIN_PARTICLE_RADIUS = 0.01  # [m]
 MAX_PARTICLE_RADIUS = 0.03  # [m]
 MIN_Y = -args['height']/10  # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
 V0 = 0                      # [m/s]
+
+# Constant vectors
+X = Vector2(1, 0)           # Unit vector X
+Y = Vector2(0, 1)           # Unit vector Y
+G = -Y * 9.81               # Gravity vector
+
 # Constants from args, easier to type
 NUM_PARTICLES = args['num-particles']
 HEIGHT = args['height']
 WIDTH = args['width']
 DIAMETER = args['diameter']
 
-#TODO: Delete these if unused
-MIN_DISTANCE = 0
+MIN_DISTANCE = 0            # Min distance between created particles [m]. Note that for this simulation, once the
+                            # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
 delta_t = 0.00006
@@ -89,13 +95,14 @@ def generate_random_particles():
 
 
 def generate_fake_particles():
-    """Generate fake opening particles for visualization, and corner particles for Ovito to create a wall"""
+    """Generate fake slit particles for visualization, and corner particles for Ovito to create a wall"""
 
-    x = WIDTH/2 - DIAMETER/2
+    x = 0
     result = list()
-    # Opening particles
-    while x <= WIDTH/2 + DIAMETER/2:
-        result.append(Particle(x, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+    # Slit particles
+    while x <= WIDTH:
+        if not WIDTH/2 - DIAMETER/2 <= x <= WIDTH/2 + DIAMETER/2:
+            result.append(Particle(x, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
         x += MIN_PARTICLE_RADIUS
 
     # Corner particles
@@ -173,6 +180,13 @@ def load_particles(positions, properties=None):
 #             force_y += force * math.sin(angle)
 #     return force_x, force_y
 
+def superposition(particle, other):
+    if other.is_fake:
+        # Wall particle
+        return particle.radius - (other.position - particle.position).magnitude()
+    else:
+        # Real particle
+        return particle.radius + other.radius - (other.position - particle.position).magnitude()
 
 
 # ----------------------------------------------------------------------------------------------------------------------
