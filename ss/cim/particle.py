@@ -72,8 +72,8 @@ class Particle:
         return self._position.y
 
     def relative_position(self, other):
-        """Return self.position - other.position"""
-        return self.position - other.position
+        """Return other.position - self.position (ie. position relative to self)"""
+        return other.position - self.position
 
     @property
     def velocity(self):
@@ -88,8 +88,8 @@ class Particle:
         self._velocity = self.to_x_y(value[0], value[1])
 
     def relative_velocity(self, other):
-        """Return self.velocity - other.velocity"""
-        return self.velocity - other.velocity
+        """Return other.velocity - self.velocity (ie. relative to self)"""
+        return other.velocity - self.velocity
 
     @property
     def acceleration(self):
