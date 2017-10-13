@@ -198,8 +198,8 @@ def evolve_particles(particles, new_positions, new_velocities):
             # TODO: Ensure no overlap. If can't generate without overlap, choose random X
             overlap = True
             new_x = p.x
-            while overlap:
 
+            while overlap:
                 new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                         id=p.id)
                 if len(result) == 0:
@@ -215,13 +215,12 @@ def evolve_particles(particles, new_positions, new_velocities):
             # as current
             new_particle.position = new_particle.position
 
-            if(new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y < 0 or new_particle.y > HEIGHT):
-                raise Exception("Particle #%i is out of bounds (%f,%f)" %(new_particle.id, new_particle.x, new_particle.y))
-
-
-            # TODO: Make setter receive Vector2 by default
             new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
 
+            if new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y < 0 or new_particle.y > HEIGHT:
+                raise Exception("Particle #%i is out of bounds (%f,%f)" %(new_particle.id, new_particle.x, new_particle.y))
+
+            # TODO: Make setter receive Vector2 by default
             result.append(new_particle)
 
     for p in result:
