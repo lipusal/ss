@@ -70,8 +70,10 @@ def generate_random_particles():
 
     for particle_count in range(NUM_PARTICLES):
         radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
-        new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE, max_width=WIDTH - radius - MIN_DISTANCE,
-                                                    radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=SLIT_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
+        new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
+                                                    max_width=WIDTH - radius - MIN_DISTANCE,
+                                                    radius=radius, speed=V0, mass=PARTICLE_MASS,
+                                                    min_height=SLIT_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
         done = False
         while not done:
             overlap = False
@@ -83,7 +85,8 @@ def generate_random_particles():
                     new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
                                                                 max_width=WIDTH - radius - MIN_DISTANCE,
                                                                 radius=radius, speed=V0, mass=PARTICLE_MASS,
-                                                                min_height=SLIT_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                                min_height=SLIT_Y + MIN_DISTANCE,
+                                                                min_width=MIN_DISTANCE)
                     break
 
             done = not overlap
@@ -103,7 +106,7 @@ def generate_fake_particles():
     result = list()
     # Slit particles
     while x <= WIDTH:
-        if not WIDTH/2 - DIAMETER/2 <= x <= WIDTH/2 + DIAMETER/2:
+        if not WIDTH / 2 - DIAMETER / 2 <= x <= WIDTH / 2 + DIAMETER / 2:
             result.append(Particle(x, SLIT_Y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
         x += MIN_PARTICLE_RADIUS
 
@@ -114,6 +117,7 @@ def generate_fake_particles():
     result.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
 
     return result
+
 
 #
 # def load_particles(positions, properties=None):
@@ -133,7 +137,8 @@ def add_wall_neighbors(particle, dest):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
 
     # Check if there is interaction with the bottom wall
-    if particle.y <= MAX_PARTICLE_RADIUS and (particle.x < (WIDTH - DIAMETER)/2 or particle.x > (WIDTH+DIAMETER)/2):
+    if particle.y <= MAX_PARTICLE_RADIUS and (
+            particle.x < (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
         dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the left wall
@@ -157,7 +162,7 @@ def superposition(particle, other):
 def calculate_force(particle, others):
     fn = Vector2()
     ft = Vector2()
-    for n,_ in others:
+    for n, _ in others:
         v_t = particle.relative_position(n).normalize()
         v_n = Vector2(-v_t.y, v_t.x)
         epsilon = superposition(particle, n)
@@ -189,7 +194,16 @@ def evolve_particles(particles, new_positions, new_velocities):
         else:
             # Replace with new particle
             # TODO: Ensure no overlap. If can't generate without overlap, choose random X
-            new_particle = Particle(p.x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0, id=p.id)
+            overlap = True
+            while overlap:
+                new_particle = Particle(p.x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
+                                        id=p.id)
+                for p2 in result:
+                    overlap = p.distance_to(p2) < MIN_DISTANCE
+                    if overlap:
+                        print("OVERLAP! Wat do?")
+                        break
+
             # Update position and velocity with same values so previous_position and previous_velocity are the same
             # as current
             new_particle.position = new_particle.position
@@ -232,7 +246,6 @@ while True:
     new_positions, new_velocities = [], []
     for p in particles:
 
-
         # Add fake particles to represent walls
         # TODO CHECK
         add_wall_neighbors(p, neighbors[p.id])
@@ -252,7 +265,8 @@ while True:
         new_velocities.append(new_velocity)
 
         if new_position.x < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
-            raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
+            raise Exception("Particle #%i moved out of the bounds, x:%f y:%f, width: %f, height: %f" % (
+            p.id, new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary
     t_accum += DELTA_T
@@ -261,11 +275,12 @@ while True:
             print("Saving frame at t=%f" % t)
 
         # Save particles
-        colors = [(255, 255, 255)] * NUM_PARTICLES      # Real particles are white
-        colors += [(0, 255, 0)] * len(fake_particles)   # Fake particles are green
+        colors = [(255, 255, 255)] * NUM_PARTICLES  # Real particles are white
+        colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
         extra_data = lambda particle: ("%g\t%g\t%g", particle.radius, particle.velocity.x, particle.velocity.y)
-        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data, mode="w" if t == 0 else "a", output="output.txt")
+        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
+                                          mode="w" if t == 0 else "a", output="output.txt")
 
         # Reset counter
         t_accum = 0
