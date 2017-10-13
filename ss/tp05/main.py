@@ -55,7 +55,7 @@ MIN_DISTANCE = 0            # Min distance between created particles [m]. Note t
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
-delta_t = 0.00006
+delta_t = 0.001
 DELTA_T_SAVE = 0.05
 
 
@@ -69,7 +69,7 @@ def generate_random_particles():
 
     for particle_count in range(NUM_PARTICLES):
         radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
-        new_particle = Particle.get_random_particle(max_height=HEIGHT - MIN_DISTANCE, max_width=WIDTH / 2 - radius - MIN_DISTANCE,
+        new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE, max_width=WIDTH - radius - MIN_DISTANCE,
                                                     radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
         done = False
         while not done:
@@ -79,8 +79,8 @@ def generate_random_particles():
             for existing_particle in result:
                 if new_particle.distance_to(existing_particle) < MIN_DISTANCE + radius:
                     overlap = True
-                    new_particle = Particle.get_random_particle(max_height=HEIGHT - MIN_DISTANCE,
-                                                                max_width=WIDTH / 2 - radius - MIN_DISTANCE,
+                    new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
+                                                                max_width=WIDTH - radius - MIN_DISTANCE,
                                                                 radius=radius, speed=V0, mass=PARTICLE_MASS,
                                                                 min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
                     break
@@ -159,28 +159,6 @@ def generate_fake_particles():
 #         if abs(particle.x - WIDTH/2) <= R:
 #             dest.append((Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH / 2)))
 
-
-# def calculate_force(particle, neighbors):
-#     """Calculate total force exerted on particle by neighbors with the lennard jones force"""
-#     force_x = 0
-#     force_y = 0
-#     for neighbor, _ in neighbors:
-#         if neighbor != particle:
-#             # Check if the neighbor particle is not in the same compartment as the original particle
-#             if not neighbor.is_fake and compartment(particle) != compartment(neighbor):
-#                 # TODO hacer lo de Barto de la pendiente para ver si se ven las partículas entre la ranura
-#                 continue
-#
-#             # Calculate total force magnitude
-#             dist = particle.distance_to(neighbor)
-#             force = lennard_jones_force(dist)
-#             # Calculate angle between neighbor and particle
-#             angle = math.atan2(particle.y-neighbor.y, particle.x-neighbor.x)
-#             # Project the force on each axis component
-#             force_x += force * math.cos(angle)
-#             force_y += force * math.sin(angle)
-#     return force_x, force_y
-
 def superposition(particle, other):
     if other.is_fake:
         # Wall particle
@@ -190,11 +168,10 @@ def superposition(particle, other):
         return particle.radius + other.radius - (other.position - particle.position).magnitude()
 
 
-
 def calculate_force(particle, others):
     # TODO check
-    fn = 0
-    ft = 0
+    fn = Vector2()
+    ft = Vector2()
     for n in others:
         v_t = particle.relative_position(n).normalize()
         v_n = Vector2(-v_t.y, v_t.x)
@@ -268,7 +245,7 @@ while True:
         colors += [(0, 255, 0)] * len(fake_particles)   # Fake particles are green
         # Also save particle radius and velocity
         extra_data = lambda particle: ("%g\t%g\t%g", particle.radius, particle.velocity.x, particle.velocity.y)
-        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data, mode="w" if t == 0 else "a", output="output2.txt")
+        FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data, mode="w" if t == 0 else "a", output="output.txt")
 
         # Save kinetic and potential energy for current time
         # # Used for 2.2
