@@ -7,13 +7,15 @@ from euclid3 import Vector2
 class Particle:
     """Model class for particles used in simulations"""
 
-
-
     _global_id = 1
 
-    def __init__(self, x, y, radius=0.0, mass=0.0, v=0.0, o=0.0, is_fake=False, original_particle=None):
-        self._id = Particle._global_id
-        Particle._global_id += 1
+    def __init__(self, x, y, radius=0.0, mass=0.0, v=0.0, o=0.0, is_fake=False, original_particle=None, id=None):
+        if id is None:
+            self._id = Particle._global_id
+            Particle._global_id += 1
+        else:
+            self._id = id
+
         self.radius = radius
         self._position = Vector2(x, y)
         self._velocity = self.to_x_y(v, o)
@@ -48,7 +50,7 @@ class Particle:
         x = random.uniform(min_width+radius, max_width - radius)
         y = random.uniform(min_height+radius, max_height - radius)
         o = random.uniform(0.0, 2 * math.pi)
-        return cls(x=x, y=y, radius=radius, mass=mass, v=speed, o=o, is_fake=False, original_particle=None )
+        return cls(x=x, y=y, radius=radius, mass=mass, v=speed, o=o, is_fake=False, original_particle=None)
 
     @property
     def id(self):
@@ -110,7 +112,7 @@ class Particle:
         return math.atan2(self._velocity.y, self._velocity.x)
 
     def vel_module(self):
-        return self.velocity.magnitude
+        return self.velocity.magnitude()
 
     @staticmethod
     def to_x_y(mod, deg):

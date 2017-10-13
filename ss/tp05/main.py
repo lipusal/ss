@@ -37,7 +37,8 @@ K_t = 2*K_n                 # Kt, ?? [N/m]
 PARTICLE_MASS = 0.01        # [Kg]
 MIN_PARTICLE_RADIUS = 0.01  # [m]
 MAX_PARTICLE_RADIUS = 0.03  # [m]
-MIN_Y = args['height']/10   # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
+SLIT_Y = args['height']/10  # Y coordinate at which the slit is located [m].
+MIN_Y = 0                   # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
 V0 = 0                      # [m/s]
 
 # Constant vectors
@@ -47,7 +48,7 @@ G = -Y * 9.81               # Gravity vector
 
 # Constants from args, easier to type
 NUM_PARTICLES = args['num_particles']
-HEIGHT = args['height'] + MIN_Y
+HEIGHT = args['height'] + SLIT_Y
 WIDTH = args['width']
 DIAMETER = args['diameter']
 
@@ -70,7 +71,7 @@ def generate_random_particles():
     for particle_count in range(NUM_PARTICLES):
         radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
         new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE, max_width=WIDTH - radius - MIN_DISTANCE,
-                                                    radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=MIN_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                    radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=SLIT_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
         done = False
         while not done:
             overlap = False
@@ -82,7 +83,7 @@ def generate_random_particles():
                     new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
                                                                 max_width=WIDTH - radius - MIN_DISTANCE,
                                                                 radius=radius, speed=V0, mass=PARTICLE_MASS,
-                                                                min_height=MIN_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                                min_height=SLIT_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
                     break
 
             done = not overlap
@@ -103,7 +104,7 @@ def generate_fake_particles():
     # Slit particles
     while x <= WIDTH:
         if not WIDTH/2 - DIAMETER/2 <= x <= WIDTH/2 + DIAMETER/2:
-            result.append(Particle(x, MIN_Y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+            result.append(Particle(x, SLIT_Y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
         x += MIN_PARTICLE_RADIUS
 
     # Corner particles
@@ -166,6 +167,40 @@ def calculate_force(particle, others):
     return fn, ft
 
 
+def evolve_particles(particles, new_positions, new_velocities):
+    """Update all particles' positions and velocities. For those that have fallen below MIN_Y, delete them and create
+    new ones (with the same ID) on the top of the silo, with V = 0, ensuring no overlap. Also, for the new particles
+    set previous position and velocity to the same as the starting ones. If we simulate with Euler, the simulation
+    would give us a previous position and velocity as if the particle had been thrown up and it was now starting to
+    fall down, but this is incorrect. Better to make it like the particle was being held where it is now, and is now
+    being dropped.
+
+    :return The new particles"""
+
+    result = list()
+
+    for i in range(len(particles)):
+        p = particles[i]
+        if new_positions[i].y > MIN_Y:
+            # Evolve normally
+            p.position = new_positions[i]
+            p.velocity = new_velocities[i]
+            result.append(p)
+        else:
+            # Replace with new particle
+            # TODO: Ensure no overlap. If can't generate without overlap, choose random X
+            new_particle = Particle(p.x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0, id=p.id)
+            # Update position and velocity with same values so previous_position and previous_velocity are the same
+            # as current
+            new_particle.position = new_particle.position
+            # TODO: Make setter receive Vector2 by default
+            new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
+
+            result.append(new_particle)
+
+    return result
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 #       MAIN
 # ----------------------------------------------------------------------------------------------------------------------
@@ -212,20 +247,11 @@ while True:
         new_position = verlet.r(particle=p, delta_t=DELTA_T, force=force)
         new_velocity = verlet.v(p, DELTA_T, force)
 
-        # Particles that fall under the silo are replaced with new particles on the top with V = 0
-        if new_position.y <= MIN_Y:
-            # print("Deleting %s" % p)
-            # particles.remove(p)
-            # # TODO: Make sure there is no overlap when moving particles back up
-            # new_position.y = HEIGHT - p.radius - MIN_DISTANCE
-            # new_velocity = Vector2(0, 0)
-            print("New position and velocity are %s, %s" % (new_position, new_velocity))
-
         # Save new position and velocity
         new_positions.append(new_position)
         new_velocities.append(new_velocity)
 
-        if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
+        if new_position.x < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary
@@ -245,9 +271,7 @@ while True:
         t_accum = 0
 
     # Evolve particles
-    for i in range(len(particles)):
-        particles[i].position = new_positions[i]
-        particles[i].velocity = new_velocities[i]
+    particles = evolve_particles(particles, new_positions, new_velocities)
 
     # Add delta t to total time
     t += DELTA_T
