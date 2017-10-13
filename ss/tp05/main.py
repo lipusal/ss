@@ -278,7 +278,7 @@ while True:
         colors = [(255, 255, 255)] * NUM_PARTICLES  # Real particles are white
         colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
-        extra_data = lambda particle: ("%g\t%g\t%g", particle.radius, particle.velocity.x, particle.velocity.y)
+        extra_data = lambda particle: ("%g\t%g\t%g" % (particle.radius, particle.velocity.x, particle.velocity.y))
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
 

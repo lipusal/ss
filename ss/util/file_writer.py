@@ -61,8 +61,8 @@ class FileWriter:
             file.write('\t%g\t%g\t%g' % (r, g, b))
             # Write any extra data, if specified
             if extra_data_function is not None:
-                data = extra_data_function(particle)
-                file.write(data[0] % data[1:])
+                file.write("\t")
+                file.write(extra_data_function(particle))
 
             file.write('\n')
 
