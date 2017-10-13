@@ -189,19 +189,21 @@ def evolve_particles(particles, new_positions, new_velocities):
         if new_positions[i].y > MIN_Y:
             # Evolve normally
             p.position = new_positions[i]
-            p.velocity = new_velocities[i]
+            p.velocity = Particle.to_v_o(new_velocities[i])
             result.append(p)
         else:
             # Replace with new particle
             # TODO: Ensure no overlap. If can't generate without overlap, choose random X
             overlap = True
+            new_x = p.x
             while overlap:
-                new_particle = Particle(p.x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
+                new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                         id=p.id)
                 for p2 in result:
                     overlap = p.distance_to(p2) < MIN_DISTANCE
                     if overlap:
-                        print("OVERLAP! Wat do?")
+                        print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
+                        new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
                         break
 
             # Update position and velocity with same values so previous_position and previous_velocity are the same
