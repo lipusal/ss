@@ -115,11 +115,11 @@ def add_wall_neighbors(particle, dest):
 
     # Check if there is interaction with the right wall
     if WIDTH - particle.x <= R:
-        dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), particle.x))
+        dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), WIDTH - particle.x))
 
     # Check if there is interaction with the top wall
     if HEIGHT - particle.y <= R:
-        dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), particle.y))
+        dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), HEIGHT - particle.y))
 
     # Is particle within the slit in Y?
     if HEIGHT/2 - SLIT_SIZE/2 < particle.y < HEIGHT/2 + SLIT_SIZE/2:

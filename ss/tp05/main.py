@@ -18,7 +18,7 @@ arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a
 #                                                    "20", type=float, default=20)
 arg_base.parser.add_argument("--diameter", "-d", help="Diameter of bottom silo opening [meters], float.  Must be less "
                                                       "than width. Default is 0.5", type=float, default=0.5)
-arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 500", type=int, default=50)
+arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 500", type=int, default=100)
 
 args = arg_base.to_dict_no_none()
 
@@ -51,7 +51,7 @@ HEIGHT = args['height'] + MIN_Y
 WIDTH = args['width']
 DIAMETER = args['diameter']
 
-MIN_DISTANCE = 0            # Min distance between created particles [m]. Note that for this simulation, once the
+MIN_DISTANCE = 0.1            # Min distance between created particles [m]. Note that for this simulation, once the
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
@@ -128,36 +128,21 @@ def generate_fake_particles():
 #     return result
 
 
-# def add_wall_neighbors(particle, dest):
-#     """Add fake particles that will represent the wall particles that exert force on the particle"""
-#
-#     # Check if there is interaction with the left wall
-#     if particle.x <= R:
-#         dest.append((Particle(x=0, y=particle.y, mass=math.inf, is_fake=True), particle.x))
-#
-#     # Check if there is interaction with the bottom wall
-#     if particle.y <= R:
-#         dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
-#
-#     # Check if there is interaction with the right wall
-#     if WIDTH - particle.x <= R:
-#         dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), particle.x))
-#
-#     # Check if there is interaction with the top wall
-#     if HEIGHT - particle.y <= R:
-#         dest.append((Particle(x=particle.x, y=HEIGHT, mass=math.inf, is_fake=True), particle.y))
-#
-#     # Is particle within the slit in Y?
-#     if HEIGHT/2 - SLIT_SIZE/2 < particle.y < HEIGHT/2 + SLIT_SIZE/2:
-#         # Yes - check interaction with slit corners if appropriate
-#         for p2 in [SLIT_TOP, SLIT_BOTTOM]:
-#             d = particle.distance_to(p2)
-#             if d <= R:
-#                 dest.append((p2, d))
-#     else:
-#         # No - check interaction with middle wall horizontally
-#         if abs(particle.x - WIDTH/2) <= R:
-#             dest.append((Particle(x=WIDTH / 2, y=particle.y, mass=math.inf, is_fake=True), abs(particle.x - WIDTH / 2)))
+def add_wall_neighbors(particle, dest):
+    """Add fake particles that will represent the wall particles that exert force on the particle"""
+
+    # Check if there is interaction with the bottom wall
+    if particle.y <= MAX_PARTICLE_RADIUS and (particle.x < (WIDTH - DIAMETER)/2 or particle.x > (WIDTH+DIAMETER)/2):
+        dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
+
+    # Check if there is interaction with the left wall
+    if particle.x <= MAX_PARTICLE_RADIUS:
+        dest.append((Particle(x=0, y=particle.y, mass=math.inf, is_fake=True), particle.x))
+
+    # Check if there is interaction with the right wall
+    if WIDTH - particle.x <= MAX_PARTICLE_RADIUS:
+        dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), WIDTH - particle.y))
+
 
 def superposition(particle, other):
     if other.is_fake:
@@ -169,16 +154,15 @@ def superposition(particle, other):
 
 
 def calculate_force(particle, others):
-    # TODO check
     fn = Vector2()
     ft = Vector2()
     for n in others:
-        v_t = particle.relative_position(n).normalize()
+        v_t = particle.relative_position(n[0]).normalize()
         v_n = Vector2(-v_t.y, v_t.x)
-        epsilon = superposition(particle, n)
+        epsilon = superposition(particle, n[0])
         if epsilon >= 0:
             fn += -K_n * epsilon * v_n
-            ft += K_t * epsilon * particle.relative_position(n) * v_t
+            ft += K_t * epsilon * particle.relative_position(n[0]).dot(v_t) * v_t
     return fn, ft
 
 
@@ -213,9 +197,10 @@ while True:
     new_positions, new_velocities = [], []
     for p in particles:
 
+
         # Add fake particles to represent walls
-        #  TODO
-        # add_wall_neighbors(p, neighbors[p.id])
+        # TODO CHECK
+        add_wall_neighbors(p, neighbors[p.id])
 
         # Calculate total force exerted on p on the normal and tang
         # TODO check
@@ -255,12 +240,6 @@ while True:
         # Also save particle radius and velocity
         extra_data = lambda particle: ("%g\t%g\t%g", particle.radius, particle.velocity.x, particle.velocity.y)
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data, mode="w" if t == 0 else "a", output="output.txt")
-
-        # Save kinetic and potential energy for current time
-        # # Used for 2.2
-        # file = open("energy2.txt", "w" if t == 0 else "a")
-        # file.write("%g,%g,%g\n" % (t, e_k, e_u))
-        # file.close()
 
         # Reset counter
         t_accum = 0
