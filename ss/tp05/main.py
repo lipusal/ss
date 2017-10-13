@@ -6,6 +6,7 @@ from euclid3 import Vector2
 from ss.cim.cell_index_method import CellIndexMethod
 import ss.util.args as arg_base
 from ss.util.file_writer import FileWriter
+from ss.util.file_reader import FileReader
 from ss.cim.particle import Particle
 from ss.tp04.solutions import verlet
 
@@ -111,26 +112,25 @@ def generate_fake_particles():
         x += MIN_PARTICLE_RADIUS
 
     # Corner particles
-    result.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(0, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(0, HEIGHT, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, HEIGHT, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
 
     return result
 
 
-#
-# def load_particles(positions, properties=None):
-#     if properties is not None and len(positions) != len(properties):
-#         raise Exception("Positions and properties must have the same length")
-#
-#     result = list()
-#     for i in range(len(positions)):
-#         position = positions[i]
-#         # TODO: Store velocity angle in output
-#         result.append(Particle(position[0], position[1], radius=PARTICLE_RADIUS, mass=PARTICLE_MASS, v=V0, o=random.uniform(0, 2 * math.pi)))
-#
-#     return result
+def load_particles(in_file, time=None, frame=None):
+    data, properties = FileReader.import_positions_ovito(in_file, time, frame)
+
+    result = list()
+    for i in range(len(data)):
+        id, x, y = data[i]
+        _r, _g, _b, radius, vx, vy = properties[i]
+        v, o = Particle.to_v_o(Vector2(vx, vy))
+        result.append(Particle(x, y, radius=radius, mass=PARTICLE_MASS, v=v, o=o, id=id))
+
+    return result
 
 
 def add_wall_neighbors(particle, dest):
@@ -225,12 +225,8 @@ if args['time']:
 
 # Generate random particles
 particles = generate_random_particles()
-
 # Load particles from file
-# from ss.util.file_reader import FileReader
-# positions, properties = FileReader.import_positions_ovito("/Users/juanlipuma/PycharmProjects/ss/in.txt", time=48.444)
-# particles = load_particles(positions, properties)[0:100]
-# NUM_PARTICLES = 100
+# particles = load_particles("in.txt")[0:1]
 
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
@@ -268,7 +264,7 @@ while True:
 
         if new_position.x < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             if new_position.y >= SLIT_Y:
-                raise Exception("Particle #%i moved out of the bounds, x:%f y:%f, width: %f, height: %f" % (
+                raise Exception("Particle #%i moved out of bounds, x:%f y:%f, width: %f, height: %f" % (
                 p.id, new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary

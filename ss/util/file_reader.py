@@ -54,10 +54,10 @@ class FileReader:
                 Time at which to capture particles. If None (default), will get first frame.
         :arg frame : int
                 Frame number to capture. Defaults to 1.
-        :return (positions, properties) as N-tuples of floats"""
+        :return Array of (id, x, y) and array of matching properties, as an N-tuple of floats"""
 
         file = open(input, 'r')
-        positions, properties = [], []
+        base_data, properties = [], []
 
         matched = False
         seek_frame = 1
@@ -82,12 +82,12 @@ class FileReader:
             for i in range(num_particles):
                 line = file.readline().strip()
                 if matched:
-                    # 1st value is X, 2nd is Y, all the remaining ones are properties; convert all to floats
-                    x, y, *remainder = map(float, re.split("[ \t]+", line))
-                    positions.append((x, y))
+                    # 1st value is ID, 2nd is X, 3rd is Y, all the remaining ones are properties; convert all to floats
+                    id, x, y, *remainder = map(float, re.split("[ \t]+", line))
+                    base_data.append((int(id), x, y))
                     properties.append(tuple(remainder))
 
             seek_frame += 1
 
         file.close()
-        return positions, properties
+        return base_data, properties
