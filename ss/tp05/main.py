@@ -199,6 +199,8 @@ def evolve_particles(particles, new_positions, new_velocities):
             while overlap:
                 new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                         id=p.id)
+                if len(result) == 0:
+                    overlap = False
                 for p2 in result:
                     overlap = new_particle.distance_to(p2) < MIN_DISTANCE
                     if overlap:
