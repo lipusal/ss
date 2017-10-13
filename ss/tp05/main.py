@@ -267,8 +267,9 @@ while True:
         new_velocities.append(new_velocity)
 
         if new_position.x < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
-            raise Exception("Particle #%i moved out of the bounds, x:%f y:%f, width: %f, height: %f" % (
-            p.id, new_position.x, new_position.y, WIDTH, HEIGHT))
+            if new_position.y >= SLIT_Y:
+                raise Exception("Particle #%i moved out of the bounds, x:%f y:%f, width: %f, height: %f" % (
+                p.id, new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary
     t_accum += DELTA_T
