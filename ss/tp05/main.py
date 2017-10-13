@@ -156,13 +156,13 @@ def superposition(particle, other):
 def calculate_force(particle, others):
     fn = Vector2()
     ft = Vector2()
-    for n in others:
-        v_t = particle.relative_position(n[0]).normalize()
+    for n,_ in others:
+        v_t = particle.relative_position(n).normalize()
         v_n = Vector2(-v_t.y, v_t.x)
-        epsilon = superposition(particle, n[0])
+        epsilon = superposition(particle, n)
         if epsilon >= 0:
             fn += -K_n * epsilon * v_n
-            ft += K_t * epsilon * particle.relative_position(n[0]).dot(v_t) * v_t
+            ft += K_t * epsilon * particle.relative_position(n).dot(v_t) * v_t
     return fn, ft
 
 
