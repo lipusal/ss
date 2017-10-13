@@ -56,7 +56,7 @@ MIN_DISTANCE = 0.1            # Min distance between created particles [m]. Note
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
-DELTA_T = 1e-4
+DELTA_T = 1e-3
 DELTA_T_SAVE = 0.05
 
 
@@ -200,7 +200,7 @@ def evolve_particles(particles, new_positions, new_velocities):
                 new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                         id=p.id)
                 for p2 in result:
-                    overlap = p.distance_to(p2) < MIN_DISTANCE
+                    overlap = new_particle.distance_to(p2) < MIN_DISTANCE
                     if overlap:
                         print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
                         new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
