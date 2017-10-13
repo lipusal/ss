@@ -37,7 +37,7 @@ K_t = 2*K_n                 # Kt, ?? [N/m]
 PARTICLE_MASS = 0.01        # [Kg]
 MIN_PARTICLE_RADIUS = 0.01  # [m]
 MAX_PARTICLE_RADIUS = 0.03  # [m]
-MIN_Y = -args['height']/10  # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
+MIN_Y = args['height']/10   # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
 V0 = 0                      # [m/s]
 
 # Constant vectors
@@ -47,7 +47,7 @@ G = -Y * 9.81               # Gravity vector
 
 # Constants from args, easier to type
 NUM_PARTICLES = args['num_particles']
-HEIGHT = args['height']
+HEIGHT = args['height'] + MIN_Y
 WIDTH = args['width']
 DIAMETER = args['diameter']
 
@@ -55,7 +55,7 @@ MIN_DISTANCE = 0            # Min distance between created particles [m]. Note t
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
-delta_t = 0.001
+DELTA_T = 1e-4
 DELTA_T_SAVE = 0.05
 
 
@@ -70,7 +70,7 @@ def generate_random_particles():
     for particle_count in range(NUM_PARTICLES):
         radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
         new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE, max_width=WIDTH - radius - MIN_DISTANCE,
-                                                    radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                    radius=radius, speed=V0, mass=PARTICLE_MASS, min_height=MIN_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
         done = False
         while not done:
             overlap = False
@@ -82,7 +82,7 @@ def generate_random_particles():
                     new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
                                                                 max_width=WIDTH - radius - MIN_DISTANCE,
                                                                 radius=radius, speed=V0, mass=PARTICLE_MASS,
-                                                                min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                                min_height=MIN_Y + MIN_DISTANCE, min_width=MIN_DISTANCE)
                     break
 
             done = not overlap
@@ -103,7 +103,7 @@ def generate_fake_particles():
     # Slit particles
     while x <= WIDTH:
         if not WIDTH/2 - DIAMETER/2 <= x <= WIDTH/2 + DIAMETER/2:
-            result.append(Particle(x, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+            result.append(Particle(x, MIN_Y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
         x += MIN_PARTICLE_RADIUS
 
     # Corner particles
@@ -222,20 +222,29 @@ while True:
         f_norm, f_tang = calculate_force(p, neighbors[p.id])
         force = f_norm + f_tang + (p.mass * G)
 
-        # Calculate new position and velocity using Verlet
-        # TODO ver lo de usar gear predictor
-        new_position = verlet.r(particle=p, delta_t=delta_t, force=force)
-
         # Calculate new position and new velocity for particle
+        # TODO ver lo de usar gear predictor
+        new_position = verlet.r(particle=p, delta_t=DELTA_T, force=force)
+        new_velocity = verlet.v(p, DELTA_T, force)
+
+        # Particles that fall under the silo are replaced with new particles on the top with V = 0
+        if new_position.y <= MIN_Y:
+            # print("Deleting %s" % p)
+            # particles.remove(p)
+            # # TODO: Make sure there is no overlap when moving particles back up
+            # new_position.y = HEIGHT - p.radius - MIN_DISTANCE
+            # new_velocity = Vector2(0, 0)
+            print("New position and velocity are %s, %s" % (new_position, new_velocity))
+
+        # Save new position and velocity
         new_positions.append(new_position)
-        new_velocity = verlet.v(p, delta_t, force)
         new_velocities.append(new_velocity)
 
         if new_position.x < 0 or new_position.y < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
             raise Exception("The particle moved out of the bounds, x:%f y:%f, width: %f, height: %f" %(new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary
-    t_accum += delta_t
+    t_accum += DELTA_T
     if t == 0 or t_accum >= DELTA_T_SAVE:
         if args['verbose']:
             print("Saving frame at t=%f" % t)
@@ -262,4 +271,4 @@ while True:
         particles[i].velocity = new_velocities[i]
 
     # Add delta t to total time
-    t += delta_t
+    t += DELTA_T
