@@ -185,18 +185,21 @@ def evolve_particles(particles, new_positions, new_velocities):
     result = list()
 
     for i in range(len(particles)):
+
         p = particles[i]
         if new_positions[i].y > MIN_Y:
             # Evolve normally
             p.position = new_positions[i]
             p.velocity = Particle.to_v_o(new_velocities[i])
             result.append(p)
+
         else:
             # Replace with new particle
             # TODO: Ensure no overlap. If can't generate without overlap, choose random X
             overlap = True
             new_x = p.x
             while overlap:
+
                 new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                         id=p.id)
                 if len(result) == 0:
@@ -211,10 +214,19 @@ def evolve_particles(particles, new_positions, new_velocities):
             # Update position and velocity with same values so previous_position and previous_velocity are the same
             # as current
             new_particle.position = new_particle.position
+
+            if(new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y < 0 or new_particle.y > HEIGHT):
+                raise Exception("Particle #%i is out of bounds (%f,%f)" %(new_particle.id, new_particle.x, new_particle.y))
+
+
             # TODO: Make setter receive Vector2 by default
             new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
 
             result.append(new_particle)
+
+    for p in result:
+        if p.x < 0 or p.x > WIDTH or p.y < 0 or p.y > HEIGHT:
+            raise Exception("Particle #%i is out of bounds, (%f, %f)" %(p.id, p.x, p.y))
 
     return result
 
@@ -263,11 +275,6 @@ while True:
         # Save new position and velocity
         new_positions.append(new_position)
         new_velocities.append(new_velocity)
-
-        if new_position.x < 0 or new_position.x > WIDTH or new_position.y > HEIGHT:
-            if new_position.y >= SLIT_Y:
-                raise Exception("Particle #%i moved out of bounds, x:%f y:%f, width: %f, height: %f" % (
-                p.id, new_position.x, new_position.y, WIDTH, HEIGHT))
 
     # Save frame if necessary
     t_accum += DELTA_T
