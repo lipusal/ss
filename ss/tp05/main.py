@@ -137,11 +137,11 @@ def add_wall_neighbors(particle, dest):
         dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
 
     # Check if there is interaction with the left wall
-    if particle.x <= MAX_PARTICLE_RADIUS:
+    if particle.x <= MAX_PARTICLE_RADIUS and particle.y > SLIT_Y:
         dest.append((Particle(x=0, y=particle.y, mass=math.inf, is_fake=True), particle.x))
 
     # Check if there is interaction with the right wall
-    if WIDTH - particle.x <= MAX_PARTICLE_RADIUS:
+    if WIDTH - particle.x <= MAX_PARTICLE_RADIUS and particle.y > SLIT_Y:
         dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), WIDTH - particle.y))
 
 
