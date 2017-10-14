@@ -175,7 +175,7 @@ def calculate_force(particle, others):
     return fn, ft
 
 
-def evolve_particles(particles, new_positions, new_velocities):
+def evolve_particles(particles, new_positions, new_velocities, pending_particles):
     """Update all particles' positions and velocities. For those that have fallen below MIN_Y, delete them and create
     new ones (with the same ID) on the top of the silo, with V = 0, ensuring no overlap. Also, for the new particles
     set previous position and velocity to the same as the starting ones. If we simulate with Euler, the simulation
@@ -183,10 +183,11 @@ def evolve_particles(particles, new_positions, new_velocities):
     fall down, but this is incorrect. Better to make it like the particle was being held where it is now, and is now
     being dropped.
 
-    :return The new particles"""
+    :return A tuple of lists of the form (evolved_particles, pending_particles), where `pending_particles` are particles
+    that could not be repositioned (ie. there was no room on the top of the silo). We should attempt to add these
+    particles again in the next delta_t."""
 
-    result = list()
-    fallen_particles = list()
+    evolved_particles, fallen_particles, new_pending_particles = [], [], []
 
     for i in range(len(particles)):
         p = particles[i]
@@ -199,10 +200,10 @@ def evolve_particles(particles, new_positions, new_velocities):
             # Evolve normally
             p.position = new_position
             p.velocity = Particle.to_v_o(new_velocities[i])
-            result.append(p)
+            evolved_particles.append(p)
 
-    # Now that all regular particles have evolved, reposition fallen particles ensuring no overlap
-    for p in fallen_particles:
+    # Now that all regular particles have evolved, reposition pending and fallen particles ensuring no overlap (pending first)
+    for p in pending_particles + fallen_particles:
         # Replace with new particle
         # TODO: Ensure no overlap. If can't generate without overlap, choose random X
         overlap = True
@@ -213,30 +214,38 @@ def evolve_particles(particles, new_positions, new_velocities):
         elif WIDTH - new_x < MIN_DISTANCE:
             new_x = WIDTH - MIN_DISTANCE
 
-        while overlap:
+        overlap_attempts = 0
+        while overlap and overlap_attempts < 100:
             new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
                                     id=p.id)
-            if len(result) == 0:
+            if len(evolved_particles) == 0:
                 overlap = False
-            for p2 in result:
+            for p2 in evolved_particles:
                 overlap = new_particle.distance_to(p2) < MIN_DISTANCE
                 if overlap:
                     print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
                     new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
                     break
 
-        # Update position and velocity with same values so previous_position and previous_velocity are the same as current
-        new_particle.position = new_particle.position
-        new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
+            overlap_attempts += 1
 
-        # TODO: Make setter receive Vector2 by default
-        result.append(new_particle)
+        if overlap:
+            # Couldn't find room for this particle, try again later
+            print("Couldn't reposition particle #%i, will try again later" % p.id)
+            new_pending_particles.append(p)
+        else:
+            # Update position and velocity with same values so previous_position and previous_velocity are the same as current
+            new_particle.position = new_particle.position
+            # TODO: Make setter receive Vector2 by default
+            new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
 
-    for p in result:
+            evolved_particles.append(new_particle)
+
+    for p in evolved_particles:
         if p.x < 0 or p.x > WIDTH or p.y > HEIGHT:
             raise Exception("%s is out of bounds, max coordinates are (%g,%g)" % (p, WIDTH, HEIGHT))
 
-    return result
+    return evolved_particles, new_pending_particles
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -247,7 +256,8 @@ if args['time']:
 
 # Generate random particles or load them from file
 particles = generate_random_particles()
-# particles = load_particles("in.txt")[0:100]
+# particles = load_particles("in.txt", time=0.707)[0:500]
+pending_particles = list()      # See evolve_particles
 
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
@@ -290,7 +300,7 @@ while True:
             print("Saving frame at t=%f" % t)
 
         # Save particles
-        colors = [(255, 255, 255)] * NUM_PARTICLES  # Real particles are white
+        colors = [(255, 255, 255)] * len(particles)  # Real particles are white
         colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
         extra_data = lambda particle: ("%g\t%g\t%g" % (particle.radius, particle.velocity.x, particle.velocity.y))
@@ -301,7 +311,7 @@ while True:
         t_accum = 0
 
     # Evolve particles
-    particles = evolve_particles(particles, new_positions, new_velocities)
+    particles, pending_particles = evolve_particles(particles, new_positions, new_velocities, pending_particles)
 
     # Add delta t to total time
     t += DELTA_T
