@@ -37,7 +37,7 @@ K_n = 10e5                  # Kn, ?? [N/m]
 K_t = 2*K_n                 # Kt, ?? [N/m]
 PARTICLE_MASS = 0.01        # [Kg]
 MIN_PARTICLE_RADIUS = 0.01  # [m]
-MAX_PARTICLE_RADIUS = 0.03  # [m]
+MAX_PARTICLE_RADIUS = 0.015 # [m]
 SLIT_Y = args['height']/10  # Y coordinate at which the slit is located [m].
 MIN_Y = 0                   # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
 V0 = 0                      # [m/s]
@@ -53,7 +53,7 @@ HEIGHT = args['height'] + SLIT_Y
 WIDTH = args['width']
 DIAMETER = args['diameter']
 
-MIN_DISTANCE = 0.1            # Min distance between created particles [m]. Note that for this simulation, once the
+MIN_DISTANCE = 0            # Min distance between created particles [m]. Note that for this simulation, once the
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
