@@ -57,8 +57,8 @@ MIN_DISTANCE = 0.1            # Min distance between created particles [m]. Note
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
-DELTA_T = 1e-3
-DELTA_T_SAVE = 0.05
+DELTA_T = 1e-4
+DELTA_T_SAVE = 1e-2
 
 
 def generate_random_particles():
@@ -137,17 +137,20 @@ def add_wall_neighbors(particle, dest):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
 
     # Check if there is interaction with the bottom wall
-    if particle.y <= MAX_PARTICLE_RADIUS and (
-            particle.x < (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
-        dest.append((Particle(x=particle.x, y=0, mass=math.inf, is_fake=True), particle.y))
+    if particle.y >= SLIT_Y and (particle.x < (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
+        fake = Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True)
+        if superposition(particle, fake) > 0:
+            dest.append((Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True), particle.distance_to(fake)))
 
     # Check if there is interaction with the left wall
-    if particle.x <= MAX_PARTICLE_RADIUS and particle.y > SLIT_Y:
-        dest.append((Particle(x=0, y=particle.y, mass=math.inf, is_fake=True), particle.x))
+    if particle.x <= particle.radius and particle.y > SLIT_Y:
+        fake = Particle(0, particle.y, radius=0, mass=math.inf, is_fake=True)
+        dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if WIDTH - particle.x <= MAX_PARTICLE_RADIUS and particle.y > SLIT_Y:
-        dest.append((Particle(x=WIDTH, y=particle.y, mass=math.inf, is_fake=True), WIDTH - particle.y))
+    if WIDTH - particle.x <= particle.radius and particle.y > SLIT_Y:
+        fake = Particle(WIDTH, particle.y, radius=0, mass=math.inf, is_fake=True)
+        dest.append((fake, particle.distance_to(fake)))
 
 
 def superposition(particle, other):
@@ -163,8 +166,8 @@ def calculate_force(particle, others):
     fn = Vector2()
     ft = Vector2()
     for n, _ in others:
-        v_t = particle.relative_position(n).normalize()
-        v_n = Vector2(-v_t.y, v_t.x)
+        v_n = particle.relative_position(n).normalize()
+        v_t = Vector2(-v_n.y, v_n.x)
         epsilon = superposition(particle, n)
         if epsilon >= 0:
             fn += -K_n * epsilon * v_n
@@ -217,15 +220,15 @@ def evolve_particles(particles, new_positions, new_velocities):
 
             new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
 
-            if new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y < 0 or new_particle.y > HEIGHT:
-                raise Exception("Particle #%i is out of bounds (%f,%f)" %(new_particle.id, new_particle.x, new_particle.y))
+            if new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y > HEIGHT:
+                raise Exception("%s is out of bounds, max coordinates are (%f,%f)" % (new_particle, WIDTH, HEIGHT))
 
             # TODO: Make setter receive Vector2 by default
             result.append(new_particle)
 
     for p in result:
-        if p.x < 0 or p.x > WIDTH or p.y < 0 or p.y > HEIGHT:
-            raise Exception("Particle #%i is out of bounds, (%f, %f)" %(p.id, p.x, p.y))
+        if p.x < 0 or p.x > WIDTH or p.y > HEIGHT:
+            raise Exception("%s is out of bounds, max coordinates are (%f,%f) (WHY NOT CAUGHT IN PREVIOUS LINES??)" % (p, WIDTH, HEIGHT))
 
     return result
 
