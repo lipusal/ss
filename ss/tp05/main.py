@@ -137,7 +137,7 @@ def add_wall_neighbors(particle, dest):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
 
     # Check if there is interaction with the bottom wall
-    if particle.y >= SLIT_Y and (particle.x < (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
+    if particle.y >= SLIT_Y and (particle.x <= (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
         fake = Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True)
         if superposition(particle, fake) > 0:
             dest.append((Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True), particle.distance_to(fake)))
