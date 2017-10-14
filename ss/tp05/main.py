@@ -19,7 +19,7 @@ arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a
 #                                                    "20", type=float, default=20)
 arg_base.parser.add_argument("--diameter", "-d", help="Diameter of bottom silo opening [meters], float.  Must be less "
                                                       "than width. Default is 0.5", type=float, default=0.5)
-arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 500", type=int, default=100)
+arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 100", type=int, default=100)
 
 args = arg_base.to_dict_no_none()
 
@@ -186,49 +186,55 @@ def evolve_particles(particles, new_positions, new_velocities):
     :return The new particles"""
 
     result = list()
+    fallen_particles = list()
 
     for i in range(len(particles)):
-
         p = particles[i]
-        if new_positions[i].y > MIN_Y:
+        new_position = new_positions[i]
+
+        if new_position.y <= MIN_Y or (new_position.y < SLIT_Y and not (0 <= new_position.x <= WIDTH)):
+            # Particle either fell below, or to the side but is below the slit, reset
+            fallen_particles.append(p)
+        else:
             # Evolve normally
-            p.position = new_positions[i]
+            p.position = new_position
             p.velocity = Particle.to_v_o(new_velocities[i])
             result.append(p)
 
-        else:
-            # Replace with new particle
-            # TODO: Ensure no overlap. If can't generate without overlap, choose random X
-            overlap = True
-            new_x = p.x
+    # Now that all regular particles have evolved, reposition fallen particles ensuring no overlap
+    for p in fallen_particles:
+        # Replace with new particle
+        # TODO: Ensure no overlap. If can't generate without overlap, choose random X
+        overlap = True
+        new_x = p.x
+        # Avoid respawning too close to side walls
+        if new_x < MIN_DISTANCE:
+            new_x = MIN_DISTANCE
+        elif WIDTH - new_x < MIN_DISTANCE:
+            new_x = WIDTH - MIN_DISTANCE
 
-            while overlap:
-                new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
-                                        id=p.id)
-                if len(result) == 0:
-                    overlap = False
-                for p2 in result:
-                    overlap = new_particle.distance_to(p2) < MIN_DISTANCE
-                    if overlap:
-                        print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
-                        new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
-                        break
+        while overlap:
+            new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
+                                    id=p.id)
+            if len(result) == 0:
+                overlap = False
+            for p2 in result:
+                overlap = new_particle.distance_to(p2) < MIN_DISTANCE
+                if overlap:
+                    print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
+                    new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
+                    break
 
-            # Update position and velocity with same values so previous_position and previous_velocity are the same
-            # as current
-            new_particle.position = new_particle.position
+        # Update position and velocity with same values so previous_position and previous_velocity are the same as current
+        new_particle.position = new_particle.position
+        new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
 
-            new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
-
-            if new_particle.x < 0 or new_particle.x > WIDTH or new_particle.y > HEIGHT:
-                raise Exception("%s is out of bounds, max coordinates are (%f,%f)" % (new_particle, WIDTH, HEIGHT))
-
-            # TODO: Make setter receive Vector2 by default
-            result.append(new_particle)
+        # TODO: Make setter receive Vector2 by default
+        result.append(new_particle)
 
     for p in result:
         if p.x < 0 or p.x > WIDTH or p.y > HEIGHT:
-            raise Exception("%s is out of bounds, max coordinates are (%f,%f) (WHY NOT CAUGHT IN PREVIOUS LINES??)" % (p, WIDTH, HEIGHT))
+            raise Exception("%s is out of bounds, max coordinates are (%g,%g)" % (p, WIDTH, HEIGHT))
 
     return result
 
@@ -239,10 +245,9 @@ def evolve_particles(particles, new_positions, new_velocities):
 if args['time']:
     import ss.util.timer
 
-# Generate random particles
+# Generate random particles or load them from file
 particles = generate_random_particles()
-# Load particles from file
-# particles = load_particles("in.txt")[0:1]
+# particles = load_particles("in.txt")[0:100]
 
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
