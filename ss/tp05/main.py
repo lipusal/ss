@@ -171,7 +171,7 @@ def calculate_force(particle, others):
         epsilon = superposition(particle, n)
         if epsilon >= 0:
             fn += -K_n * epsilon * v_n
-            ft += K_t * epsilon * particle.relative_position(n).dot(v_t) * v_t
+            ft += K_t * epsilon * particle.relative_velocity(n).dot(v_t) * v_t
     return fn, ft
 
 
