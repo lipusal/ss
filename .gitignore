@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
-output*.txt
 
 ss/tp04/gas/kinetic_energy\.txt
 
@@ -10,4 +9,4 @@ ss/tp04/gas/energy\.txt
 
 ss/tp04/gas/fpleft\.txt
 
-*.txt
+/*.txt
