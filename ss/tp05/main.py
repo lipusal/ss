@@ -139,16 +139,16 @@ def add_wall_neighbors(particle, dest):
     # Check if there is interaction with the bottom wall
     if particle.y >= SLIT_Y and (particle.x <= (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
         fake = Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True)
-        if superposition(particle, fake) > 0:
+        if superposition(particle, fake) >= 0:
             dest.append((Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True), particle.distance_to(fake)))
 
     # Check if there is interaction with the left wall
-    if particle.x <= particle.radius and particle.y > SLIT_Y:
+    if particle.x <= particle.radius:
         fake = Particle(0, particle.y, radius=0, mass=math.inf, is_fake=True)
         dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if WIDTH - particle.x <= particle.radius and particle.y > SLIT_Y:
+    if WIDTH - particle.x <= particle.radius:
         fake = Particle(WIDTH, particle.y, radius=0, mass=math.inf, is_fake=True)
         dest.append((fake, particle.distance_to(fake)))
 
@@ -163,16 +163,27 @@ def superposition(particle, other):
 
 
 def calculate_force(particle, others):
-    fn = Vector2()
-    ft = Vector2()
+    f_x = f_y = 0
     for n, _ in others:
-        v_n = particle.relative_position(n).normalize()
-        v_t = Vector2(-v_n.y, v_n.x)
         epsilon = superposition(particle, n)
         if epsilon >= 0:
-            fn += -K_n * epsilon * v_n
-            ft += K_t * epsilon * particle.relative_velocity(n).dot(v_t) * v_t
-    return fn, ft
+            v_n = particle.relative_position(n).normalize()
+            fn, ft = f_n(particle, n), f_t(particle, n)
+
+            f_x += fn * v_n.x + ft * (-v_n.y)
+            f_y += fn * v_n.y + ft * v_n.x
+
+    return Vector2(f_x, f_y)
+
+
+def f_t(particle, neighbor):
+    v_n = particle.relative_position(neighbor).normalize()
+    v_t = Vector2(-v_n.y, v_n.x)
+    return K_t * superposition(particle, neighbor) * particle.relative_velocity(neighbor).dot(v_t)
+
+
+def f_n(particle, neighbor):
+    return -K_n * superposition(particle, neighbor)
 
 
 def evolve_particles(particles, new_positions, new_velocities, pending_particles):
@@ -193,7 +204,7 @@ def evolve_particles(particles, new_positions, new_velocities, pending_particles
         p = particles[i]
         new_position = new_positions[i]
 
-        if new_position.y <= MIN_Y or (new_position.y < SLIT_Y and not (0 <= new_position.x <= WIDTH)):
+        if new_position.y <= MIN_Y: #or new_position.y > HEIGHT:
             # Particle either fell below, or to the side but is below the slit, reset
             fallen_particles.append(p)
         else:
@@ -256,7 +267,7 @@ if args['time']:
 
 # Generate random particles or load them from file
 particles = generate_random_particles()
-# particles = load_particles("in.txt", time=0.707)[0:500]
+# particles = load_particles("in.txt", time=0.)[0:2]
 pending_particles = list()      # See evolve_particles
 
 # Generate wall/corner particles
@@ -281,8 +292,7 @@ while True:
 
         # Calculate total force exerted on p on the normal and tang
         # TODO check
-        f_norm, f_tang = calculate_force(p, neighbors[p.id])
-        force = f_norm + f_tang + (p.mass * G)
+        force = calculate_force(p, neighbors[p.id]) + (p.mass * G)
 
         # Calculate new position and new velocity for particle
         # TODO ver lo de usar gear predictor
