@@ -57,7 +57,7 @@ MIN_DISTANCE = 0            # Min distance between created particles [m]. Note t
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # TODO: Should these be params?
-DELTA_T = 1e-4
+DELTA_T = 1e-5
 DELTA_T_SAVE = 1e-2
 
 
