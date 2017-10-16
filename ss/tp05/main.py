@@ -204,7 +204,7 @@ def evolve_particles(particles, new_positions, new_velocities, pending_particles
         p = particles[i]
         new_position = new_positions[i]
 
-        if new_position.y <= MIN_Y: #or new_position.y > HEIGHT:
+        if new_position.y <= MIN_Y or new_position.y > HEIGHT:
             # Particle either fell below, or to the side but is below the slit, reset
             fallen_particles.append(p)
         else:
