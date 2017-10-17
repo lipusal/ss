@@ -322,7 +322,7 @@ while True:
 
         # Save Flow
         file = open("flow.txt", "w" if t == 0 else "a")
-        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE))
+        file.write("%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE))
         file.close()
         num_fallen_particles = 0
 
