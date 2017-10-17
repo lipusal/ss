@@ -58,7 +58,7 @@ MIN_DISTANCE = 0            # Min distance between created particles [m]. Note t
                             # simulation has started particles may be closer than this. This is just for the start.
 
 # Beverloo constant
-B = (NUM_PARTICLES/HEIGHT*WIDTH)*(G.magnitude)**0.5
+B = (NUM_PARTICLES/HEIGHT*WIDTH)*(G.magnitude())**0.5
 
 # TODO: Should these be params?
 DELTA_T = 1e-5
