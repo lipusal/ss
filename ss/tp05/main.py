@@ -335,7 +335,7 @@ while True:
         # Save Flow
         beverloo_flow = B * (DIAMETER - particle_avg_radius)**1.5
         file = open("flow.txt", "w" if t == 0 else "a")
-        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE), beverloo_flow)
+        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE, beverloo_flow))
         file.close()
         num_fallen_particles = 0
 
