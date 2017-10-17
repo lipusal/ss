@@ -275,7 +275,7 @@ fake_particles = generate_fake_particles()
 
 t_accum = 0
 t = 0
-
+num_fallen_particles = 0
 # TODO: Establish end condition
 while True:
 
@@ -299,6 +299,9 @@ while True:
         new_position = verlet.r(particle=p, delta_t=DELTA_T, force=force)
         new_velocity = verlet.v(p, DELTA_T, force)
 
+        if p.position.y >= SLIT_Y and new_position.y < SLIT_Y:
+            num_fallen_particles += 1
+
         # Save new position and velocity
         new_positions.append(new_position)
         new_velocities.append(new_velocity)
@@ -316,6 +319,12 @@ while True:
         extra_data = lambda particle: ("%g\t%g\t%g" % (particle.radius, particle.velocity.x, particle.velocity.y))
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
+
+        # Save Flow
+        file = open("flow.txt", "w" if t == 0 else "a")
+        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE))
+        file.close()
+        num_fallen_particles = 0
 
         # Reset counter
         t_accum = 0
