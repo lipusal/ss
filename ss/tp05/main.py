@@ -9,6 +9,7 @@ from ss.util.file_writer import FileWriter
 from ss.util.file_reader import FileReader
 from ss.cim.particle import Particle
 from ss.tp04.solutions import verlet
+import numpy as np
 
 # TODO: Update description
 arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles " \
@@ -55,6 +56,9 @@ DIAMETER = args['diameter']
 
 MIN_DISTANCE = 0            # Min distance between created particles [m]. Note that for this simulation, once the
                             # simulation has started particles may be closer than this. This is just for the start.
+
+# Beverloo constant
+B = (NUM_PARTICLES/HEIGHT*WIDTH)*(G.magnitude)**0.5
 
 # TODO: Should these be params?
 DELTA_T = 1e-5
@@ -267,6 +271,10 @@ if args['time']:
 
 # Generate random particles or load them from file
 particles = generate_random_particles()
+
+# Calculate avg radius
+particle_avg_radius = np.mean([x.radius for x in particles])
+
 # particles = load_particles("in.txt", time=0.)[0:2]
 pending_particles = list()      # See evolve_particles
 
@@ -325,10 +333,12 @@ while True:
                                           mode="w" if t == 0 else "a", output="output.txt")
 
         # Save Flow
+        beverloo_flow = B * (DIAMETER - particle_avg_radius)**1.5
         file = open("flow.txt", "w" if t == 0 else "a")
-        file.write("%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE))
+        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE), beverloo_flow)
         file.close()
         num_fallen_particles = 0
+
 
         # Save kinetic energy
         file = open("kinetic_energy.txt", "w" if t == 0 else "a")
