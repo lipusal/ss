@@ -277,11 +277,13 @@ t_accum = 0
 t = 0
 num_fallen_particles = 0
 # TODO: Establish end condition
+
+total_velocities = 0
 while True:
 
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
-
+    total_velocities = 0
     # Initialize variables
     new_positions, new_velocities = [], []
     for p in particles:
@@ -298,6 +300,8 @@ while True:
         # TODO ver lo de usar gear predictor
         new_position = verlet.r(particle=p, delta_t=DELTA_T, force=force)
         new_velocity = verlet.v(p, DELTA_T, force)
+        total_velocities += new_velocity.magnitude()
+
 
         if p.position.y >= SLIT_Y and new_position.y < SLIT_Y:
             num_fallen_particles += 1
@@ -325,6 +329,11 @@ while True:
         file.write("%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE))
         file.close()
         num_fallen_particles = 0
+
+        # Save kinetic energy
+        file = open("kinetic_energy.txt", "w" if t == 0 else "a")
+        file.write("%g,%g\n" % (t, 0.5*PARTICLE_MASS*NUM_PARTICLES*(total_velocities**2)))
+        file.close()
 
         # Reset counter
         t_accum = 0
