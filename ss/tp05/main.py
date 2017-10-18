@@ -1,3 +1,10 @@
+# Add folders to python path to run this from command line
+import sys
+import os
+# NOTE: Adjust the number of ".." to get to the project's root directory (i.e. where doc, ex, and ss are, NOT inside ss
+# where cim, util, etc. are)
+sys.path.append(os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "..")))
+
 import math
 import random
 
@@ -12,10 +19,8 @@ from ss.tp04.solutions import verlet
 from ss.tp05 import flow_sliding_window
 import numpy as np
 
-# TODO: Update description
-arg_base.parser.description = "Gas Diffusion simulation Program. Simulates how a number of given gas particles " \
-                              "diffuse from one compartment to another through a slit. Unlike TP03, particles in this" \
-                              "simulation have interaction forces as modeled by the Lennard-Jones potential model"
+arg_base.parser.description = "Granular media simulation program. Simulates the behavior of sand-like particles " \
+                              "falling in a silo with a slit. "
 # arg_base.parser.add_argument("--height", "-h", help="Silo height [meters], float.  Default is 50", type=float, default=50)
 # arg_base.parser.add_argument("--width", "-w", help="Silo width [meters], float.  Must be less than height. Default is "
 #                                                    "20", type=float, default=20)
