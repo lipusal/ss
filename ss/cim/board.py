@@ -54,25 +54,17 @@ class Board:
         """Populates cells with the particles self was initialized with."""
 
         for particle in self.particles:
-            assert particle.x > 0 and particle.y >0 and particle.x < self.width and particle.y < self.height
             col, row = self.get_cell(particle)
             self.cells[row][col].particles.append(particle)
 
         return self
 
-    def calculate_mbb(self):
-        """Calculates minimum bounding box for this instance's particles"""
-
-        return Board.calculate_mbb(self.particles)
-
     @staticmethod
     def calculate_mbb(particles):
         """Calculates minimum bounding box for a given list of particles. Returns (width, height)"""
 
-        xs, ys = [], []
-        for particle in particles:
-            xs.append(particle.x)
-            ys.append(particle.y)
+        width = max([p.x for p in particles]) + Board.EPSILON
+        height = max([p.y for p in particles]) + Board.EPSILON
 
         # TODO: If min(xs) >> 0, will have a lot of empty space; ídem ys
-        return max(xs) + Board.EPSILON, max(ys) + Board.EPSILON
+        return width, height
