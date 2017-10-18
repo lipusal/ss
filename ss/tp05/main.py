@@ -337,8 +337,6 @@ while True:
         file = open("flow.txt", "w" if t == 0 else "a")
         file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE, beverloo_flow))
         file.close()
-        num_fallen_particles = 0
-
 
         # Save kinetic energy
         file = open("kinetic_energy.txt", "w" if t == 0 else "a")
