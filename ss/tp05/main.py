@@ -9,6 +9,7 @@ from ss.util.file_writer import FileWriter
 from ss.util.file_reader import FileReader
 from ss.cim.particle import Particle
 from ss.tp04.solutions import verlet
+from ss.tp05 import flow_sliding_window
 import numpy as np
 
 # TODO: Update description
@@ -286,14 +287,13 @@ t = 0
 num_fallen_particles = 0
 # TODO: Establish end condition
 
-total_velocities = 0
 while True:
-
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
-    total_velocities = 0
     # Initialize variables
     new_positions, new_velocities = [], []
+    total_velocities = 0
+
     for p in particles:
 
         # Add fake particles to represent walls
@@ -310,9 +310,9 @@ while True:
         new_velocity = verlet.v(p, DELTA_T, force)
         total_velocities += new_velocity.magnitude()
 
-
         if p.position.y >= SLIT_Y and new_position.y < SLIT_Y:
             num_fallen_particles += 1
+            flow_sliding_window.append_event("flow_n.txt", num_fallen_particles, t, "w" if num_fallen_particles == 1 else "a")
 
         # Save new position and velocity
         new_positions.append(new_position)
