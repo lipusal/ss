@@ -13,7 +13,9 @@ def sliding_window_flow(window_size, input="flow_n.txt", output="sliding_window.
     while i + width - 1 < len(ns):
         start, end = i - width, i + width - 1
         flow = (ns[end] - ns[start]) / (ts[end] - ts[start])
-        file.write("%i,%g\n" % (i, flow))
+        line = "%i,%g\n" % (i, flow)
+        file.write(line)
+        print(line.strip())
         i += 1
     file.close()
 
