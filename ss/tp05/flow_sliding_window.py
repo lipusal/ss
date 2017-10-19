@@ -1,4 +1,6 @@
 def sliding_window_flow(window_size, input="flow_n.txt", output="sliding_window.txt"):
+    """Use a sliding-window strategy to calculate flow of particles in the given simulation. Write each step of the
+    algorithm in the specified output file."""
     file = open(input, "r")
     ns, ts = [], []
     for line in file:

@@ -277,11 +277,12 @@ if args['time']:
 
 # Generate random particles or load them from file
 particles = generate_random_particles()
+# particles = load_particles("in.txt", time=0.)[0:2]
+
 
 # Calculate avg radius
 particle_avg_radius = np.mean([x.radius for x in particles])
 
-# particles = load_particles("in.txt", time=0.)[0:2]
 pending_particles = list()      # See evolve_particles
 
 # Generate wall/corner particles
