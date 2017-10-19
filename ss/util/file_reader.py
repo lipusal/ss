@@ -56,13 +56,35 @@ class FileReader:
                 Frame number to capture. Defaults to 1.
         :return Array of (id, x, y) and array of matching properties, as an N-tuple of floats"""
 
+        seek_to_last = False
+        if time == -1:
+            if frame is not None and frame != -1:
+                raise Exception("Specified frame but time is -1 (last). Either don't specify frame or specify frame == -1")
+            else:
+                frame = -1
+                seek_to_last = True
+        if frame == -1:
+            if time is not None and time != -1:
+                raise Exception("Specified time but frame is -1 (last). Either don't specify time or specify time == -1")
+            else:
+                time = -1
+                seek_to_last = True
+
         file = open(input, 'r')
         base_data, properties = [], []
 
         matched = False
         seek_frame = 1
         while not matched:
-            num_particles = int(file.readline())
+            test = file.readline()
+            if test == "":
+                # Reached EOF
+                if seek_to_last:
+                    break
+                else:
+                    raise Exception("Could not find specified time and/or frame in file")
+
+            num_particles = int(test)
             seek_time = float(file.readline())
 
             if frame is None and time is None:
@@ -78,6 +100,11 @@ class FileReader:
                     raise Exception("Frame #%i matches time %g, not the specified time %g. Aborting" % (seek_frame, seek_time, time))
                 else:
                     matched = True
+            elif seek_to_last:
+                # Match every frame, we will return the last one we captured
+                matched = True
+                # Reset data so we don't return the whole file
+                base_data, properties = [], []
 
             for i in range(num_particles):
                 line = file.readline().strip()
@@ -86,6 +113,10 @@ class FileReader:
                     id, x, y, *remainder = map(float, re.split("[ \t]+", line))
                     base_data.append((int(id), x, y))
                     properties.append(tuple(remainder))
+
+            if seek_to_last:
+                # Keep seeking more frames, finish on EOF
+                matched = False
 
             seek_frame += 1
 
