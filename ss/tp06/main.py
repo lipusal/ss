@@ -37,7 +37,7 @@ if args['num_particles'] < 0:
 
 # Model constants
 MIN_PARTICLE_RADIUS = 0.1           # [m]
-MAX_PARTICLE_RADIUS = 0.37          # [m]
+MAX_PARTICLE_RADIUS = 0.2          # [m]
 V0 = args['initial_velocity']       # [m/s]
 MIN_DISTANCE = 0                    # Distance at which particles are considered to collide [m]
 # TODO: Confirm these are the proper values
@@ -49,9 +49,7 @@ V_D_MAX = args['v_max']
 NUM_PARTICLES = args['num_particles']
 
 # Geometrical constants
-# TODO: Tomar de args y defaultear a esto si no está
 HEIGHT = 20
-#TODO agregar mas espacio para ver como salen las particulas?
 WIDTH = 22
 DOOR_POSITION = 20
 DIAMETER = 1.2
@@ -61,8 +59,7 @@ TARGET = Particle(WIDTH, HEIGHT/2, is_fake=True)
 
 # TODO: Should these be params?
 DELTA_T = 1e-3
-DELTA_T_SAVE = 1e-2
-
+DELTA_T_SAVE = 1e-1
 
 def generate_random_particles():
     """Create particles with random positions in the silo"""
@@ -172,13 +169,22 @@ def evolve_particles(particles, new_positions, new_velocities, new_radii):
 
     return particles
 
+def target(particle):
+    # Target for pedestrians that are on the top half of the room
+    if particle.y > HEIGHT/2 + DOOR_POSITION/2:
+        return Particle(DOOR_POSITION, HEIGHT/2 + DOOR_POSITION/2 - MAX_PARTICLE_RADIUS, is_fake=True)
+    # Target for pedestrians that are on the lower half of the room
+    if particle.y < HEIGHT/2 - DOOR_POSITION/2:
+        return Particle(DOOR_POSITION, HEIGHT/2 - DOOR_POSITION/2 + MAX_PARTICLE_RADIUS, is_fake=True)
+    # Target for pedestrians that are in the middle of the room
+    return Particle(WIDTH,particle.y, is_fake=True)
 
 def evolve_no_contact(particle):
     # Magnitude
     new_velocity = V_D_MAX * ((particle.radius - MIN_PARTICLE_RADIUS) / (MAX_PARTICLE_RADIUS - MIN_PARTICLE_RADIUS))**BETA
     # Vector
     # TODO: Make target a function
-    new_velocity = new_velocity * particle.relative_position(TARGET).normalize()
+    new_velocity = new_velocity * particle.relative_position(target(particle)).normalize()
 
     new_position = particle.position + new_velocity * DELTA_T
 
