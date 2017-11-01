@@ -15,15 +15,14 @@ import ss.util.args as arg_base
 from ss.util.file_writer import FileWriter
 from ss.util.file_reader import FileReader
 from ss.cim.particle import Particle
-from ss.tp04.solutions import verlet
 from ss.tp05 import flow_sliding_window
-import numpy as np
 
 #TODO change descrip
 arg_base.parser.description = "Granular media simulation program. Simulates the behavior of sand-like particles " \
                               "falling in a silo with a slit. "
 arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 100", type=int, default=100)
-arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity. Default is 10 m/s", type=int, default=10)
+arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity. Float. Default is 1 m/s", type=float, default=1)
+arg_base.parser.add_argument("-v_max", "-vm", help="Maximum velocity. Float. Default is 3 m/s", type=float, default=3)
 
 args = arg_base.to_dict_no_none()
 
@@ -36,35 +35,32 @@ if args['num_particles'] < 0:
     raise Exception("Num particles (%i) must be positive" % args['num-particles'])
 
 
-# Constants
-K_n = 10e5
-# Kn, ?? [N/m]
-K_t = 2*K_n                 # Kt, ?? [N/m]
-PARTICLE_MASS = 0.01        # [Kg]
-MIN_PARTICLE_RADIUS = 0.01  # [m]
-MAX_PARTICLE_RADIUS = 0.015 # [m]
-# SLIT_Y = args['height']/10  # Y coordinate at which the slit is located [m].
-# MIN_Y = 0                   # Min Y coordinate of particles [m]. When below this, they are repositioned at the top with V=0
-V0 = args['initial_velocity']                      # [m/s]
-
-# # Constant vectors
-# X = Vector2(1, 0)           # Unit vector X
-# Y = Vector2(0, 1)           # Unit vector Y
-# G = -Y * 9.81               # Gravity vector
+# Model constants
+MIN_PARTICLE_RADIUS = 0.1           # [m]
+MAX_PARTICLE_RADIUS = 0.37          # [m]
+V0 = args['initial_velocity']       # [m/s]
+MIN_DISTANCE = 0                    # Distance at which particles are considered to collide [m]
+# TODO: Confirm these are the proper values
+BETA = 1
+TAU = 0.5
+V_D_MAX = args['v_max']
 
 # Constants from args, easier to type
 NUM_PARTICLES = args['num_particles']
+
+# Geometrical constants
+# TODO: Tomar de args y defaultear a esto si no está
 HEIGHT = 20
 #TODO agregar mas espacio para ver como salen las particulas?
 WIDTH = 22
 DOOR_POSITION = 20
 DIAMETER = 1.2
 
-MIN_DISTANCE = 0            # Min distance between created particles [m]. Note that for this simulation, once the
-                            # simulation has started particles may be closer than this. This is just for the start.
+# Constant vectors
+TARGET = Particle(WIDTH, HEIGHT/2, is_fake=True)
 
 # TODO: Should these be params?
-DELTA_T = 1e-5
+DELTA_T = 1e-3
 DELTA_T_SAVE = 1e-2
 
 
@@ -77,22 +73,23 @@ def generate_random_particles():
         print("Generating %i particles without overlap..." % NUM_PARTICLES, end='', flush=True)
 
     for particle_count in range(NUM_PARTICLES):
-        radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
+        radius = MAX_PARTICLE_RADIUS
         new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
                                                     max_width=DOOR_POSITION - MIN_DISTANCE,
-                                                    radius=radius, speed=V0, mass=PARTICLE_MASS,
-                                                    min_height=MIN_DISTANCE, min_width=MIN_DISTANCE)
+                                                    radius=radius, speed=V0,
+                                                    min_height=MIN_DISTANCE,
+                                                    min_width=MIN_DISTANCE)
         done = False
         while not done:
             overlap = False
             # Make sure the new particle doesn't overlap with any other existing particle
-            radius = random.uniform(MIN_PARTICLE_RADIUS, MAX_PARTICLE_RADIUS)
+            radius = MAX_PARTICLE_RADIUS
             for existing_particle in result:
                 if new_particle.distance_to(existing_particle) < MIN_DISTANCE + radius:
                     overlap = True
                     new_particle = Particle.get_random_particle(max_height=HEIGHT - radius - MIN_DISTANCE,
                                                                 max_width=DOOR_POSITION - MIN_DISTANCE,
-                                                                radius=radius, speed=V0, mass=PARTICLE_MASS,
+                                                                radius=radius, speed=V0,
                                                                 min_height=MIN_DISTANCE,
                                                                 min_width=MIN_DISTANCE)
                     break
@@ -116,18 +113,19 @@ def generate_fake_particles():
     y = 0
     while y <= HEIGHT:
         if not HEIGHT / 2 - DIAMETER / 2 <= y <= HEIGHT / 2 + DIAMETER / 2:
-            result.append(Particle(DOOR_POSITION, y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+            result.append(Particle(DOOR_POSITION, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
         y += MIN_PARTICLE_RADIUS
 
     # Corner particles
-    result.append(Particle(0, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(WIDTH, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(0, HEIGHT, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
-    result.append(Particle(WIDTH, HEIGHT, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
+    result.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
 
     return result
 
 
+# FIXME
 def load_particles(in_file, time=None, frame=None):
     data, properties = FileReader.import_positions_ovito(in_file, time, frame)
 
@@ -136,7 +134,7 @@ def load_particles(in_file, time=None, frame=None):
         id, x, y = data[i]
         _r, _g, _b, radius, vx, vy = properties[i]
         v, o = Particle.to_v_o(Vector2(vx, vy))
-        result.append(Particle(x, y, radius=radius, mass=PARTICLE_MASS, v=v, o=o, id=id))
+        result.append(Particle(x, y, radius=radius, v=v, o=o, id=id))
 
     return result
 
@@ -147,14 +145,12 @@ def add_wall_neighbors(particle, dest):
     # Check if there is interaction with the bottom wall
     if particle.y <= particle.radius:
         fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
-        if superposition(particle, fake) >= 0:
-            dest.append(fake, particle.distance_to(fake))
+        dest.append(fake, particle.distance_to(fake))
 
     # Check if there is interaction with top wall
     if particle.y + particle.radius >= HEIGHT:
         fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
-        if superposition(particle, fake) >= 0:
-            dest.append(fake, particle.distance_to(fake))
+        dest.append(fake, particle.distance_to(fake))
 
     # Check if there is interaction with the left wall
     if particle.x <= particle.radius:
@@ -167,110 +163,40 @@ def add_wall_neighbors(particle, dest):
         dest.append((fake, particle.distance_to(fake)))
 
 
-def superposition(particle, other):
-    if other.is_fake:
-        # Wall particle
-        return particle.radius - (other.position - particle.position).magnitude()
-    else:
-        # Real particle
-        return particle.radius + other.radius - (other.position - particle.position).magnitude()
-
-
-def calculate_force(particle, others):
-    f_x = f_y = 0
-    for n, _ in others:
-        epsilon = superposition(particle, n)
-        if epsilon >= 0:
-            v_n = particle.relative_position(n).normalize()
-            fn, ft = f_n(particle, n), f_t(particle, n)
-
-            f_x += fn * v_n.x + ft * (-v_n.y)
-            f_y += fn * v_n.y + ft * v_n.x
-
-    return Vector2(f_x, f_y)
-
-
-def f_t(particle, neighbor):
-    v_n = particle.relative_position(neighbor).normalize()
-    v_t = Vector2(-v_n.y, v_n.x)
-    return K_t * superposition(particle, neighbor) * particle.relative_velocity(neighbor).dot(v_t)
-
-
-def f_n(particle, neighbor):
-    return -K_n * superposition(particle, neighbor)
-
-
-def evolve_particles(particles, new_positions, new_velocities, pending_particles):
-    """Update all particles' positions and velocities. For those that have fallen below MIN_Y, delete them and create
-    new ones (with the same ID) on the top of the silo, with V = 0, ensuring no overlap. Also, for the new particles
-    set previous position and velocity to the same as the starting ones. If we simulate with Euler, the simulation
-    would give us a previous position and velocity as if the particle had been thrown up and it was now starting to
-    fall down, but this is incorrect. Better to make it like the particle was being held where it is now, and is now
-    being dropped.
-
-    :return A tuple of lists of the form (evolved_particles, pending_particles), where `pending_particles` are particles
-    that could not be repositioned (ie. there was no room on the top of the silo). We should attempt to add these
-    particles again in the next delta_t."""
-
-    evolved_particles, fallen_particles, new_pending_particles = [], [], []
-
+def evolve_particles(particles, new_positions, new_velocities, new_radii):
     for i in range(len(particles)):
         p = particles[i]
-        new_position = new_positions[i]
+        p.position = new_positions[i]
+        p.velocity = Particle.to_v_o(new_velocities[i])
+        p.radius = new_radii[i]
 
-        if new_position.x >= DOOR_POSITION:
-            # Person has left the room
-            fallen_particles.append(p)
-        else:
-            # Evolve normally
-            p.position = new_position
-            p.velocity = Particle.to_v_o(new_velocities[i])
-            evolved_particles.append(p)
+    return particles
 
-    # Now that all regular particles have evolved, reposition pending and fallen particles ensuring no overlap (pending first)
-    for p in pending_particles + fallen_particles:
-        # Replace with new particle
-        # TODO: Ensure no overlap. If can't generate without overlap, choose random X
-        overlap = True
-        new_x = p.x
-        # Avoid respawning too close to side walls
-        if new_x < MIN_DISTANCE:
-            new_x = MIN_DISTANCE
-        elif WIDTH - new_x < MIN_DISTANCE:
-            new_x = WIDTH - MIN_DISTANCE
 
-        overlap_attempts = 0
-        while overlap and overlap_attempts < 100:
-            new_particle = Particle(new_x, HEIGHT - p.radius - MIN_DISTANCE, radius=p.radius, mass=p.mass, v=0, o=0,
-                                    id=p.id)
-            if len(evolved_particles) == 0:
-                overlap = False
-            for p2 in evolved_particles:
-                overlap = new_particle.distance_to(p2) < MIN_DISTANCE
-                if overlap:
-                    print("Overlap between #%i and #%i, setting random X for #%i" % (p.id, p2.id, p.id))
-                    new_x = random.uniform(MIN_DISTANCE, WIDTH - MIN_DISTANCE)
-                    break
+def evolve_no_contact(particle):
+    # Magnitude
+    new_velocity = V_D_MAX * ((particle.radius - MIN_PARTICLE_RADIUS) / (MAX_PARTICLE_RADIUS - MIN_PARTICLE_RADIUS))**BETA
+    # Vector
+    # TODO: Make target a function
+    new_velocity = new_velocity * particle.relative_position(TARGET).normalize()
 
-            overlap_attempts += 1
+    new_position = particle.position + new_velocity * DELTA_T
 
-        if overlap:
-            # Couldn't find room for this particle, try again later
-            print("Couldn't reposition particle #%i, will try again later" % p.id)
-            new_pending_particles.append(p)
-        else:
-            # Update position and velocity with same values so previous_position and previous_velocity are the same as current
-            new_particle.position = new_particle.position
-            # TODO: Make setter receive Vector2 by default
-            new_particle.velocity = (new_particle.vel_module(), new_particle.vel_angle())
+    new_radius = particle.radius
+    if particle.radius < MAX_PARTICLE_RADIUS:
+        new_radius += MAX_PARTICLE_RADIUS / TAU * DELTA_T
 
-            evolved_particles.append(new_particle)
+    return new_position, new_velocity, new_radius
 
-    for p in evolved_particles:
-        if p.x < 0 or p.x > WIDTH or p.y > HEIGHT:
-            raise Exception("%s is out of bounds, max coordinates are (%g,%g)" % (p, WIDTH, HEIGHT))
 
-    return evolved_particles, new_pending_particles
+def evolve_contact(particle, others):
+    escape_velocity = Vector2()
+    for other, _ in others:
+        escape_velocity += particle.relative_position(other).normalize() * -1 * V_D_MAX
+
+    new_position = particle.position + escape_velocity * DELTA_T
+
+    return new_position, escape_velocity, MIN_PARTICLE_RADIUS
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -282,11 +208,6 @@ if args['time']:
 # Generate random particles or load them from file
 particles = generate_random_particles()
 # particles = load_particles("in.txt", time=0.)[0:2]
-
-# Calculate avg radius
-particle_avg_radius = np.mean([x.radius for x in particles])
-
-pending_particles = list()      # See evolve_particles
 
 # Generate wall/corner particles
 fake_particles = generate_fake_particles()
@@ -300,7 +221,7 @@ while True:
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
     # Initialize variables
-    new_positions, new_velocities = [], []
+    new_positions, new_velocities, new_radii = [], [], []
     total_velocities = 0
 
     for p in particles:
@@ -308,24 +229,19 @@ while True:
         # Add fake particles to represent walls
         # TODO CHECK
         add_wall_neighbors(p, neighbors[p.id])
+        colliding = next((True for _, distance in neighbors[p.id] if distance < MIN_DISTANCE), False)
 
-        # Calculate total force exerted on p on the normal and tang
-        # TODO check
-        force = calculate_force(p, neighbors[p.id])
 
-        # Calculate new position and new velocity for particle
-        # TODO ver lo de usar gear predictor
-        new_position = verlet.r(particle=p, delta_t=DELTA_T, force=force)
-        new_velocity = verlet.v(p, DELTA_T, force)
-        total_velocities += new_velocity.magnitude()
+        new_position, new_velocity, new_radius = evolve_contact(p, neighbors[p.id]) if colliding else evolve_no_contact(p)
 
-        if p.position.x <= DOOR_POSITION and new_position.x > DOOR_POSITION:
+        if p.position.x <= DOOR_POSITION < new_position.x:
             pedestrians_who_exited += 1
             flow_sliding_window.append_event("flow_n.txt", pedestrians_who_exited, t, "w" if pedestrians_who_exited == 1 else "a")
 
         # Save new position and velocity
         new_positions.append(new_position)
         new_velocities.append(new_velocity)
+        new_radii.append(new_radius)
 
     # Save frame if necessary
     t_accum += DELTA_T
@@ -337,7 +253,7 @@ while True:
         colors = [(255, 255, 255)] * len(particles)  # Real particles are white
         colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
-        extra_data = lambda particle: ("%g\t%g\t%g" % (particle.radius, particle.velocity.x, particle.velocity.y))
+        extra_data = lambda particle: ("%g\t%g\t%g" % (MIN_PARTICLE_RADIUS, particle.velocity.x, particle.velocity.y))
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
 
@@ -350,7 +266,7 @@ while True:
         t_accum = 0
 
     # Evolve particles
-    particles, pending_particles = evolve_particles(particles, new_positions, new_velocities, pending_particles)
+    particles = evolve_particles(particles, new_positions, new_velocities, new_radii)
 
     # Add delta t to total time
     t += DELTA_T
