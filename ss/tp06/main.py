@@ -23,7 +23,7 @@ import numpy as np
 arg_base.parser.description = "Granular media simulation program. Simulates the behavior of sand-like particles " \
                               "falling in a silo with a slit. "
 arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 100", type=int, default=100)
-arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity.", type=int)
+arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity. Default is 10 m/s", type=int, default=10)
 
 args = arg_base.to_dict_no_none()
 
@@ -110,13 +110,14 @@ def generate_random_particles():
 def generate_fake_particles():
     """Generate fake slit particles for visualization, and corner particles for Ovito to create a wall"""
 
-    x = 0
     result = list()
-    # Slit particles
-    while x <= WIDTH:
-        if not WIDTH / 2 - DIAMETER / 2 <= x <= WIDTH / 2 + DIAMETER / 2:
-            result.append(Particle(x, SLIT_Y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
-        x += MIN_PARTICLE_RADIUS
+
+    # Door wall particles
+    y = 0
+    while y <= HEIGHT:
+        if not HEIGHT / 2 - DIAMETER / 2 <= y <= HEIGHT / 2 + DIAMETER / 2:
+            result.append(Particle(DOOR_POSITION, y, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
+        y += MIN_PARTICLE_RADIUS
 
     # Corner particles
     result.append(Particle(0, 0, radius=MIN_PARTICLE_RADIUS, mass=math.inf, v=0, o=0, is_fake=True))
@@ -144,10 +145,16 @@ def add_wall_neighbors(particle, dest):
     """Add fake particles that will represent the wall particles that exert force on the particle"""
 
     # Check if there is interaction with the bottom wall
-    if particle.y >= SLIT_Y and (particle.x <= (WIDTH - DIAMETER) / 2 or particle.x > (WIDTH + DIAMETER) / 2):
-        fake = Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True)
+    if particle.y <= particle.radius:
+        fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
         if superposition(particle, fake) >= 0:
-            dest.append((Particle(particle.x, SLIT_Y, radius=0, mass=math.inf, is_fake=True), particle.distance_to(fake)))
+            dest.append(fake, particle.distance_to(fake))
+
+    # Check if there is interaction with top wall
+    if particle.y + particle.radius >= HEIGHT:
+        fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
+        if superposition(particle, fake) >= 0:
+            dest.append(fake, particle.distance_to(fake))
 
     # Check if there is interaction with the left wall
     if particle.x <= particle.radius:
@@ -155,8 +162,8 @@ def add_wall_neighbors(particle, dest):
         dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if WIDTH - particle.x <= particle.radius:
-        fake = Particle(WIDTH, particle.y, radius=0, mass=math.inf, is_fake=True)
+    if DOOR_POSITION - particle.x <= particle.radius:
+        fake = Particle(DOOR_POSITION, particle.y, radius=0, mass=math.inf, is_fake=True)
         dest.append((fake, particle.distance_to(fake)))
 
 
@@ -211,8 +218,8 @@ def evolve_particles(particles, new_positions, new_velocities, pending_particles
         p = particles[i]
         new_position = new_positions[i]
 
-        if new_position.y <= MIN_Y or new_position.y > HEIGHT:
-            # Particle either fell below, or to the side but is below the slit, reset
+        if new_position.x >= DOOR_POSITION:
+            # Person has left the room
             fallen_particles.append(p)
         else:
             # Evolve normally
@@ -276,7 +283,6 @@ if args['time']:
 particles = generate_random_particles()
 # particles = load_particles("in.txt", time=0.)[0:2]
 
-
 # Calculate avg radius
 particle_avg_radius = np.mean([x.radius for x in particles])
 
@@ -287,9 +293,9 @@ fake_particles = generate_fake_particles()
 
 t_accum = 0
 t = 0
-num_fallen_particles = 0
-# TODO: Establish end condition
+pedestrians_who_exited = 0
 
+# TODO: Establish end condition
 while True:
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
@@ -305,7 +311,7 @@ while True:
 
         # Calculate total force exerted on p on the normal and tang
         # TODO check
-        force = calculate_force(p, neighbors[p.id]) + (p.mass * G)
+        force = calculate_force(p, neighbors[p.id])
 
         # Calculate new position and new velocity for particle
         # TODO ver lo de usar gear predictor
@@ -313,9 +319,9 @@ while True:
         new_velocity = verlet.v(p, DELTA_T, force)
         total_velocities += new_velocity.magnitude()
 
-        if p.position.y >= SLIT_Y and new_position.y < SLIT_Y:
-            num_fallen_particles += 1
-            flow_sliding_window.append_event("flow_n.txt", num_fallen_particles, t, "w" if num_fallen_particles == 1 else "a")
+        if p.position.x <= DOOR_POSITION and new_position.x > DOOR_POSITION:
+            pedestrians_who_exited += 1
+            flow_sliding_window.append_event("flow_n.txt", pedestrians_who_exited, t, "w" if pedestrians_who_exited == 1 else "a")
 
         # Save new position and velocity
         new_positions.append(new_position)
@@ -336,14 +342,8 @@ while True:
                                           mode="w" if t == 0 else "a", output="output.txt")
 
         # Save Flow
-        beverloo_flow = B * (DIAMETER - particle_avg_radius)**1.5
         file = open("flow.txt", "w" if t == 0 else "a")
-        file.write("%g,%g,%g\n" % (t, num_fallen_particles/DELTA_T_SAVE, beverloo_flow))
-        file.close()
-
-        # Save kinetic energy
-        file = open("kinetic_energy.txt", "w" if t == 0 else "a")
-        file.write("%g,%g\n" % (t, 0.5*PARTICLE_MASS*NUM_PARTICLES*(total_velocities**2)))
+        file.write("%g,%g\n" % (t, pedestrians_who_exited / DELTA_T_SAVE))
         file.close()
 
         # Reset counter
