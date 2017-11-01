@@ -59,7 +59,7 @@ TARGET = Particle(WIDTH, HEIGHT/2, is_fake=True)
 
 # TODO: Should these be params?
 DELTA_T = 1e-3
-DELTA_T_SAVE = 1e-1
+DELTA_T_SAVE = 5e-2
 
 def generate_random_particles():
     """Create particles with random positions in the silo"""
@@ -142,12 +142,12 @@ def add_wall_neighbors(particle, dest):
     # Check if there is interaction with the bottom wall
     if particle.y <= particle.radius:
         fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
-        dest.append(fake, particle.distance_to(fake))
+        dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with top wall
     if particle.y + particle.radius >= HEIGHT:
         fake = Particle(particle.x, 0, radius=0, mass=math.inf, is_fake=True)
-        dest.append(fake, particle.distance_to(fake))
+        dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the left wall
     if particle.x <= particle.radius:
@@ -163,6 +163,9 @@ def add_wall_neighbors(particle, dest):
 def evolve_particles(particles, new_positions, new_velocities, new_radii):
     for i in range(len(particles)):
         p = particles[i]
+        #TODO que hacemos con las particulas que se van?
+        if new_positions[i].x >= WIDTH:
+            continue
         p.position = new_positions[i]
         p.velocity = Particle.to_v_o(new_velocities[i])
         p.radius = new_radii[i]
