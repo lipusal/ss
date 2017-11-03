@@ -53,15 +53,15 @@ HEIGHT = 20
 WIDTH = 22
 DOOR_POSITION = 20
 DIAMETER = 1.2
-DOOR_TOP = HEIGHT/2 + DIAMETER/2
-DOOR_BOTTOM = HEIGHT/2 - DIAMETER/2
 
-# Constant vectors
-TARGET = Particle(WIDTH, HEIGHT/2, is_fake=True)
+# Constant positions
+DOOR_TOP = Particle(DOOR_POSITION, HEIGHT/2 + DIAMETER/2, radius=0, mass=math.inf, is_fake=True)
+DOOR_BOTTOM = Particle(DOOR_POSITION, HEIGHT/2 - DIAMETER/2, radius=0, mass=math.inf, is_fake=True)
 
 # TODO: Should these be params?
 DELTA_T = 1e-3
-DELTA_T_SAVE = 5e-2
+DELTA_T_SAVE = 1e-2
+
 
 def generate_random_particles():
     """Create particles with random positions in the silo"""
@@ -157,7 +157,7 @@ def add_wall_neighbors(particle, dest):
         dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if DOOR_POSITION - particle.x <= particle.radius and not DOOR_BOTTOM <= particle.y <= DOOR_TOP:
+    if DOOR_POSITION - particle.x <= particle.radius and not DOOR_BOTTOM.y <= particle.y <= DOOR_TOP.y:
         fake = Particle(DOOR_POSITION, particle.y, radius=0, mass=math.inf, is_fake=True)
         dest.append((fake, particle.distance_to(fake)))
 
@@ -176,14 +176,15 @@ def evolve_particles(particles, new_positions, new_velocities, new_radii):
 
 
 def target(particle):
-    # Target for pedestrians that are on the top half of the room
-    if particle.y > HEIGHT/2 + DOOR_POSITION/2:
-        return Particle(DOOR_POSITION, HEIGHT/2 + DOOR_POSITION/2 - MAX_PARTICLE_RADIUS, is_fake=True)
-    # Target for pedestrians that are on the lower half of the room
-    if particle.y < HEIGHT/2 - DOOR_POSITION/2:
-        return Particle(DOOR_POSITION, HEIGHT/2 - DOOR_POSITION/2 + MAX_PARTICLE_RADIUS, is_fake=True)
-    # Target for pedestrians that are in the middle of the room
-    return Particle(WIDTH,particle.y, is_fake=True)
+    if particle.y > DOOR_TOP.y:
+        # Above door => target top edge of door
+        return DOOR_TOP
+    elif particle.y < DOOR_BOTTOM.y:
+        # Below door => target bottom edge of door
+        return DOOR_BOTTOM
+    else:
+        # Within door => target edge of room straight ahead
+        return Particle(WIDTH, particle.y, is_fake=True)
 
 
 def evolve_no_contact(particle):
