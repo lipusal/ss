@@ -157,22 +157,25 @@ def add_wall_neighbors(particle, dest):
         dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if DOOR_POSITION - particle.x <= particle.radius and not DOOR_BOTTOM.y <= particle.y <= DOOR_TOP.y:
+    if particle.x <= DOOR_POSITION and not DOOR_BOTTOM.y <= particle.y <= DOOR_TOP.y:
         fake = Particle(DOOR_POSITION, particle.y, radius=0, mass=math.inf, is_fake=True)
-        dest.append((fake, particle.distance_to(fake)))
+        if particle.distance_to(fake) <= particle.radius:
+            dest.append((fake, particle.distance_to(fake)))
 
 
 def evolve_particles(particles, new_positions, new_velocities, new_radii):
+    result = []
     for i in range(len(particles)):
         p = particles[i]
         #TODO que hacemos con las particulas que se van?
-        if new_positions[i].x >= WIDTH:
-            continue
-        p.position = new_positions[i]
-        p.velocity = Particle.to_v_o(new_velocities[i])
-        p.radius = new_radii[i]
+        if new_positions[i].x < WIDTH:
+            p.position = new_positions[i]
+            p.velocity = Particle.to_v_o(new_velocities[i])
+            p.radius = new_radii[i]
+            result.append(p)
+        # Discard particles that have exited the room
 
-    return particles
+    return result
 
 
 def target(particle):
@@ -230,8 +233,7 @@ t_accum = 0
 t = 0
 pedestrians_who_exited = 0
 
-# TODO: Establish end condition
-while True:
+while len(particles) > 0:
     # Calculate all neighbors for all particles
     neighbors = CellIndexMethod(particles, radius=MAX_PARTICLE_RADIUS, width=WIDTH, height=HEIGHT).neighbors
     # Initialize variables
@@ -245,10 +247,10 @@ while True:
         add_wall_neighbors(p, neighbors[p.id])
         colliding = next((True for _, distance in neighbors[p.id] if distance < MIN_DISTANCE), False)
 
-
         new_position, new_velocity, new_radius = evolve_contact(p, neighbors[p.id]) if colliding else evolve_no_contact(p)
 
         if p.position.x <= DOOR_POSITION < new_position.x:
+            # FIXME: Some pedestrians go back through the door for some reason, so we register them again when they re-exit
             pedestrians_who_exited += 1
             flow_sliding_window.append_event("flow_n.txt", pedestrians_who_exited, t, "w" if pedestrians_who_exited == 1 else "a")
 
