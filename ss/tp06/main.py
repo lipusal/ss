@@ -22,7 +22,7 @@ arg_base.parser.description = "Granular media simulation program. Simulates the 
                               "falling in a silo with a slit. "
 arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 100", type=int, default=100)
 arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity. Float. Default is 1 m/s", type=float, default=1)
-arg_base.parser.add_argument("-v_max", "-vm", help="Maximum velocity. Float. Default is 3 m/s", type=float, default=3)
+arg_base.parser.add_argument("-v_max", "-vm", help="Maximum velocity. Float. Default is 3 m/s", type=float, default=1)
 
 args = arg_base.to_dict_no_none()
 
@@ -193,21 +193,20 @@ def target(particle):
             return Particle(WIDTH, particle.y, radius=0, mass=math.inf, is_fake=True)
     else:
         # Within door => target edge of room straight ahead
-        return Particle(WIDTH, particle.y, is_fake=True)
+        return Particle(WIDTH, particle.y, radius=0, is_fake=True)
 
 
 def evolve_no_contact(particle):
     # Magnitude
     new_velocity = V_D_MAX * ((particle.radius - MIN_PARTICLE_RADIUS) / (MAX_PARTICLE_RADIUS - MIN_PARTICLE_RADIUS))**BETA
     # Vector
-    # TODO: Make target a function
     new_velocity = new_velocity * particle.relative_position(target(particle)).normalize()
 
     new_position = particle.position + new_velocity * DELTA_T
 
     new_radius = particle.radius
     if particle.radius < MAX_PARTICLE_RADIUS:
-        new_radius += MAX_PARTICLE_RADIUS / TAU * DELTA_T
+        new_radius += MAX_PARTICLE_RADIUS / (TAU / DELTA_T)
 
     return new_position, new_velocity, new_radius
 
@@ -215,8 +214,9 @@ def evolve_no_contact(particle):
 def evolve_contact(particle, others):
     escape_velocity = Vector2()
     for other, _ in others:
-        escape_velocity += particle.relative_position(other).normalize() * -1 * V_D_MAX
+        escape_velocity += particle.relative_position(other) * -1
 
+    escape_velocity = escape_velocity.normalize() * V_D_MAX
     new_position = particle.position + escape_velocity * DELTA_T
 
     return new_position, escape_velocity, MIN_PARTICLE_RADIUS
@@ -275,7 +275,7 @@ while len(particles) > 0:
         colors = [(255, 255, 255)] * len(particles)  # Real particles are white
         colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
-        extra_data = lambda particle: ("%g\t%g\t%g" % (MIN_PARTICLE_RADIUS, particle.velocity.x, particle.velocity.y))
+        extra_data = lambda particle: ("%g\t%g\t%g" % (particle.radius, particle.velocity.x, particle.velocity.y))
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
 
