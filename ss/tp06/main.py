@@ -53,6 +53,8 @@ HEIGHT = 20
 WIDTH = 22
 DOOR_POSITION = 20
 DIAMETER = 1.2
+DOOR_TOP = HEIGHT/2 + DIAMETER/2
+DOOR_BOTTOM = HEIGHT/2 - DIAMETER/2
 
 # Constant vectors
 TARGET = Particle(WIDTH, HEIGHT/2, is_fake=True)
@@ -155,7 +157,7 @@ def add_wall_neighbors(particle, dest):
         dest.append((fake, particle.distance_to(fake)))
 
     # Check if there is interaction with the right wall
-    if DOOR_POSITION - particle.x <= particle.radius:
+    if DOOR_POSITION - particle.x <= particle.radius and not DOOR_BOTTOM <= particle.y <= DOOR_TOP:
         fake = Particle(DOOR_POSITION, particle.y, radius=0, mass=math.inf, is_fake=True)
         dest.append((fake, particle.distance_to(fake)))
 
@@ -172,6 +174,7 @@ def evolve_particles(particles, new_positions, new_velocities, new_radii):
 
     return particles
 
+
 def target(particle):
     # Target for pedestrians that are on the top half of the room
     if particle.y > HEIGHT/2 + DOOR_POSITION/2:
@@ -181,6 +184,7 @@ def target(particle):
         return Particle(DOOR_POSITION, HEIGHT/2 - DOOR_POSITION/2 + MAX_PARTICLE_RADIUS, is_fake=True)
     # Target for pedestrians that are in the middle of the room
     return Particle(WIDTH,particle.y, is_fake=True)
+
 
 def evolve_no_contact(particle):
     # Magnitude
