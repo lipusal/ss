@@ -37,7 +37,7 @@ if args['num_particles'] < 0:
 
 # Model constants
 MIN_PARTICLE_RADIUS = 0.1           # [m]
-MAX_PARTICLE_RADIUS = 0.2          # [m]
+MAX_PARTICLE_RADIUS = 0.2           # [m]
 V0 = args['initial_velocity']       # [m/s]
 MIN_DISTANCE = 0                    # Distance at which particles are considered to collide [m]
 # TODO: Confirm these are the proper values
@@ -181,9 +181,10 @@ def evolve_particles(particles, new_positions, new_velocities, new_radii):
 def target(particle):
     if particle.y > DOOR_TOP.y:
         # Above door => target top edge of door
-        return DOOR_TOP
+        return Particle(DOOR_POSITION, DOOR_TOP.y - particle.radius, radius=0, mass=math.inf, is_fake=True)
     elif particle.y < DOOR_BOTTOM.y:
         # Below door => target bottom edge of door
+        return Particle(DOOR_POSITION, DOOR_BOTTOM.y + particle.radius, radius=0, mass=math.inf, is_fake=True)
         return DOOR_BOTTOM
     else:
         # Within door => target edge of room straight ahead
