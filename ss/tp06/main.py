@@ -59,8 +59,8 @@ DOOR_TOP = Particle(DOOR_POSITION, HEIGHT/2 + DIAMETER/2, radius=0, mass=math.in
 DOOR_BOTTOM = Particle(DOOR_POSITION, HEIGHT/2 - DIAMETER/2, radius=0, mass=math.inf, is_fake=True)
 
 # TODO: Should these be params?
-DELTA_T = 1e-3
-DELTA_T_SAVE = 1e-2
+DELTA_T = 5e-2
+DELTA_T_SAVE = 1e-1
 
 
 def generate_random_particles():
