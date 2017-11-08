@@ -16,6 +16,7 @@ from ss.util.file_writer import FileWriter
 from ss.util.file_reader import FileReader
 from ss.cim.particle import Particle
 from ss.tp05 import flow_sliding_window
+from collections import OrderedDict
 
 #TODO change descrip
 arg_base.parser.description = "Granular media simulation program. Simulates the behavior of sand-like particles " \
@@ -237,7 +238,7 @@ fake_particles = generate_fake_particles()
 
 t_accum = 0
 t = 0
-pedestrians_who_exited = 0
+exit_times = {}
 
 while len(particles) > 0:
     # Calculate all neighbors for all particles
@@ -258,9 +259,8 @@ while len(particles) > 0:
         new_position, new_velocity, new_radius = evolve_contact(p, neighbors[p.id]) if colliding else evolve_no_contact(p)
 
         if p.position.x <= DOOR_POSITION < new_position.x:
-            # FIXME: Some pedestrians go back through the door for some reason, so we register them again when they re-exit
-            pedestrians_who_exited += 1
-            flow_sliding_window.append_event("flow_n.txt", pedestrians_who_exited, t, "w" if pedestrians_who_exited == 1 else "a")
+            # Record exit time for this particle. In case this particle re-exits (because it collided right as it was exiting and was pushed behind the door), save latest time.
+            exit_times[p.id] = t
 
         # Save new data
         new_positions.append(new_position)
@@ -281,11 +281,6 @@ while len(particles) > 0:
         FileWriter.export_positions_ovito(particles + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
 
-        # Save Flow
-        file = open("flow.txt", "w" if t == 0 else "a")
-        file.write("%g,%g\n" % (t, pedestrians_who_exited / DELTA_T_SAVE))
-        file.close()
-
         # Reset counter
         t_accum = 0
 
@@ -294,3 +289,17 @@ while len(particles) > 0:
 
     # Add delta t to total time
     t += DELTA_T
+
+# Simulation complete
+if args['verbose']:
+    print("Simulation complete, saving exit times to calculate flow...")
+
+# Save at which time N particles had exited, for every 1 <= N <= num_particles
+# Sort dictionary by values, https://stackoverflow.com/a/31741215/2333689
+sorted_times = OrderedDict(sorted(exit_times.items(), key=lambda entry: entry[1]))
+pedestrian_count = 1
+for time in sorted_times.values():
+    flow_sliding_window.append_event("flow_n.txt", pedestrian_count, time, "w" if pedestrian_count == 1 else "a")
+    pedestrian_count += 1
+
+print("Done")
