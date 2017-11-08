@@ -251,7 +251,9 @@ while len(particles) > 0:
         # Add fake particles to represent walls
         # TODO CHECK
         add_wall_neighbors(p, neighbors[p.id])
-        colliding = next((True for _, distance in neighbors[p.id] if distance < MIN_DISTANCE), False)
+        # Cell index method returns neighbors within MAX_PARTICLE_RADIUS. Keep only those within MIN_DISTANCE.
+        neighbors[p.id] = [tuple for tuple in neighbors[p.id] if tuple[1] <= MIN_DISTANCE]
+        colliding = len(neighbors[p.id]) > 0
 
         new_position, new_velocity, new_radius = evolve_contact(p, neighbors[p.id]) if colliding else evolve_no_contact(p)
 
@@ -260,7 +262,7 @@ while len(particles) > 0:
             pedestrians_who_exited += 1
             flow_sliding_window.append_event("flow_n.txt", pedestrians_who_exited, t, "w" if pedestrians_who_exited == 1 else "a")
 
-        # Save new position and velocity
+        # Save new data
         new_positions.append(new_position)
         new_velocities.append(new_velocity)
         new_radii.append(new_radius)
