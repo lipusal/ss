@@ -23,7 +23,7 @@ arg_base.parser.description = "Granular media simulation program. Simulates the 
                               "falling in a silo with a slit. "
 arg_base.parser.add_argument("--num_particles", "-n", help="Number of particles. Default is 100", type=int, default=100)
 arg_base.parser.add_argument("-initial_velocity", "-v0", help="Initial velocity. Float. Default is 1 m/s", type=float, default=1)
-arg_base.parser.add_argument("-v_max", "-vm", help="Maximum velocity. Float. Default is 3 m/s", type=float, default=1)
+arg_base.parser.add_argument("-v_max", "-vm", help="Maximum velocity. Float. Default is 1.55 m/s", type=float, default=1.55)
 
 args = arg_base.to_dict_no_none()
 
@@ -36,13 +36,12 @@ if args['num_particles'] < 0:
     raise Exception("Num particles (%i) must be positive" % args['num-particles'])
 
 
-# Model constants
-MIN_PARTICLE_RADIUS = 0.1           # [m]
-MAX_PARTICLE_RADIUS = 0.2           # [m]
+# Model constants (many are taken from the "set of parameters 1" in the paper this model is based off of)
+MIN_PARTICLE_RADIUS = 0.15           # [m]
+MAX_PARTICLE_RADIUS = 0.32           # [m]
 V0 = args['initial_velocity']       # [m/s]
 MIN_DISTANCE = 0                    # Distance at which particles are considered to collide [m]
-# TODO: Confirm these are the proper values
-BETA = 1
+BETA = 0.9
 TAU = 0.5
 V_D_MAX = args['v_max']
 
