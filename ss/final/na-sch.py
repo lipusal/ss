@@ -122,20 +122,25 @@ def to_circle(x):
     return math.cos(degree) * ROAD_LENGTH, math.sin(degree) * ROAD_LENGTH
 
 
-def export_circle(real_particles, t):
+def export_circle(real_particles, t, colors):
+    if len(real_particles) != len(colors):
+        raise Exception("Mismatching particles and colors length. Aborting.")
     # TODO: Add a more generic and customizable fileWriter method to handle individual rows
     f = open("output.txt", mode="w" if t == 0 else "a")
     f.write("%i\n" % (len(real_particles)*2))
     f.write("%g\n" % t)
-    for particle in real_particles:
+    for i in range(len(real_particles)):
+        particle = real_particles[i]
+        color = colors[i]
         x, y = to_circle(particle.x)
+
         # Export in circle form
         f.write('%i\t%g\t%g' % (particle.id, x, y))
-        f.write('\t%g\t%g\t%g' % (255, 255, 255))
+        f.write('\t%g\t%g\t%g' % color)
         f.write("\t%g\t%g\n" % (particle.radius, particle.velocity.magnitude()))
         # Export in linear form for comparison
         f.write('%i\t%g\t%g' % (particle.id, particle.x, particle.y - ROAD_LENGTH * 2))
-        f.write('\t%g\t%g\t%g' % (255, 255, 255))
+        f.write('\t%g\t%g\t%g' % color)
         f.write("\t%g\t%g\n" % (particle.radius, particle.velocity.magnitude()))
     f.close()
 
@@ -157,15 +162,11 @@ t = 0
 
 while t < MAX_TIME:
     new_velocities = list()
-
+    colors = list()
     for car in cars:
         # TODO: Model.evolve()
-        if car.velocity.magnitude() <= 1:
-            2+2
         # 1) Accelerate
         new_velocity = min(car.velocity.magnitude() + 1, V_MAX)
-        if new_velocity <= 1:
-            2+2
 
         # 2) Interaction with cars ahead
         distances = [other.x - car.x for other in cars if other.id != car.id]
@@ -173,14 +174,15 @@ while t < MAX_TIME:
         new_velocity = min(new_velocity, closest_car_distance - MIN_DISTANCE)
         if new_velocity < 0:
             raise "%s changed velocity!" % car
-        if new_velocity <= 1:
-            2+2
 
         # 3) Chance of slowing down
         if random.random() < P:
             new_velocity = max(new_velocity - 1, 0)
-        if new_velocity <= 1:
-            2+2
+            colors.append((255, 0, 0))      # Red (break lights)
+        elif new_velocity == 0:
+            colors.append((255, 0, 0))      # Red (break lights still on when stopped)
+        else:
+            colors.append((255, 255, 255))  # White
 
         new_velocities.append(new_velocity)
 
@@ -193,7 +195,7 @@ while t < MAX_TIME:
         # Save particles
         # colors = [(255, 255, 255)] * NUM_PARTICLES     # Real particles are white
         # colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
-        export_circle(cars, t)
+        export_circle(cars, t, colors)
 
         # Also save particle radius and velocity for fake particles
         # extra_data = lambda car: ("%g\t%g" % (car.radius, car.velocity.x))
