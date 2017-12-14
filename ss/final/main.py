@@ -68,7 +68,7 @@ def generate_random_board():
             # Make sure the new particle is at least MIN_DISTANCE from any other existing particle
             velocity = random.uniform(0, V_MAX)
             for existing_particle in board:
-                if existing_particle is not None and new_particle.distance_to(existing_particle) < MIN_DISTANCE + velocity:
+                if existing_particle is not None and 0 <= new_particle.distance_to(existing_particle) + existing_particle.radius + new_particle.radius < MIN_DISTANCE + velocity:
                     overlap = True
                     new_particle = Particle(x=random.randint(0, ROAD_LENGTH - 1), y=0, radius=CELL_SIZE, v=velocity)
                     break
@@ -83,25 +83,14 @@ def generate_random_board():
     return board
 
 
-# def generate_fake_particles():
-#     """Generate fake slit particles for visualization, and corner particles for Ovito to create a wall"""
-#
-#     result = list()
-#
-#     # Door wall particles
-#     y = 0
-#     while y <= HEIGHT:
-#         if not HEIGHT / 2 - DIAMETER / 2 <= y <= HEIGHT / 2 + DIAMETER / 2:
-#             result.append(Particle(DOOR_POSITION, y, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-#         y += MIN_PARTICLE_RADIUS
-#
-#     # Corner particles
-#     result.append(Particle(0, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-#     result.append(Particle(WIDTH, 0, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-#     result.append(Particle(0, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-#     result.append(Particle(WIDTH, HEIGHT, radius=0, mass=math.inf, v=0, o=0, is_fake=True))
-#
-#     return result
+def generate_fake_particles():
+    result = list()
+
+    # Corner particles
+    result.append(Particle(0, 0, radius=0, v=0, o=0, is_fake=True))
+    result.append(Particle(ROAD_LENGTH, 0, radius=0, v=0, o=0, is_fake=True))
+
+    return result
 
 
 # def load_particles(in_file, time=None, frame=None):
@@ -142,7 +131,7 @@ cars = [car for car in board if car is not None]
 # particles = load_particles("in.txt", time=0.)[0:2]
 
 # Generate wall/corner particles
-# fake_particles = generate_fake_particles()
+fake_particles = generate_fake_particles()
 
 t_accum = 0
 t = 0
@@ -160,7 +149,7 @@ while t < MAX_TIME:
         # 2) Interaction with cars ahead
         next_cars = [other for other in board[index + 1:] if other is not None]
         if len(next_cars) > 0:
-            new_velocity = min(new_velocity, car.distance_to(next_cars[0]) - MIN_DISTANCE)
+            new_velocity = min(new_velocity, car.distance_to(next_cars[0]) + car.radius + next_cars[0].radius - MIN_DISTANCE)
         # 3) Chance of slowing down
         if random.random() <= P:
             new_velocity = max(new_velocity - 1, 0)
@@ -175,9 +164,10 @@ while t < MAX_TIME:
 
         # Save particles
         colors = [(255, 255, 255)] * NUM_PARTICLES     # Real particles are white
+        colors += [(0, 255, 0)] * len(fake_particles)  # Fake particles are green
         # Also save particle radius and velocity
         extra_data = lambda car: ("%g\t%g" % (car.radius, car.velocity.x))
-        FileWriter.export_positions_ovito(cars, t, colors=colors, extra_data_function=extra_data,
+        FileWriter.export_positions_ovito(cars + fake_particles, t, colors=colors, extra_data_function=extra_data,
                                           mode="w" if t == 0 else "a", output="output.txt")
 
         # Reset counter
