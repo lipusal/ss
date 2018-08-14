@@ -1,0 +1,9 @@
+Esto se corrió con:
+- 100 partículas
+- Caja de 100x50
+- Min distance 2
+- delta t = 3e-5
+- delta t save = 5e-2
+- Los histogramas del medio y del final están mal, a ambos les falta un clear() para borrar lo que había antes
+- La energía potencial (3ra columna en energy.txt) está mal, se calculaba mal para esta corrida y da muchísimo más
+- Esto corrió por más de 24 horas, fue insufrible
