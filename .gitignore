@@ -1,4 +1,10 @@
+# IntelliJ IDEA stuff
 .idea/
+
+# Java
+out/
+
+# Python and other stuff
 __pycache__/
 
 ss/tp04/gas/kinetic_energy\.txt
