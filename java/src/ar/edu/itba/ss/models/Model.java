@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class Model<T extends Particle> {
+
     protected List<T> particles;
 
     public Model(List<T> particles) {

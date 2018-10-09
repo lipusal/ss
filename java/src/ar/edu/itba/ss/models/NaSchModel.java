@@ -85,7 +85,7 @@ public class NaSchModel extends Model<Car> {
         // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
         Set<Car> sortedCars = new TreeSet<>(Comparator.comparingDouble(Particle::getX)); // Leftmost car will be first
         particles.forEach(car -> {
-            car.advanceRight((int) car.getVX());
+            car.advanceForward((int) car.getVX());
             if (car.getX() > roadLength) {
                 // Out bounds; wrap around (periodic boundary conditions), add first in list rather than last
                 car.setX((int) car.getX() - roadLength);

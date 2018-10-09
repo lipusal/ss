@@ -30,6 +30,7 @@ public class Main {
 //        cars.add(new Car(new Point(7, 0), new Point2D.Double(2, 0)));
         cars.add(new Car(new Point(5, 0)));
 
+//        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
         NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
         int t = 0;
         while (t < 100) {

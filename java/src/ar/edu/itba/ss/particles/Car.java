@@ -49,24 +49,24 @@ public class Car extends Particle {
         return String.format("Car #%d @%s, Vx=%g, Ax=%g, blinkers %s", id, PointUtils.toString(position), getVX(), getAX(), blinkersOn ? "ON" : "OFF");
     }
 
-    public void setX(int x) {
+    public void setX(double x) {
         position.x = x;
     }
 
-    public void advanceRight(int deltaX) {
-        setX((int) getX() + deltaX);
+    public void advanceForward(double deltaX) {
+        setX(getX() + deltaX);
     }
 
-    public void setVx(int vx) {
+    public void setVx(double vx) {
         velocity.x = vx;
     }
 
     public void incrementVx() {
-        setVx((int) getVX() + 1);
+        setVx(getVX() + 1);
     }
 
     public void decrementVx() {
-        setVx((int) getVX() - 1);
+        setVx(getVX() - 1);
     }
 
     public boolean isFake() {
