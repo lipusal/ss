@@ -116,7 +116,11 @@ public class KSSS extends Model<Car>{
 
                 //Rule 4: Move car and update car velocity
                 currentCar.setVx(v);
-                currentCar.advanceForward(v);
+                double newPos = v + currentCar.getX();
+                if(newPos > roadLength){
+                    newPos -= roadLength;
+                }
+                currentCar.setX(newPos);
             }
             t++;
 
