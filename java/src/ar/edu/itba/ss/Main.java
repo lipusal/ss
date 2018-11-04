@@ -2,7 +2,6 @@ package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.files.OvitoWriter;
 import ar.edu.itba.ss.models.KSSS;
-import ar.edu.itba.ss.models.NaSchModel;
 import ar.edu.itba.ss.particles.Car;
 
 import java.awt.*;
@@ -16,9 +15,10 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        final int ROAD_LENGTH = 20,
-                MAX_SPEED = 2;
+        final int ROAD_LENGTH = 2000,
+                MAX_SPEED = 20;
         final double P = 0;
+        final int car_radius = 5;
         OvitoWriter<Car> ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
 
         List<Car> placeholders = new ArrayList<>(2);
@@ -26,15 +26,15 @@ public class Main {
         placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 0), 0.1).fake());
 
         List<Car> cars = new ArrayList<>();
-        cars.add(new Car(new Point2D.Double(0, 0), new Point2D.Double(2, 0)));
-        cars.add(new Car(new Point2D.Double(3, 0), new Point2D.Double(1, 0)));
+        cars.add(new Car(new Point2D.Double(0, 0), new Point2D.Double(2, 0), car_radius));
+        cars.add(new Car(new Point2D.Double(10, 0), new Point2D.Double(1, 0), car_radius));
 //        cars.add(new Car(new Point2D.Double(7, 0), new Point2D.Double(2, 0)));
-        cars.add(new Car(new Point2D.Double(5, 0)));
+        cars.add(new Car(new Point2D.Double(20, 0), car_radius));
 
-//        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
-        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
+        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
+//        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
         int t = 0;
-        while (t < 100) {
+        while (t < 100) { // TODO: parametrizar tiempo de simulación
             System.out.println(model);
             List<Car> allCars = withPlaceholders(placeholders, cars);
             ovitoWriter.exportPositions(allCars, t, colors(allCars), car -> Double.toString(car.getRadius()));

@@ -21,6 +21,10 @@ public class Car extends Particle {
         this(position, velocity, new Point2D.Double());
     }
 
+    public Car(Point2D.Double position, Point2D.Double velocity, double radius) {
+        super(globalId++, position, velocity, new Point2D.Double(0,0), radius);
+    }
+
     public Car(Point2D.Double position, double radius) {
         this(0, position, new Point2D.Double(), new Point2D.Double(), radius);
     }
@@ -30,7 +34,7 @@ public class Car extends Particle {
     }
 
     public double distanceTo(Car other) {
-        return position.distance(other.position);
+        return position.distance(other.position) - radius - other.radius;
     }
 
     public void turnBlinkersOn() {
