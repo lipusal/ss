@@ -12,7 +12,7 @@ import java.util.*;
  *
  * @see <a href="https://es.wikipedia.org/wiki/Modelo_Nagel-Schreckenberg">Wikipedia entry</a>.
  */
-public class NaSchModel extends Model<Car> {
+public class NaSchModel extends Model{
 
     private final int roadLength, maxSpeed;
     private final double p;
@@ -36,35 +36,9 @@ public class NaSchModel extends Model<Car> {
         this.maxSpeed = maxSpeed;
         this.p = p;
         this.random = new Random();
-        validateCars(cars);
+        validateCars(cars, roadLength, maxSpeed);
     }
 
-    private void validateCars(List<Car> cars) throws IllegalArgumentException {
-        for (int i = 0; i < cars.size(); i++) {
-            Car current = cars.get(i),
-                carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
-            // 1) Cars are listed in order, and
-            // 2) Cars do not overlap
-            if (carAhead != null) {
-                if (current.getX() > carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, current.getX(), carAhead.getX()));
-                } else if (current.getX() == carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s overlap (same X coordinate)", current, carAhead));
-                }
-            }
-            // 3) Position
-            if (current.getX() < 0 || current.getX() > roadLength) {
-                throw new IllegalArgumentException(String.format("%s is outside of bounds ([%d <= x <= %d, but x=%g])", current, 0, roadLength, current.getX()));
-            }
-            // 4) Speed
-            if (current.getVX() < 0) {
-                throw new IllegalArgumentException(String.format("%s is going to the left (%g)", current, current.getVX()));
-            }
-            if (current.getVX() > maxSpeed) {
-                throw new IllegalArgumentException(String.format("%s is going too fast (%g, max speed is %d)", current, current.getVX(), maxSpeed));
-            }
-        }
-    }
 
     @Override
     public List<Car> evolve() {
@@ -95,21 +69,11 @@ public class NaSchModel extends Model<Car> {
         particles = new ArrayList<>(sortedCars);
         // Make sure we didn't break anything. Re-throw IllegalArgument as IllegalState exceptions
         try {
-            validateCars(particles);
+            validateCars(particles, roadLength, maxSpeed);
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
         return particles;
-    }
-    
-    private Car getCarAhead(int index) {
-//        if (index == particles.size() - 1) {
-////            System.out.println("WARNING: Wrapping around road to get next car, confirm whether you want this");;
-//            return null;
-//        } else {
-//            return particles.get(index + 1);
-//        }
-        return particles.get((index + 1) % particles.size());   // Periodic boundary conditions (ie. the rightmost car has the leftmost car ahead)
     }
 
     @Override

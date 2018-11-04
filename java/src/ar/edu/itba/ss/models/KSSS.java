@@ -8,7 +8,7 @@ import java.util.Random;
 /**
  * https://es.wikipedia.org/wiki/Modelo_Knospe,_Santen,_Schadschneider,_Schreckenberg
  */
-public class KSSS extends Model<Car>{
+public class KSSS extends Model{
 
     private int maxSpeed;
     private int roadLength;
@@ -32,43 +32,6 @@ public class KSSS extends Model<Car>{
         this.roadLength = roadLength;
     }
 
-    private Car getCarAhead(int index) {
-//        if (index == particles.size() - 1) {
-////            System.out.println("WARNING: Wrapping around road to get next car, confirm whether you want this");;
-//            return null;
-//        } else {
-//            return particles.get(index + 1);
-//        }
-        return particles.get((index + 1) % particles.size());   // Periodic boundary conditions (ie. the rightmost car has the leftmost car ahead)
-    }
-
-
-    private void validateCars(List<Car> cars) throws IllegalArgumentException {
-        for (int i = 0; i < cars.size(); i++) {
-            Car current = cars.get(i),
-                    carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
-            // 1) Cars are listed in order, and
-            // 2) Cars do not overlap
-            if (carAhead != null) {
-                if (current.getX() > carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, current.getX(), carAhead.getX()));
-                } else if (current.getX() == carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s overlap (same X coordinate)", current, carAhead));
-                }
-            }
-            // 3) Position
-            if (current.getX() < 0 || current.getX() > roadLength) {
-                throw new IllegalArgumentException(String.format("%s is outside of bounds ([%d <= x <= %d, but x=%g])", current, 0, roadLength, current.getX()));
-            }
-            // 4) Speed
-            if (current.getVX() < 0) {
-                throw new IllegalArgumentException(String.format("%s is going to the left (%g)", current, current.getVX()));
-            }
-            if (current.getVX() > maxSpeed) {
-                throw new IllegalArgumentException(String.format("%s is going too fast (%g, max speed is %d)", current, current.getVX(), maxSpeed));
-            }
-        }
-    }
 
     @Override
     public List<Car> evolve() {
