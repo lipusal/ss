@@ -53,7 +53,7 @@ public class OvitoWriter<T extends Particle> {
             fileWriter.write(String.format("\t%d\t%d\t%d", color.getRed(), color.getGreen(), color.getBlue()));
             // Write extra element data, if any
             if (extraDataFn != null) {
-                fileWriter.write(extraDataFn.apply(element));
+                fileWriter.write('\t' + extraDataFn.apply(element));
             }
             // Always write newline
             fileWriter.write('\n');

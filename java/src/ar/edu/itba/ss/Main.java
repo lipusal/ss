@@ -1,6 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.files.OvitoWriter;
+import ar.edu.itba.ss.models.KSSS;
 import ar.edu.itba.ss.models.NaSchModel;
 import ar.edu.itba.ss.particles.Car;
 
@@ -21,14 +22,14 @@ public class Main {
         OvitoWriter<Car> ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
 
         List<Car> placeholders = new ArrayList<>(2);
-        placeholders.add(new Car(new Point(0, 0)).fake());
-        placeholders.add(new Car(new Point(ROAD_LENGTH, 0)).fake());
+        placeholders.add(new Car(new Point2D.Double(0, 0), 0.1).fake());
+        placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 0), 0.1).fake());
 
         List<Car> cars = new ArrayList<>();
-        cars.add(new Car(new Point(0, 0), new Point2D.Double(2, 0)));
-        cars.add(new Car(new Point(3, 0), new Point2D.Double(1, 0)));
-//        cars.add(new Car(new Point(7, 0), new Point2D.Double(2, 0)));
-        cars.add(new Car(new Point(5, 0)));
+        cars.add(new Car(new Point2D.Double(0, 0), new Point2D.Double(2, 0)));
+        cars.add(new Car(new Point2D.Double(3, 0), new Point2D.Double(1, 0)));
+//        cars.add(new Car(new Point2D.Double(7, 0), new Point2D.Double(2, 0)));
+        cars.add(new Car(new Point2D.Double(5, 0)));
 
 //        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
         NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
@@ -36,7 +37,7 @@ public class Main {
         while (t < 100) {
             System.out.println(model);
             List<Car> allCars = withPlaceholders(placeholders, cars);
-            ovitoWriter.exportPositions(allCars, t, colors(allCars), null);
+            ovitoWriter.exportPositions(allCars, t, colors(allCars), car -> Double.toString(car.getRadius()));
             cars = model.evolve();
             t++;
         }

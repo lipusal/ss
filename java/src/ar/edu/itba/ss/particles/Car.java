@@ -2,30 +2,31 @@ package ar.edu.itba.ss.particles;
 
 import ar.edu.itba.ss.util.PointUtils;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 
 public class Car extends Particle {
     private static int globalId = 1;
 
-    private int length;
     private boolean blinkersOn = false, isFake = false;
 
-    public Car(int id, int length, Point position, Point2D.Double velocity, Point2D.Double acceleration) {
-        super(id, new Point2D.Double(position.getX(), position.getY()), velocity, acceleration);
-        this.length = length;
+    public Car(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
+        super(id, position, velocity, acceleration, radius);
     }
 
-    public Car(int length, Point position, Point2D.Double velocity, Point2D.Double acceleration) {
-        this(globalId++, length, position, velocity, acceleration);
+    public Car(Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration) {
+        super(globalId++, position, velocity, acceleration);
     }
 
-    public Car(Point position, Point2D.Double velocity) {
-        this(0, position, velocity, new Point2D.Double());
+    public Car(Point2D.Double position, Point2D.Double velocity) {
+        this(position, velocity, new Point2D.Double());
     }
 
-    public Car(Point position) {
-        this(0, position, new Point2D.Double(), new Point2D.Double());
+    public Car(Point2D.Double position, double radius) {
+        this(0, position, new Point2D.Double(), new Point2D.Double(), radius);
+    }
+
+    public Car(Point2D.Double position) {
+        this(position, 1.0);
     }
 
     public double distanceTo(Car other) {
