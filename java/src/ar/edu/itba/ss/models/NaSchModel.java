@@ -12,7 +12,7 @@ import java.util.*;
  *
  * @see <a href="https://es.wikipedia.org/wiki/Modelo_Nagel-Schreckenberg">Wikipedia entry</a>.
  */
-public class NaSchModel extends Model{
+public class NaSchModel extends Model {
 
     private final int roadLength, maxSpeed;
     private final double p;
@@ -29,6 +29,7 @@ public class NaSchModel extends Model{
 *                      <li>Cars do not overlap</li>
 *                      <li>0 <= x <= roadLength for each car</li>
 *                      <li>0 <= Vx <= maxSpeed for each car</li>
+     *               </ul>
      */
     public NaSchModel(int roadLength, int maxSpeed, double p, List<Car> cars) {
         super(cars);
@@ -59,7 +60,7 @@ public class NaSchModel extends Model{
         // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
         Set<Car> sortedCars = new TreeSet<>(Comparator.comparingDouble(Particle::getX)); // Leftmost car will be first
         particles.forEach(car -> {
-            car.advanceForward((int) car.getVX());
+            car.advanceX((int) car.getVX());
             if (car.getX() > roadLength) {
                 // Out bounds; wrap around (periodic boundary conditions), add first in list rather than last
                 car.setX((int) car.getX() - roadLength);

@@ -33,24 +33,21 @@ public class OvitoWriter<T extends Particle> {
      *
      * @param particles   List of particles to export.
      * @param time        Current simulation time
-     * @param colors      (Optional) Colors to paint each particle in. Defaults to white for all particles.
      * @param extraDataFn (Optional) Function to write extra data for each particle.
      * @throws IOException On I/O errors.
      */
-    public void exportPositions(List<T> particles, double time, List<Color> colors, Function<T, String> extraDataFn) throws IOException {
+    public void exportPositions(List<T> particles, double time, Function<T, String> extraDataFn) throws IOException {
         Objects.requireNonNull(particles);
         final int dataSize = particles.size();
-        if (colors != null && dataSize != colors.size()) {
-            throw new IllegalArgumentException(String.format("Data length (%d) does not match colors length (%d)", dataSize, colors.size()));
-        }
         fileWriter.write(String.format("%d\n%g\n", dataSize, time));
-        for (int i = 0; i < dataSize; i++) {
+        for (T element : particles) {
             // Write basic element data
-            T element = particles.get(i);
             fileWriter.write(String.format("%d\t%g\t%g", element.getId(), element.getX(), element.getY()));
-            // Write color, fall back to white if not specified
-            Color color = colors == null ? Color.WHITE : colors.get(i);
+            // Write color
+            Color color = element.getColor();
             fileWriter.write(String.format("\t%d\t%d\t%d", color.getRed(), color.getGreen(), color.getBlue()));
+            // Write draw radius
+            fileWriter.write(String.format("\t%g", element.getDrawRadius()));
             // Write extra element data, if any
             if (extraDataFn != null) {
                 fileWriter.write('\t' + extraDataFn.apply(element));
@@ -59,6 +56,14 @@ public class OvitoWriter<T extends Particle> {
             fileWriter.write('\n');
         }
         fileWriter.flush();
+    }
+
+    /**
+     * Equivalent to {@code exportPositions(particles, time, null)}.
+     * @see #exportPositions(List, double, Function)
+     */
+    public void exportPositions(List<T> particles, double time) throws IOException {
+        exportPositions(particles, time, null);
     }
 
     /**

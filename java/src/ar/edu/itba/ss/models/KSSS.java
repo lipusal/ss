@@ -76,7 +76,7 @@ public class KSSS extends Model{
                 newPos -= roadLength;
             }
             currentCar.setX(newPos);
-            }
+        }
         return particles;
     }
 }

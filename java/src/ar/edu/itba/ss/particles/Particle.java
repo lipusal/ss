@@ -1,12 +1,14 @@
 package ar.edu.itba.ss.particles;
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.Objects;
 
 public abstract class Particle {
     protected int id;
     protected Point2D.Double position, velocity, acceleration;
-    protected double radius;
+    protected double radius, drawRadius;
+    protected Color color = Color.WHITE;
 
     public Particle(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
         this.id = id;
@@ -14,6 +16,7 @@ public abstract class Particle {
         this.velocity = velocity;
         this.acceleration = acceleration;
         this.radius = radius;
+        this.drawRadius = radius;
     }
 
     /**
@@ -31,6 +34,17 @@ public abstract class Particle {
         this(id, new Point2D.Double(), new Point2D.Double(), new Point2D.Double());
     }
 
+    /**
+     * Used for traffic lights and particles that aren't cars
+     */
+    public Particle(int id, Point2D.Double position){
+        this(id, position, new Point2D.Double(0,0), new Point2D.Double(0,0));
+    }
+
+    public double distanceTo(Particle other) {
+        return position.distance(other.position) - radius - other.radius;
+    }
+
     public int getId() {
         return id;
     }
@@ -43,8 +57,16 @@ public abstract class Particle {
         return position.getX();
     }
 
+    public void setX(double x) {
+        position.x = x;
+    }
+
     public double getY() {
         return position.getY();
+    }
+
+    public void setY(double y) {
+        position.y = y;
     }
 
     public Point2D.Double getVelocity() {
@@ -55,8 +77,16 @@ public abstract class Particle {
         return velocity.getX();
     }
 
+    public void setVx(double vx) {
+        velocity.x = vx;
+    }
+
     public double getVY() {
         return velocity.getY();
+    }
+
+    public void setVy(double vy) {
+        velocity.y = vy;
     }
 
     public Point2D.Double getAcceleration() {
@@ -74,6 +104,22 @@ public abstract class Particle {
     public double getRadius() { return radius; }
 
     public void setRadius(double radius) { this.radius = radius; }
+
+    public double getDrawRadius() {
+        return drawRadius;
+    }
+
+    public void setDrawRadius(double drawRadius) {
+        this.drawRadius = drawRadius;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
 
     @Override
     public boolean equals(Object o) {

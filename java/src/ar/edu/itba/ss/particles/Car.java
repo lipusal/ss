@@ -2,6 +2,7 @@ package ar.edu.itba.ss.particles;
 
 import ar.edu.itba.ss.util.PointUtils;
 
+import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class Car extends Particle {
@@ -54,24 +55,8 @@ public class Car extends Particle {
         return String.format("Car #%d @%s, Vx=%g, Ax=%g, blinkers %s", id, PointUtils.toString(position), getVX(), getAX(), blinkersOn ? "ON" : "OFF");
     }
 
-    public void setX(double x) {
-        position.x = x;
-    }
-
-    public void advanceForward(double deltaX) {
+    public void advanceX(double deltaX) {
         setX(getX() + deltaX);
-    }
-
-    public void setVx(double vx) {
-        velocity.x = vx;
-    }
-
-    public void incrementVx() {
-        setVx(getVX() + 1);
-    }
-
-    public void decrementVx() {
-        setVx(getVX() - 1);
     }
 
     public boolean isFake() {
@@ -79,12 +64,13 @@ public class Car extends Particle {
     }
 
     /**
-     * Sets the fake boolean.
+     * Sets the fake boolean. If {@code true}, sets this car's color to green, otherwise white.
 
      * @return The instance, for chaining.
      */
     public Car setFake(boolean fake) {
         isFake = fake;
+        setColor(isFake ? Color.GREEN : Color.WHITE);
         return this;
     }
 
