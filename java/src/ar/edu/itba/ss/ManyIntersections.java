@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class ManyIntersections {
 
     public static void main(String[] args) throws IOException {
-        final int ROAD_LENGTH = 2000,
+        final int ROAD_LENGTH = 500,
                 MAX_SPEED = 20;
         final double P = 0;
         final int car_radius = 5;
@@ -60,8 +60,8 @@ public class ManyIntersections {
         carsH2.add(new Car(new Point2D.Double(20, secondStreetCoordinates), car_radius));
         // Add traffic light
         List<TrafficLight> trafficLightsH2 = new ArrayList<>();
-        trafficLightsH2.add(new TrafficLight(1, new Point2D.Double(firstStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
-        trafficLightsH2.add(new TrafficLight(1, new Point2D.Double(firstStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
+        trafficLightsH2.add(new TrafficLight(1, new Point2D.Double(secondStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
+        trafficLightsH2.add(new TrafficLight(1, new Point2D.Double(secondStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
         LiPumaNavasModel modelH2 = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH2, trafficLightsH2);
 
         /* *************************************************************************************************************
@@ -79,7 +79,7 @@ public class ManyIntersections {
         // Add traffic lights
         List<TrafficLight> trafficLightsV = new ArrayList<>();
         trafficLightsV.add(new TrafficLight(1, new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
-        trafficLightsV.add(new TrafficLight(1, new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV.add(new TrafficLight(1, new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
         LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV, trafficLightsV);
 
         /* SECOND VERTICAL STREET*/
@@ -92,23 +92,25 @@ public class ManyIntersections {
         carsV2.add(new Car(new Point2D.Double(secondStreetCoordinates, 20), car_radius));
         // Add traffic lights
         List<TrafficLight> trafficLightsV2 = new ArrayList<>();
-        trafficLightsV.add(new TrafficLight(1, new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV.add(new TrafficLight(1, new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
         trafficLightsV.add(new TrafficLight(1, new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
         LiPumaNavasModel modelV2 = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV2, trafficLightsV2);
 
-
         int t = 0;
-        while (t < 250) { // TODO: parametrizar tiempo de simulación
-
+        while (t < 500) { // TODO: parametrizar tiempo de simulación
+            // Add cars and placeholders
             List<Particle> allCars = withPlaceholders(placeholders, carsH);
             allCars.addAll(carsV);
             allCars.addAll(carsH2);
             allCars.addAll(carsV2);
-            allCars.addAll(trafficLightsH2);
+            // Add the traffic lights
             allCars.addAll(trafficLightsH);
+            allCars.addAll(trafficLightsH2);
             allCars.addAll(trafficLightsV);
             allCars.addAll(trafficLightsV2);
+            // Export ovito positions
             ovitoWriter.exportPositions(allCars, t);
+            // Evolve all the models
             carsH = modelH.evolve();
             carsV = modelV.evolve();
             carsH2 = modelH2.evolve();
