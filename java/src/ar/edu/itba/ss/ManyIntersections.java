@@ -14,7 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("ALL")
+/**
+ * This configuration is a block: 4 intersections. The timing of the traffic lights is such that either only vertical
+ * lanes have green, or only horizontal ones do.
+ */
+@SuppressWarnings("Duplicates")
 public class ManyIntersections {
 
     public static void main(String[] args) throws IOException {
@@ -24,9 +28,7 @@ public class ManyIntersections {
         final int car_radius = 5;
         OvitoWriter<Particle> ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
 
-        List<Car> placeholders = new ArrayList<>(2);
-
-        List<List<Car>> carsList = new ArrayList<>();
+        List<Car> placeholders = new ArrayList<>(8);
 
         double firstStreetCoordinates = ROAD_LENGTH/3.0;
         double secondStreetCoordinates = 2*ROAD_LENGTH/3.0;
