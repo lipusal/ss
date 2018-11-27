@@ -94,8 +94,8 @@ public class ManyIntersections {
         carsV2.add(new Car(new Point2D.Double(secondStreetCoordinates, 20), car_radius));
         // Add traffic lights
         List<TrafficLight> trafficLightsV2 = new ArrayList<>();
-        trafficLightsV.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
-        trafficLightsV.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
         LiPumaNavasModel modelV2 = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV2, trafficLightsV2);
 
         int t = 0;
