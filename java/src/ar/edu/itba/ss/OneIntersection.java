@@ -38,7 +38,7 @@ public class OneIntersection {
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
-        trafficLightsH.add(new TrafficLight(1, new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, 50, 0));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, 50, 0));
         LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
 
         /* *************************************************************************************************************
@@ -54,7 +54,7 @@ public class OneIntersection {
         carsV.add(new Car(new Point2D.Double(ROAD_LENGTH/2.0, 20), car_radius));
 
         List<TrafficLight> trafficLightsV = new ArrayList<>();
-        trafficLightsV.add(new TrafficLight(1, new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 25, 25));
+        trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 25, 25));
         LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV, trafficLightsV);
 
 
