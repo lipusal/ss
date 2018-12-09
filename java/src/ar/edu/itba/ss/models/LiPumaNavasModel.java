@@ -1,7 +1,6 @@
 package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
-import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
 
 import java.awt.*;
@@ -22,6 +21,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
     private double PD = 0.1;
     private int BS = 7;
     private int simTime = 0;
+    private final double maxDeceleration = -5;
 
     private List<TrafficLight> trafficLights = new ArrayList<>();
 
@@ -41,35 +41,69 @@ public class LiPumaNavasModel extends SingleLaneModel {
             Car currentCar = particles.get(i);
             Car nextCar = getCarAhead(i);
             TrafficLight nextTrafficLight = getTrafficLightAhead(currentCar);
+            // Interact with traffic light if it's the closest particle ahead and it's not green
+            boolean shouldInteractWithTrafficLight =
+                    nextTrafficLight != null
+                    && wrapAroundDistance(currentCar, nextTrafficLight) < wrapAroundDistance(currentCar, nextCar)
+                    && !nextTrafficLight.isGreen();
 
-            if (nextTrafficLight != null && wrapAroundDistance(currentCar, nextTrafficLight) < wrapAroundDistance(currentCar, nextCar) && nextTrafficLight.isRed()) {
-                interaction(currentCar, nextTrafficLight);
+            double newV;
+            if (shouldInteractWithTrafficLight) {
+                newV = trafficLightInteraction(currentCar, nextTrafficLight);
             } else {
-                interaction(currentCar, nextCar);
+                newV = carInteraction(currentCar, nextCar);
             }
+            updateCar(currentCar, newV);
         }
         this.simTime++;
         return particles;
     }
 
     /**
+     * Update a car given its new velocity component:
+     * <ul>
+     *     <li>Turn stopping lights on/off as necessary</li>
+     *     <li>Update velocity component</li>
+     *     <li>Update position based on new velocity</li>
+     * </ul>
+     *
+     * @param car  Car to update.
+     * @param newV Car's new velocity.
+     */
+    private void updateCar(Car car, double newV) {
+        // Update blinkers and color
+        if (newV < getVelocityComponent(car)) {
+            car.turnBlinkersOn();
+            car.setColor(Color.RED);
+        } else {
+            car.turnBlinkersOff();
+            car.setColor(Color.WHITE);
+        }
+        // Update velocity
+        setVelocityComponent(car, newV);
+        // Update position with new velocity
+        double newPos = newV + getPositionComponent(car);
+        if(newPos > roadLength){ // Periodic borders, wrap around if necessary
+            newPos -= roadLength;
+        }
+        setPositionComponent(car, newPos);
+    }
+
+    /**
      * Modified KSSS interaction, treats red traffic lights as stopping cars.
      *
      * @param currentCar Current car
-     * @param nextParticle Particle ahead (car or traffic light)
+     * @param carAhead Particle ahead (car or traffic light)
+     * @return The car's new velocity component.
      */
-    private void interaction(Car currentCar, Particle nextParticle) {
+    private double carInteraction(Car currentCar, Car carAhead) {
         double p;
-        double th = wrapAroundDistance(currentCar, nextParticle) / Math.abs(getVelocityComponent(currentCar));
+        double th = wrapAroundDistance(currentCar, carAhead) / Math.abs(getVelocityComponent(currentCar));
         double ts = Math.min(Math.abs(getVelocityComponent(currentCar)), H);
-
-        boolean nextParticleIsStopping =
-                (nextParticle instanceof TrafficLight && ((TrafficLight)nextParticle).isRed())
-                || (nextParticle instanceof Car && ((Car)nextParticle).areBlinkersOn());
 
         // Rule 0: Calculation of random parameters
         // th < ts indicates that the preceding car is in the interaction horizon
-        if (nextParticleIsStopping && th < ts) {
+        if (carAhead.areBlinkersOn() && th < ts) {
             p = PB;
         } else if (Math.abs(getVelocityComponent(currentCar)) == 0) {
             p = P0;
@@ -80,12 +114,12 @@ public class LiPumaNavasModel extends SingleLaneModel {
         // Rule 1: Acceleration
         double v = getVelocityComponent(currentCar);
         // if the next car is not in the interaction horizon it accelerates by one unit
-        if((!currentCar.areBlinkersOn() && !nextParticleIsStopping) || th >= ts) {
+        if((!currentCar.areBlinkersOn() && !carAhead.areBlinkersOn()) || th >= ts) {
             v = Math.min(Math.abs(getVelocityComponent(currentCar)) + 1, maxSpeed);
         }
 
         // Rule 2: Brake because of interaction with other cars
-        v = Math.min(v, currentCar.distanceTo(nextParticle));
+        v = Math.min(v, currentCar.distanceTo(carAhead));
         if(v < getVelocityComponent(currentCar)){
             currentCar.turnBlinkersOn();
             currentCar.setColor(Color.RED);
@@ -106,13 +140,39 @@ public class LiPumaNavasModel extends SingleLaneModel {
             currentCar.setColor(Color.WHITE);
         }
 
-        //Rule 4: Move car and update car velocity
-        setVelocityComponent(currentCar, v);
-        double newPos = v + getPositionComponent(currentCar);
-        if(newPos > roadLength){ // Periodic borders
-            newPos -= roadLength;
+        return v;
+    }
+
+    // TODO NOW if a car is braking hard from a traffic light, all cars behind it should slow down too
+
+    /**
+     * Traffic light interaction. Cars slow down as hard as needed for red and yellow lights (up to a maximum for yellow
+     * lights) and accelerate for yellow lights if they won't break in time.
+     *
+     *  @param currentCar Current car
+     * @param nextTrafficLight Particle ahead (car or traffic light)
+     * @return Whether {@link #carInteraction(Car, Car)} should be called after calling this method. This happens when
+     * the car does not interact with the next traffic light (eg. because it's green) and so the regular KSSS interaction
+     * should be evaluated with the car preceding it (which is past the traffic light).
+     */
+    private double trafficLightInteraction(Car currentCar, TrafficLight nextTrafficLight) {
+        double distance = wrapAroundDistance(currentCar, nextTrafficLight);
+        double v = getVelocityComponent(currentCar);
+        if (distance == 0 && v > -maxDeceleration) {
+            throw new IllegalStateException("EDGE CASE: " + currentCar + " is directly under a traffic light and is going too fast to stop. What do we do?");
         }
-        setPositionComponent(currentCar, newPos);
+        double requiredDeceleration = distance == 0
+                ? -v // Come to a stop
+                : -(v*v) / (2 * distance); // a = (vf^2 - vi^2) / (2*d)
+
+        // Cars can see "infinitely" ahead for traffic lights, and can tell whether they will stop in time for yellow lights
+        boolean mustStop = nextTrafficLight.isRed()
+                || (nextTrafficLight.isYellow() && requiredDeceleration >= maxDeceleration); // >=, not <= because we're dealing with negative numbers
+        if (mustStop) {
+            return v + (requiredDeceleration * 1); // vf = vi + a*t, t = 1s
+        } else {
+            return Math.min(v+1, maxSpeed);
+        }
     }
 
     /**
