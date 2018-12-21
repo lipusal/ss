@@ -5,7 +5,7 @@ import java.awt.geom.Point2D;
 
 public class TrafficLight extends Particle {
 
-    private final double redDuration, greenDuration;
+    private final double redDuration, greenDuration, yellowDuration;
     private double phase;
     private int lastUpdateTime;
 
@@ -17,37 +17,60 @@ public class TrafficLight extends Particle {
 
     private LightState state = LightState.GREEN;
 
-    public TrafficLight(Point2D.Double position, int redDuration, int greenDuration, int phase) {
+    public TrafficLight(Point2D.Double position, int redDuration, int yellowDuration, int greenDuration, int phase) {
         super(position);
         setRadius(0); // Consider the traffic light a point when calculating distance
         setDrawRadius(DRAW_RADIUS);
         setColor(Color.GREEN); // Traffic lights start GREEN, use phase to make the initial green last shorter (or even 0)
         this.redDuration = redDuration;
+        this.yellowDuration = yellowDuration;
         this.greenDuration = greenDuration;
         this.phase = phase;
         this.lastUpdateTime = 0;
     }
 
     /**
-     * Change the traffic light to red or green as appropriate.
+     * Creates a traffic light with a 0-duration yellow light.
+     *
+     * @see #TrafficLight(Point2D.Double, int, int, int, int)
+     */
+    public TrafficLight(Point2D.Double position, int redDuration, int greenDuration, int phase) {
+        this(position, redDuration, 0, greenDuration, phase);
+    }
+
+    /**
+     * Cycle the traffic light around green, yellow or red as appropriate.
      *
      * @param time Current simulation time.
      */
     public void evolve(int time) {
         int timeSinceLastChange = time - lastUpdateTime;
         switch (getState()) {
-            case RED:
-                if (timeSinceLastChange + phase >= redDuration) {
-                    changeToGreen();
+            case GREEN:
+                if (timeSinceLastChange + phase >= greenDuration) {
+                    if (yellowDuration > 0) { // Edge case: 0-duration yellow light
+                        changeToYellow();
+                    } else {
+                        changeToRed();
+                    }
                     lastUpdateTime = time;
                     if (phase != 0) {
                         phase = 0;
                     }
                 }
             break;
-            case GREEN:
-                if (timeSinceLastChange + phase >= greenDuration) {
+            case YELLOW:
+                if (timeSinceLastChange + phase >= yellowDuration) {
                     changeToRed();
+                    lastUpdateTime = time;
+                    if (phase != 0) {
+                        phase = 0;
+                    }
+                }
+            break;
+            case RED:
+                if (timeSinceLastChange + phase >= redDuration) {
+                    changeToGreen();
                     lastUpdateTime = time;
                     if (phase != 0) {
                         phase = 0;

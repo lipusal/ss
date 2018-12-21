@@ -38,13 +38,13 @@ public class SingleLane {
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
-        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, 50, 0));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50, 0));
         LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
 
 //        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
 //        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
         int t = 0;
-        while (t < 250) { // TODO: parametrizar tiempo de simulación
+        while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);
             allCars.addAll(trafficLightsH);
             ovitoWriter.exportPositions(allCars, t);
