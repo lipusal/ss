@@ -32,10 +32,6 @@ public class Car extends Particle {
         this(position, 1.0);
     }
 
-    public double distanceTo(Car other) {
-        return position.distance(other.position) - radius - other.radius;
-    }
-
     public void turnBlinkersOn() {
         this.blinkersOn = true;
     }

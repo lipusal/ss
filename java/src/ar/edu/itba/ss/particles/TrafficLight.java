@@ -19,7 +19,6 @@ public class TrafficLight extends Particle {
 
     public TrafficLight(Point2D.Double position, int redDuration, int yellowDuration, int greenDuration, int phase) {
         super(position);
-        setRadius(0); // Consider the traffic light a point when calculating distance
         setDrawRadius(DRAW_RADIUS);
         setColor(Color.GREEN); // Traffic lights start GREEN, use phase to make the initial green last shorter (or even 0)
         this.redDuration = redDuration;

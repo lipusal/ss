@@ -9,16 +9,15 @@ public abstract class Particle {
 
     protected int id;
     protected Point2D.Double position, velocity, acceleration;
-    protected double radius, drawRadius;
+    protected double drawRadius;
     protected Color color = Color.WHITE;
 
-    public Particle(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
+    public Particle(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double drawRadius) {
         this.id = id;
         this.position = position;
         this.velocity = velocity;
         this.acceleration = acceleration;
-        this.radius = radius;
-        this.drawRadius = radius;
+        this.drawRadius = drawRadius;
     }
 
     public Particle(Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
@@ -41,7 +40,7 @@ public abstract class Particle {
     }
 
     public double distanceTo(Particle other) {
-        return position.distance(other.position) - radius - other.radius;
+        return position.distance(other.position);
     }
 
     public int getId() {
@@ -100,9 +99,7 @@ public abstract class Particle {
         return acceleration.getY();
     }
 
-    public double getRadius() { return radius; }
 
-    public void setRadius(double radius) { this.radius = radius; }
 
     public double getDrawRadius() {
         return drawRadius;

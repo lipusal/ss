@@ -50,7 +50,8 @@ public class NaSchModel extends Model {
             // Rule 1: Accelerate if we haven't reached top speed
             newSpeed = Math.min(currentCar.getVX()+1, maxSpeed);
             // Rule 2: Slow down if close to other cars
-            newSpeed = Math.min(newSpeed, currentCar.distanceTo(carAhead)-1);
+            int b = (int) currentCar.distanceTo(carAhead) - 1;
+            newSpeed = Math.min(newSpeed, b);
             // Rule 3: Brake at random if not already stopped
             if (newSpeed > 0 && p > 0 && random.nextDouble() <= p) {
                 newSpeed--;
