@@ -95,6 +95,10 @@ public abstract class Particle {
         return acceleration.getX();
     }
 
+    public void setAX(double ax) {
+        acceleration.x = ax;
+    }
+
     public double getAY() {
         return acceleration.getY();
     }

@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class Car extends Particle {
-    private boolean blinkersOn = false, isFake = false;
+    private boolean brakeLightsOn = false, isFake = false;
 
     public Car(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
         super(id, position, velocity, acceleration, radius);
@@ -32,21 +32,21 @@ public class Car extends Particle {
         this(position, 1.0);
     }
 
-    public void turnBlinkersOn() {
-        this.blinkersOn = true;
+    public void turnBrakeLightsOn() {
+        this.brakeLightsOn = true;
     }
 
-    public void turnBlinkersOff() {
-        this.blinkersOn = false;
+    public void turnBrakeLightsOff() {
+        this.brakeLightsOn = false;
     }
 
-    public boolean areBlinkersOn() {
-        return this.blinkersOn;
+    public boolean areBrakeLightsOn() {
+        return this.brakeLightsOn;
     }
 
     @Override
     public String toString() {
-        return String.format("Car #%d @%s, Vx=%g, Ax=%g, blinkers %s", id, PointUtils.toString(position), getVX(), getAX(), blinkersOn ? "ON" : "OFF");
+        return String.format("Car #%d @%s, Vx=%g, Ax=%g, brake lights %s", id, PointUtils.toString(position), getVX(), getAX(), brakeLightsOn ? "ON" : "OFF");
     }
 
     public void advanceX(double deltaX) {

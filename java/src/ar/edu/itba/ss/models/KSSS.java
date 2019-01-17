@@ -40,7 +40,7 @@ public class KSSS extends Model{
 
             // Rule 0: Calculation of random parameters
             // th < ts indicates that el preceding car is in the interaction horizon
-            if(nextCar.areBlinkersOn() && th < ts){
+            if(nextCar.areBrakeLightsOn() && th < ts){
                 p = PB;
             } else if(Math.abs(currentCar.getVelocity().getX()) == 0) {
                 p = P0;
@@ -51,21 +51,21 @@ public class KSSS extends Model{
             // Rule 1: Acceleration
             double v = currentCar.getVX();
             // if the next car is not in the interaction horizon it accelerates by one unit
-            if((!currentCar.areBlinkersOn() && !nextCar.areBlinkersOn()) || th >= ts){
+            if((!currentCar.areBrakeLightsOn() && !nextCar.areBrakeLightsOn()) || th >= ts){
                 v = Math.min(Math.abs(currentCar.getVelocity().getX()) + 1, maxSpeed);
             }
 
             // Rule 2: Brake because of interaction with other cars
             v = Math.min(v, currentCar.distanceTo(nextCar));
             if(v < currentCar.getVX()){
-                currentCar.turnBlinkersOn();
+                currentCar.turnBrakeLightsOn();
             }
 
             // Rule 3: Random brake with probability p
             if(new Random().nextDouble() < p){
                 v = Math.max(v-1, 0);
                 if(p==PB){
-                    currentCar.turnBlinkersOn();
+                    currentCar.turnBrakeLightsOn();
                 }
             }
 

@@ -1,6 +1,7 @@
 package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
+import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
 
 import java.awt.*;
@@ -73,10 +74,10 @@ public class LiPumaNavasModel extends SingleLaneModel {
     private void updateCar(Car car, double newV) {
         // Update blinkers and color
         if (newV < getVelocityComponent(car)) {
-            car.turnBlinkersOn();
+            car.turnBrakeLightsOn();
             car.setColor(Color.RED);
         } else {
-            car.turnBlinkersOff();
+            car.turnBrakeLightsOff();
             car.setColor(Color.WHITE);
         }
         // Update velocity
@@ -103,7 +104,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
 
         // Rule 0: Calculation of random parameters
         // th < ts indicates that the preceding car is in the interaction horizon
-        if (carAhead.areBlinkersOn() && th < ts) {
+        if (carAhead.areBrakeLightsOn() && th < ts) {
             p = PB;
         } else if (Math.abs(getVelocityComponent(currentCar)) == 0) {
             p = P0;
@@ -114,14 +115,14 @@ public class LiPumaNavasModel extends SingleLaneModel {
         // Rule 1: Acceleration
         double v = getVelocityComponent(currentCar);
         // if the next car is not in the interaction horizon it accelerates by one unit
-        if((!currentCar.areBlinkersOn() && !carAhead.areBlinkersOn()) || th >= ts) {
+        if((!currentCar.areBrakeLightsOn() && !carAhead.areBrakeLightsOn()) || th >= ts) {
             v = Math.min(Math.abs(getVelocityComponent(currentCar)) + 1, maxSpeed);
         }
 
         // Rule 2: Brake because of interaction with other cars
         v = Math.min(v, currentCar.distanceTo(carAhead));
         if(v < getVelocityComponent(currentCar)){
-            currentCar.turnBlinkersOn();
+            currentCar.turnBrakeLightsOn();
             currentCar.setColor(Color.RED);
         }
 
@@ -129,14 +130,14 @@ public class LiPumaNavasModel extends SingleLaneModel {
         if(new Random().nextDouble() < p){
             v = Math.max(v-1, 0);
             if(p==PB){
-                currentCar.turnBlinkersOn();
+                currentCar.turnBrakeLightsOn();
                 currentCar.setColor(Color.RED);
             }
         }
 
         // Turn off break lights if not breaking
         if (v > getVelocityComponent(currentCar)) {
-            currentCar.turnBlinkersOff();
+            currentCar.turnBrakeLightsOff();
             currentCar.setColor(Color.WHITE);
         }
 
