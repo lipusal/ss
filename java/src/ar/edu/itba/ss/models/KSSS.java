@@ -39,11 +39,11 @@ public class KSSS extends Model{
             double ts = Math.min(Math.abs(currentCar.getVelocity().getX()), H);
 
             // Rule 0: Calculation of random parameters
-            // th < ts indicates that el preceding car is in the interaction horizon
-            if(nextCar.areBrakeLightsOn() && th < ts){
-                p = PB;
-            } else if(Math.abs(currentCar.getVelocity().getX()) == 0) {
+            // th < ts indicates that the car ahead is within the interaction horizon
+            if (currentCar.getVelocity().getX() == 0) {
                 p = P0;
+            } else if(nextCar.areBrakeLightsOn() && th < ts){
+                p = PB;
             } else {
                 p = PD;
             }
