@@ -16,8 +16,17 @@ public class KSSS extends SingleLaneModel {
     private int maxSpeed;
 
     private int H = 6;
+    /**
+     * Probability of a stopped car to remain stopped.
+     */
     private double P0 = 0.5;
+    /**
+     * Probability of a car who can see its car ahead to brake when needed.
+     */
     private double PB = 0.94;
+    /**
+     * Probability of a car to brake randomly.
+     */
     private double PD = 0.1;
     private int BS = 7;
     private int securityGap;
@@ -29,8 +38,24 @@ public class KSSS extends SingleLaneModel {
         this.securityGap = securityGap;
     }
 
+    /**
+     * Equivalent to {@code KSSS(roadLength, maxSpeed, securityGap, true, cars)}.
+     *
+     * @see #KSSS(int, int, int, boolean, List)
+     */
     public KSSS(int roadLength, int maxSpeed, int securityGap, List<Car> cars) {
         this(roadLength, maxSpeed, securityGap, true, cars);
+    }
+
+    /**
+     * Equivalent to {@link #KSSS(int, int, int, boolean, List) original constructor} with overrides for different
+     * probability parameters.
+     */
+    public KSSS(int roadLength, int maxSpeed, int securityGap, boolean horizontal, double P0, double Pb, double Pd, List<Car> cars) {
+        this(roadLength, maxSpeed, securityGap, horizontal, cars);
+        this.P0 = P0;
+        this.PB = Pb;
+        this.PD = Pd;
     }
 
     @Override
