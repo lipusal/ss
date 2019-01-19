@@ -22,7 +22,7 @@ public class SingleLane {
         final int ROAD_LENGTH = 2000,
                 MAX_SPEED = 20;
         final double P = 0;
-        final int car_radius = 5;
+        final int car_radius = 1;
         OvitoWriter<Particle> ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
 
         List<Car> placeholders = new ArrayList<>(2);
