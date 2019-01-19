@@ -13,6 +13,7 @@ import java.util.List;
 
 public class KsssRunner {
 
+    @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {
         final int ROAD_LENGTH = 1000,
                 MAX_SPEED = 20;
