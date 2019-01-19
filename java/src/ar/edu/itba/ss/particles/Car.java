@@ -34,10 +34,12 @@ public class Car extends Particle {
 
     public void turnBrakeLightsOn() {
         this.brakeLightsOn = true;
+        this.color = Color.RED;
     }
 
     public void turnBrakeLightsOff() {
         this.brakeLightsOn = false;
+        this.color = Color.WHITE;
     }
 
     public boolean areBrakeLightsOn() {

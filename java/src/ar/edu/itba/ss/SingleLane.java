@@ -1,7 +1,9 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.files.OvitoWriter;
+import ar.edu.itba.ss.models.KSSS;
 import ar.edu.itba.ss.models.LiPumaNavasModel;
+import ar.edu.itba.ss.models.NaSchModel;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
@@ -39,10 +41,10 @@ public class SingleLane {
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50, 0));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
+//        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
 
-//        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
-//        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
+        KSSS modelH = new KSSS(ROAD_LENGTH, MAX_SPEED, 5, carsH);
+//        NaSchModel modelH = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, carsH);
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);
