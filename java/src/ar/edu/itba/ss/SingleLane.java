@@ -30,8 +30,8 @@ public class SingleLane {
         /* *************************************************************************************************************
          *                                          HORIZONTAL MODEL
          * ************************************************************************************************************/
-        placeholders.add(new Car(new Point2D.Double(0, ROAD_LENGTH/2.0), 0.1).fake());
-        placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH/2.0), 0.1).fake());
+        placeholders.add(new Car(new Point2D.Double(0, ROAD_LENGTH/2.0 + 20), 0.1).fake());
+        placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH/2.0 - 20), 0.1).fake());
 
         List<Car> carsH = new ArrayList<>();
         carsH.add(new Car(new Point2D.Double(0, ROAD_LENGTH/2.0), new Point2D.Double(2, 0), car_radius));
