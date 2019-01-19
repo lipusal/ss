@@ -20,6 +20,7 @@ public class NaSchModel extends SingleLaneModel {
 
     /**
      * Instances a new Na-Sch model.
+     *
      * @param roadLength  Road length.
      * @param maxSpeed    Maximum speed that any one car is allowed to reach.
      * @param p           Probability of a <b>moving</b> car to randomly reduce speed. If 0, this model is deterministic.
