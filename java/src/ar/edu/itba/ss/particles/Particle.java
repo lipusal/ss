@@ -8,7 +8,7 @@ public abstract class Particle {
     private static int globalId = 1;
 
     protected int id;
-    protected Point2D.Double position, velocity, acceleration;
+    protected Point2D.Double position, velocity, acceleration, drawPosition;
     protected double drawRadius;
     protected Color color = Color.WHITE;
 
@@ -111,6 +111,22 @@ public abstract class Particle {
 
     public void setDrawRadius(double drawRadius) {
         this.drawRadius = drawRadius;
+    }
+
+    public Point2D.Double getDrawPosition() {
+        return drawPosition;
+    }
+
+    public double getDrawX() {
+        return drawPosition.x;
+    }
+
+    public double getDrawY() {
+        return drawPosition.y;
+    }
+
+    public void setDrawPosition(Point2D.Double drawPosition) {
+        this.drawPosition = drawPosition;
     }
 
     public Color getColor() {
