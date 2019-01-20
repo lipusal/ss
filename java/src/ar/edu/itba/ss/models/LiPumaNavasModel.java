@@ -112,7 +112,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
         if (currentCarSpeed == 0) {
             p = P0;
         } else if(nextCar.areBrakeLightsOn() && th < ts){
-            p = PB; // TODO make this 1.0 if next car is stopped
+            p = PB;
         } else {
             p = PD;
         }
@@ -179,11 +179,11 @@ public class LiPumaNavasModel extends SingleLaneModel {
      * @return The required deceleration.
      */
     private double requiredDeceleration(Car car, TrafficLight trafficLight) {
-        double distanceToTrafficLight = wrapAroundDistance(car, trafficLight),
+        double trafficLightEffectiveGap = effectiveGap(car, trafficLight),
                 v = getVelocityComponent(car);
-        return distanceToTrafficLight <= 1 // TODO consider securityGap here, or use a different traffic light security gap
+        return trafficLightEffectiveGap == 0
                 ? -v // Come to a stop
-                : Math.floor(-(v*v) / (2 * distanceToTrafficLight)); // a = (vf^2 - vi^2) / (2*d). Use floor to always give whole numbers.
+                : Math.floor(-(v*v) / (2 * trafficLightEffectiveGap)); // a = (vf^2 - vi^2) / (2*d). Use floor to always give whole numbers.
     }
 
     /**
@@ -203,7 +203,6 @@ public class LiPumaNavasModel extends SingleLaneModel {
             throw new IllegalStateException(String.format("Required deceleration for car %s to not crash against traffic light %s exceeds maximum deceleration: %g < %g", currentCar, nextTrafficLight, requiredDeceleration, maxDeceleration));
         }
         double vf = v + requiredDeceleration * 1; // vf = vi + a*t, t = 1s
-        setVelocityComponent(currentCar, vf);
         if (vf <= v) {
             currentCar.turnBrakeLightsOn();
         } else {
@@ -246,7 +245,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
         if (trafficLight.isGreen()) {
             return Integer.MAX_VALUE;
         } else {
-            return Math.max(wrapAroundDistance(car, trafficLight) - securityGap, 0);
+            return Math.max(wrapAroundDistance(car, trafficLight) - securityGap, 0); // TODO consider using a different traffic light security gap
         }
     }
 
