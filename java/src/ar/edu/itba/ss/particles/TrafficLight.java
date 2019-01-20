@@ -109,4 +109,9 @@ public class TrafficLight extends Particle {
         this.state = LightState.RED;
         setColor(Color.RED);
     }
+
+    @Override
+    public String toString() {
+        return String.format("TrafficLight #%d @(%g, %g), %s", getId(), getX(), getY(), getState());
+    }
 }
