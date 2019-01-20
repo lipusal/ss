@@ -1,4 +1,4 @@
-package ar.edu.itba.ss;
+package ar.edu.itba.ss.runners.singleIntersection;
 
 import ar.edu.itba.ss.files.OvitoWriter;
 import ar.edu.itba.ss.models.LiPumaNavasModel;
@@ -14,13 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OneIntersection {
+public class LiPumaNavasRunner {
 
     public static void main(String[] args) throws IOException {
-        final int ROAD_LENGTH = 2000,
+        final int ROAD_LENGTH = 1000,
                 MAX_SPEED = 20;
         final double P = 0;
-        final int car_radius = 5;
+        final int car_radius = 1;
         OvitoWriter<Particle> ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
 
         List<Car> placeholders = new ArrayList<>(2);
@@ -38,7 +38,7 @@ public class OneIntersection {
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
-        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, 50, 0));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 50, 50, 0));
         LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* *************************************************************************************************************
@@ -54,7 +54,7 @@ public class OneIntersection {
         carsV.add(new Car(new Point2D.Double(ROAD_LENGTH/2.0, 20), car_radius));
 
         List<TrafficLight> trafficLightsV = new ArrayList<>();
-        trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 25, 25));
+        trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 50, 50));
         LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
 
