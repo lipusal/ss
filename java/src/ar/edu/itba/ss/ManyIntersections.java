@@ -49,7 +49,7 @@ public class ManyIntersections {
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
         trafficLightsH.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
+        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* TOP HORIZONTAL STREET*/
         // Add placeholders for corners of the street
@@ -64,7 +64,7 @@ public class ManyIntersections {
         List<TrafficLight> trafficLightsH2 = new ArrayList<>();
         trafficLightsH2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
         trafficLightsH2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
-        LiPumaNavasModel modelH2 = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH2, trafficLightsH2);
+        LiPumaNavasModel modelH2 = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH2, trafficLightsH2);
 
         /* *************************************************************************************************************
          *                                          VERTICAL MODELS
@@ -82,7 +82,7 @@ public class ManyIntersections {
         List<TrafficLight> trafficLightsV = new ArrayList<>();
         trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
         trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
-        LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV, trafficLightsV);
+        LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
         /* RIGHT VERTICAL STREET*/
         placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH/2.0, 0), 0.1).fake());
@@ -96,7 +96,7 @@ public class ManyIntersections {
         List<TrafficLight> trafficLightsV2 = new ArrayList<>();
         trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
         trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
-        LiPumaNavasModel modelV2 = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV2, trafficLightsV2);
+        LiPumaNavasModel modelV2 = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV2, trafficLightsV2);
 
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación

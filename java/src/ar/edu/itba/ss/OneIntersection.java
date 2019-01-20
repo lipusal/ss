@@ -39,7 +39,7 @@ public class OneIntersection {
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, 50, 0));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
+        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* *************************************************************************************************************
          *                                          VERTICAL MODEL
@@ -55,7 +55,7 @@ public class OneIntersection {
 
         List<TrafficLight> trafficLightsV = new ArrayList<>();
         trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 25, 25));
-        LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, false, MAX_SPEED, carsV, trafficLightsV);
+        LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
 
 //        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);

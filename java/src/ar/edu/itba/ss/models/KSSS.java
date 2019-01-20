@@ -13,7 +13,7 @@ import java.util.Random;
  */
 public class KSSS extends SingleLaneModel {
 
-    private int maxSpeed;
+    protected int maxSpeed;
 
     private int H = 6;
     /**
@@ -64,56 +64,67 @@ public class KSSS extends SingleLaneModel {
             Car currentCar = particles.get(i),
                 nextCar = getCarAhead(i),
                 nextNextCar = getCarAhead(i+1);
-            double currentCarSpeed = getVelocityComponent(currentCar);
-            double p;
-            double th = wrapAroundDistance(currentCar, nextCar) / currentCarSpeed;
-            double ts = Math.min(currentCarSpeed, H);
-
-            // Rule 0: Calculation of random parameters
-            // th < ts indicates that the car ahead is within the interaction horizon
-            if (currentCarSpeed == 0) {
-                p = P0;
-            } else if(nextCar.areBrakeLightsOn() && th < ts){
-                p = PB;
-            } else {
-                p = PD;
-            }
-
-            // Rule 1: Acceleration
-            double v = getVelocityComponent(currentCar);
-            // if the next car is not in the interaction horizon it accelerates by one unit
-            if((!currentCar.areBrakeLightsOn() && !nextCar.areBrakeLightsOn()) || th >= ts) {
-                v = Math.min(currentCarSpeed + 1, maxSpeed);
-            }
-
-            // Rule 2: Brake because of interaction with other cars
-            v = Math.min(effectiveGap(currentCar, nextCar, nextNextCar), v);
-            if(v < currentCarSpeed){
-                currentCar.turnBrakeLightsOn();
-            }
-
-            // Rule 3: Random brake with probability p
-            if(new Random().nextDouble() < p){
-                v = Math.max(v-1, 0);
-                if(p == PB || v <= currentCarSpeed) {
-                    currentCar.turnBrakeLightsOn();
-                }
-            }
-
-            // Turn off brake lights if accelerating
-            if (v > currentCarSpeed) {
-                currentCar.turnBrakeLightsOff();
-            }
-
-            //Rule 4: Move car and update car velocity
-            setVelocityComponent(currentCar, v);
-            double newPos = getPositionComponent(currentCar) + v;
-            if(newPos > roadLength){ // Periodic borders
-                newPos -= roadLength;
-            }
-            setPositionComponent(currentCar, newPos);
+            evolveCar(currentCar, nextCar, nextNextCar);
         }
         return particles;
+    }
+
+    /**
+     * Implementation of KSSS model step.
+     *
+     * @param currentCar  Current car.
+     * @param nextCar     Car ahead of {@code currentCar}.
+     * @param nextNextCar Car ahead of {@code nextCar}.
+     */
+    protected void evolveCar(Car currentCar, Car nextCar, Car nextNextCar) {
+        double currentCarSpeed = getVelocityComponent(currentCar);
+        double p;
+        double th = wrapAroundDistance(currentCar, nextCar) / currentCarSpeed;
+        double ts = Math.min(currentCarSpeed, H);
+
+        // Rule 0: Calculation of random parameters
+        // th < ts indicates that the car ahead is within the interaction horizon
+        if (currentCarSpeed == 0) {
+            p = P0;
+        } else if(nextCar.areBrakeLightsOn() && th < ts){
+            p = PB;
+        } else {
+            p = PD;
+        }
+
+        // Rule 1: Acceleration
+        double v = getVelocityComponent(currentCar);
+        // if the next car is not in the interaction horizon it accelerates by one unit
+        if((!currentCar.areBrakeLightsOn() && !nextCar.areBrakeLightsOn()) || th >= ts) {
+            v = Math.min(currentCarSpeed + 1, maxSpeed);
+        }
+
+        // Rule 2: Brake because of interaction with other cars
+        v = Math.min(effectiveGap(currentCar, nextCar, nextNextCar), v);
+        if(v < currentCarSpeed){
+            currentCar.turnBrakeLightsOn();
+        }
+
+        // Rule 3: Random brake with probability p
+        if(new Random().nextDouble() < p){
+            v = Math.max(v-1, 0);
+            if(p == PB || v <= currentCarSpeed) {
+                currentCar.turnBrakeLightsOn();
+            }
+        }
+
+        // Turn off brake lights if accelerating
+        if (v > currentCarSpeed) {
+            currentCar.turnBrakeLightsOff();
+        }
+
+        //Rule 4: Move car and update car velocity
+        setVelocityComponent(currentCar, v);
+        double newPos = getPositionComponent(currentCar) + v;
+        if(newPos > roadLength){ // Periodic borders
+            newPos -= roadLength;
+        }
+        setPositionComponent(currentCar, newPos);
     }
 
     /**

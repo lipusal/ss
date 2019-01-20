@@ -37,7 +37,7 @@ public class LiPumaNavasRunner {
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50, 0));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, true, MAX_SPEED, carsH, trafficLightsH);
+        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación
