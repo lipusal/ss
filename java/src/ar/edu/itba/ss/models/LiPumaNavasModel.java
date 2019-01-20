@@ -18,18 +18,18 @@ public class LiPumaNavasModel extends SingleLaneModel {
     /**
      * Probability of a stopped car to remain stopped.
      */
-//    protected double P0 = 0.5;
-    protected double P0 = 0;
+    protected double P0 = 0.5;
+//    protected double P0 = 0;
     /**
      * Probability of a car who can see its car ahead to brake when needed.
      */
-//    protected double PB = 0.94;
-    protected double PB = 1;
+    protected double PB = 0.94;
+//    protected double PB = 1;
     /**
      * Probability of a car to brake randomly.
      */
-//    protected double PD = 0.1;
-    protected double PD = 0;
+    protected double PD = 0.1;
+//    protected double PD = 0;
     protected int securityGap;
 
     private int simTime = 0;
