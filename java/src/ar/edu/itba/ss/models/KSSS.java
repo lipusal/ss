@@ -15,21 +15,21 @@ public class KSSS extends SingleLaneModel {
 
     protected int maxSpeed;
 
-    private int H = 6;
+    protected int H = 6;
     /**
      * Probability of a stopped car to remain stopped.
      */
-    private double P0 = 0.5;
+    protected double P0 = 0.5;
     /**
      * Probability of a car who can see its car ahead to brake when needed.
      */
-    private double PB = 0.94;
+    protected double PB = 0.94;
     /**
      * Probability of a car to brake randomly.
      */
-    private double PD = 0.1;
-    private int BS = 7;
-    private int securityGap;
+    protected double PD = 0.1;
+    protected int BS = 7;
+    protected int securityGap;
 
     public KSSS(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars) {
         super(cars, roadLength, horizontal);

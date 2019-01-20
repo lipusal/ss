@@ -56,8 +56,13 @@ public class LiPumaNavasModel extends KSSS {
      * ahead of it.
      */
     private boolean shouldStopForTrafficLight(Car car, TrafficLight nextTrafficLight, Car nextCar) {
-        return wrapAroundDistance(car, nextTrafficLight) < wrapAroundDistance(car, nextCar)
+        double v = getVelocityComponent(car),
+                trafficLightDistance = wrapAroundDistance(car, nextTrafficLight),
+                th = wrapAroundDistance(car, nextTrafficLight) / v,
+                ts = Math.min(v, H * 2); // Interaction horizon for traffic lights is twice as big as cars' since traffic lights are more visible from far away
+        return trafficLightDistance < wrapAroundDistance(car, nextCar)
                 && !nextTrafficLight.isGreen()
+                &&  th < ts
                 && requiredDeceleration(car, nextTrafficLight) >= maxDeceleration; // >=, not <= because we're dealing with negative numbers
     }
 
