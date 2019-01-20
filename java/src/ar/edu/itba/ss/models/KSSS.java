@@ -2,6 +2,7 @@ package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -11,29 +12,29 @@ import java.util.Random;
 /**
  * https://es.wikipedia.org/wiki/Modelo_Knospe,_Santen,_Schadschneider,_Schreckenberg
  */
+@SuppressWarnings("Duplicates")
 public class KSSS extends SingleLaneModel {
 
-    protected int maxSpeed;
+    private int maxSpeed;
 
-    protected int H = 6;
+    private int H = 6;
     /**
      * Probability of a stopped car to remain stopped.
      */
-    protected double P0 = 0.5;
+    private double P0 = 0.5;
     /**
      * Probability of a car who can see its car ahead to brake when needed.
      */
-    protected double PB = 0.94;
+    private double PB = 0.94;
     /**
      * Probability of a car to brake randomly.
      */
-    protected double PD = 0.1;
-    protected int BS = 7;
-    protected int securityGap;
+    private double PD = 0.1;
+    private int BS = 7;
+    private int securityGap;
 
     public KSSS(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars) {
         super(cars, roadLength, horizontal);
-        System.out.println(cars);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
     }
@@ -60,23 +61,33 @@ public class KSSS extends SingleLaneModel {
 
     @Override
     public List<Car> evolve() {
+        List<Double> newSpeeds = new ArrayList<>(particles.size());
+        // Compute new speeds
         for (int i = 0; i < particles.size(); i++) {
             Car currentCar = particles.get(i),
                 nextCar = getCarAhead(i),
                 nextNextCar = getCarAhead(i+1);
-            evolveCar(currentCar, nextCar, nextNextCar);
+            newSpeeds.add(evolveCar(currentCar, nextCar, nextNextCar));
+        }
+        // Advance cars
+        for (int i = 0; i < particles.size(); i++) {
+            Car c = particles.get(i);
+            double v = newSpeeds.get(i);
+            setVelocityComponent(c, v);
+            double newPos = (getPositionComponent(c) + v) % roadLength; // Modulo because road is periodic
+            setPositionComponent(c, newPos);
         }
         return particles;
     }
 
     /**
      * Implementation of KSSS model step.
-     *
-     * @param currentCar  Current car.
+     *  @param currentCar  Current car.
      * @param nextCar     Car ahead of {@code currentCar}.
      * @param nextNextCar Car ahead of {@code nextCar}.
+     * @return The car's new velocity.
      */
-    protected void evolveCar(Car currentCar, Car nextCar, Car nextNextCar) {
+    private double evolveCar(Car currentCar, Car nextCar, Car nextNextCar) {
         double currentCarSpeed = getVelocityComponent(currentCar);
         double p;
         double th = wrapAroundDistance(currentCar, nextCar) / currentCarSpeed;
@@ -106,7 +117,7 @@ public class KSSS extends SingleLaneModel {
         }
 
         // Rule 3: Random brake with probability p
-        if(new Random().nextDouble() < p){
+        if (new Random().nextDouble() < p) {
             v = Math.max(v-1, 0);
             if(p == PB || v <= currentCarSpeed) {
                 currentCar.turnBrakeLightsOn();
@@ -118,13 +129,7 @@ public class KSSS extends SingleLaneModel {
             currentCar.turnBrakeLightsOff();
         }
 
-        //Rule 4: Move car and update car velocity
-        setVelocityComponent(currentCar, v);
-        double newPos = getPositionComponent(currentCar) + v;
-        if(newPos > roadLength){ // Periodic borders
-            newPos -= roadLength;
-        }
-        setPositionComponent(currentCar, newPos);
+        return v;
     }
 
     /**
