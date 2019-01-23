@@ -61,7 +61,7 @@ public class LiPumaNavasRunner {
 //        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
 //        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
         int t = 0;
-        while (t < 250) { // TODO: parametrizar tiempo de simulación
+        while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);
             allCars.addAll(carsV);
             allCars.addAll(trafficLightsH);
