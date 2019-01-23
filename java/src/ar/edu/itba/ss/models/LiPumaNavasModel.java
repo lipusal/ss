@@ -3,9 +3,7 @@ package ar.edu.itba.ss.models;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.TrafficLight;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Modified version of KSSS that includes interaction with traffic lights
@@ -112,7 +110,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
         if (currentCarSpeed == 0) {
             p = P0;
         } else if(nextCar.areBrakeLightsOn() && th < ts){
-            p = PB;
+            p = getVelocityComponent(nextCar) > 0 ? PB : 1;
         } else {
             p = PD;
         }
