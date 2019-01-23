@@ -2,6 +2,7 @@ package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -11,72 +12,142 @@ import java.util.Random;
 /**
  * https://es.wikipedia.org/wiki/Modelo_Knospe,_Santen,_Schadschneider,_Schreckenberg
  */
-public class KSSS extends Model{
+@SuppressWarnings("Duplicates")
+public class KSSS extends SingleLaneModel {
 
     private int maxSpeed;
-    private int roadLength;
 
     private int H = 6;
+    /**
+     * Probability of a stopped car to remain stopped.
+     */
     private double P0 = 0.5;
+    /**
+     * Probability of a car who can see its car ahead to brake when needed.
+     */
     private double PB = 0.94;
+    /**
+     * Probability of a car to brake randomly.
+     */
     private double PD = 0.1;
     private int BS = 7;
+    private int securityGap;
 
-    public KSSS(int roadLength, int maxSpeed, List<Car> cars) {
-        super(cars);
-        System.out.println(cars);
+    public KSSS(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars) {
+        super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
-        this.roadLength = roadLength;
+        this.securityGap = securityGap;
+    }
+
+    /**
+     * Equivalent to {@code KSSS(roadLength, maxSpeed, securityGap, true, cars)}.
+     *
+     * @see #KSSS(int, int, int, boolean, List)
+     */
+    public KSSS(int roadLength, int maxSpeed, int securityGap, List<Car> cars) {
+        this(roadLength, maxSpeed, securityGap, true, cars);
+    }
+
+    /**
+     * Equivalent to {@link #KSSS(int, int, int, boolean, List) original constructor} with overrides for different
+     * probability parameters.
+     */
+    public KSSS(int roadLength, int maxSpeed, int securityGap, boolean horizontal, double P0, double Pb, double Pd, List<Car> cars) {
+        this(roadLength, maxSpeed, securityGap, horizontal, cars);
+        this.P0 = P0;
+        this.PB = Pb;
+        this.PD = Pd;
     }
 
     @Override
     public List<Car> evolve() {
+        List<Double> newSpeeds = new ArrayList<>(particles.size());
+        // Compute new speeds
         for (int i = 0; i < particles.size(); i++) {
-            Car currentCar = particles.get(i);
-            Car nextCar = getCarAhead(i);
-            double p;
-            double th = currentCar.distanceTo(nextCar) / Math.abs(currentCar.getVelocity().getX());
-            double ts = Math.min(Math.abs(currentCar.getVelocity().getX()), H);
-
-            // Rule 0: Calculation of random parameters
-            // th < ts indicates that el preceding car is in the interaction horizon
-            if(nextCar.areBlinkersOn() && th < ts){
-                p = PB;
-            } else if(Math.abs(currentCar.getVelocity().getX()) == 0) {
-                p = P0;
-            } else {
-                p = PD;
-            }
-
-            // Rule 1: Acceleration
-            double v = currentCar.getVX();
-            // if the next car is not in the interaction horizon it accelerates by one unit
-            if((!currentCar.areBlinkersOn() && !nextCar.areBlinkersOn()) || th >= ts){
-                v = Math.min(Math.abs(currentCar.getVelocity().getX()) + 1, maxSpeed);
-            }
-
-            // Rule 2: Brake because of interaction with other cars
-            v = Math.min(v, currentCar.distanceTo(nextCar));
-            if(v < currentCar.getVX()){
-                currentCar.turnBlinkersOn();
-            }
-
-            // Rule 3: Random brake with probability p
-            if(new Random().nextDouble() < p){
-                v = Math.max(v-1, 0);
-                if(p==PB){
-                    currentCar.turnBlinkersOn();
-                }
-            }
-
-            //Rule 4: Move car and update car velocity
-            currentCar.setVx(v);
-            double newPos = v + currentCar.getX();
-            if(newPos > roadLength){ // Periodic borders
-                newPos -= roadLength;
-            }
-            currentCar.setX(newPos);
+            Car currentCar = particles.get(i),
+                nextCar = getCarAhead(i),
+                nextNextCar = getCarAhead(i+1);
+            newSpeeds.add(evolveCar(currentCar, nextCar, nextNextCar));
+        }
+        // Advance cars
+        for (int i = 0; i < particles.size(); i++) {
+            Car c = particles.get(i);
+            double v = newSpeeds.get(i);
+            setVelocityComponent(c, v);
+            double newPos = (getPositionComponent(c) + v) % roadLength; // Modulo because road is periodic
+            setPositionComponent(c, newPos);
         }
         return particles;
+    }
+
+    /**
+     * Implementation of KSSS model step.
+     *  @param currentCar  Current car.
+     * @param nextCar     Car ahead of {@code currentCar}.
+     * @param nextNextCar Car ahead of {@code nextCar}.
+     * @return The car's new velocity.
+     */
+    private double evolveCar(Car currentCar, Car nextCar, Car nextNextCar) {
+        double currentCarSpeed = getVelocityComponent(currentCar);
+        double p;
+        double th = wrapAroundDistance(currentCar, nextCar) / currentCarSpeed;
+        double ts = Math.min(currentCarSpeed, H);
+
+        // Rule 0: Calculation of random parameters
+        // th < ts indicates that the car ahead is within the interaction horizon
+        if (currentCarSpeed == 0) {
+            p = P0;
+        } else if(nextCar.areBrakeLightsOn() && th < ts){
+            p = PB;
+        } else {
+            p = PD;
+        }
+
+        // Rule 1: Acceleration
+        double v = getVelocityComponent(currentCar);
+        // if the next car is not in the interaction horizon it accelerates by one unit
+        if((!currentCar.areBrakeLightsOn() && !nextCar.areBrakeLightsOn()) || th >= ts) {
+            v = Math.min(currentCarSpeed + 1, maxSpeed);
+        }
+
+        // Rule 2: Brake because of interaction with other cars
+        v = Math.min(effectiveGap(currentCar, nextCar, nextNextCar), v);
+        if(v < currentCarSpeed){
+            currentCar.turnBrakeLightsOn();
+        }
+
+        // Rule 3: Random brake with probability p
+        if (new Random().nextDouble() < p) {
+            v = Math.max(v-1, 0);
+            if(p == PB || v <= currentCarSpeed) {
+                currentCar.turnBrakeLightsOn();
+            }
+        }
+
+        // Turn off brake lights if accelerating
+        if (v > currentCarSpeed) {
+            currentCar.turnBrakeLightsOff();
+        }
+
+        return v;
+    }
+
+    /**
+     * Calculate the effective gap between two cars.  The effective gap is predictive, ie. {@code leftCar } car tries to
+     * predict how the car ahead of it, {@code middleCar} will react according to the distance to its own predecessor
+     * ({@code rightCar}).
+     *
+     * @param leftCar   Leftmost car.
+     * @param middleCar Car ahead of {@code leftCar}.
+     * @param rightCar  Car ahead of {@code middleCar}.
+     * @return The effective distance.
+     * @see <a href="https://arxiv.org/pdf/cond-mat/0012204.pdf">Algorithm in paper</a>.
+     */
+    private int effectiveGap(Car leftCar, Car middleCar, Car rightCar) {
+        // d(n) = x(n+1) − x(n) − car length
+        int dn = wrapAroundDistance(leftCar, middleCar);  // TODO incorporate car length into these
+        int dn1 = wrapAroundDistance(middleCar, rightCar);
+        double anticipatedSpeed = Math.min(dn1, getVelocityComponent(middleCar)); // Expected velocity of middle car in the next time step
+        return dn + (int) Math.max(anticipatedSpeed - securityGap, 0);
     }
 }

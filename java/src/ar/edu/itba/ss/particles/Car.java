@@ -6,16 +6,14 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class Car extends Particle {
-    private static int globalId = 1;
-
-    private boolean blinkersOn = false, isFake = false;
+    private boolean brakeLightsOn = false, isFake = false;
 
     public Car(int id, Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration, double radius) {
         super(id, position, velocity, acceleration, radius);
     }
 
     public Car(Point2D.Double position, Point2D.Double velocity, Point2D.Double acceleration) {
-        super(globalId++, position, velocity, acceleration);
+        super(position, velocity, acceleration);
     }
 
     public Car(Point2D.Double position, Point2D.Double velocity) {
@@ -23,36 +21,34 @@ public class Car extends Particle {
     }
 
     public Car(Point2D.Double position, Point2D.Double velocity, double radius) {
-        super(globalId++, position, velocity, new Point2D.Double(0,0), radius);
+        super(position, velocity, new Point2D.Double(0,0), radius);
     }
 
     public Car(Point2D.Double position, double radius) {
-        this(0, position, new Point2D.Double(), new Point2D.Double(), radius);
+        this(position, new Point2D.Double(), radius);
     }
 
     public Car(Point2D.Double position) {
         this(position, 1.0);
     }
 
-    public double distanceTo(Car other) {
-        return position.distance(other.position) - radius - other.radius;
+    public void turnBrakeLightsOn() {
+        this.brakeLightsOn = true;
+        this.color = Color.RED;
     }
 
-    public void turnBlinkersOn() {
-        this.blinkersOn = true;
+    public void turnBrakeLightsOff() {
+        this.brakeLightsOn = false;
+        this.color = Color.WHITE;
     }
 
-    public void turnBlinkersOff() {
-        this.blinkersOn = false;
-    }
-
-    public boolean areBlinkersOn() {
-        return this.blinkersOn;
+    public boolean areBrakeLightsOn() {
+        return this.brakeLightsOn;
     }
 
     @Override
     public String toString() {
-        return String.format("Car #%d @%s, Vx=%g, Ax=%g, blinkers %s", id, PointUtils.toString(position), getVX(), getAX(), blinkersOn ? "ON" : "OFF");
+        return String.format("Car #%d @%s, Vx=%g, Ax=%g, brake lights %s", id, PointUtils.toString(position), getVX(), getAX(), brakeLightsOn ? "ON" : "OFF");
     }
 
     public void advanceX(double deltaX) {

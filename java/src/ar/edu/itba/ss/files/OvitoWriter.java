@@ -42,7 +42,13 @@ public class OvitoWriter<T extends Particle> {
         fileWriter.write(String.format("%d\n%g\n", dataSize, time));
         for (T element : particles) {
             // Write basic element data
-            fileWriter.write(String.format("%d\t%g\t%g", element.getId(), element.getX(), element.getY()));
+            fileWriter.write(String.format("%d\t%g\t%g\t%g\t%g",
+                    element.getId(),
+                    element.getDrawPosition() == null ? element.getX() : element.getDrawX(),
+                    element.getDrawPosition() == null ? element.getY() : element.getDrawY(),
+                    element.getVX(),
+                    element.getVY()))
+            ;
             // Write color
             Color color = element.getColor();
             fileWriter.write(String.format("\t%d\t%d\t%d", color.getRed(), color.getGreen(), color.getBlue()));
