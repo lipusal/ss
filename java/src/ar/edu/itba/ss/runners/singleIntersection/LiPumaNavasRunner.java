@@ -36,6 +36,9 @@ public class LiPumaNavasRunner {
         carsH.add(new Car(new Point2D.Double(10, ROAD_LENGTH/2.0), new Point2D.Double(1, 0), car_radius));
 //        cars.add(new Car(new Point2D.Double(7, 0), new Point2D.Double(2, 0)));
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
+        carsH.add(new Car(new Point2D.Double(30, ROAD_LENGTH/2.0), car_radius));
+        carsH.add(new Car(new Point2D.Double(40, ROAD_LENGTH/2.0), car_radius));
+        carsH.add(new Car(new Point2D.Double(50, ROAD_LENGTH/2.0), car_radius));
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 50, 50, 0));
