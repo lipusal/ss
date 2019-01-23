@@ -42,6 +42,7 @@ public class LiPumaNavasRunner {
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 50, 50, 0));
+        trafficLightsH.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0 + 10, ROAD_LENGTH/2.0));
         LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* *************************************************************************************************************
@@ -58,6 +59,7 @@ public class LiPumaNavasRunner {
 
         List<TrafficLight> trafficLightsV = new ArrayList<>();
         trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 50, 50));
+        trafficLightsV.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0  + 10));
         LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
 
