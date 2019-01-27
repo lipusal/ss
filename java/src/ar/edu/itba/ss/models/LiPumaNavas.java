@@ -1,6 +1,7 @@
 package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
+import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
 
 import java.util.*;
@@ -35,11 +36,22 @@ public class LiPumaNavas extends SingleLaneModel {
 
     private List<TrafficLight> trafficLights = new ArrayList<>();
 
+    /**
+     * Map of car IDs to booleans indicating whether a car with a given ID is interacting with a traffic light. Used to
+     * indicate when the first car in a group is braking for a traffic light, so the interaction propagates down the
+     * group and cars interact differently.
+     */
+    private Map<Integer, Boolean> trafficLightInteractions;
+
     public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
         this.trafficLights.addAll(trafficLights);
+        // Initialize and populate traffic light interactions
+        trafficLightInteractions = new HashMap<>(cars.size());
+        cars.forEach(c -> trafficLightInteractions.put(c.getId(), false));
+
         validateCars(cars, roadLength, maxSpeed);
     }
 
@@ -69,19 +81,31 @@ public class LiPumaNavas extends SingleLaneModel {
             tl.evolve(simTime);
         }
         List<Double> newSpeeds = new ArrayList<>(particles.size());
+        Map<Integer, Boolean> newInteractions = new HashMap<>(trafficLightInteractions.size());
         for (int i = 0; i < particles.size(); i++) {
             Car currentCar = particles.get(i),
                 nextCar = getCarAhead(i),
                 nextNextCar = getCarAhead(i+1);
             TrafficLight nextTrafficLight = getTrafficLightAhead(currentCar);
+            newInteractions.put(currentCar.getId(), false);
+
             if (shouldStopForTrafficLight(currentCar, nextTrafficLight, nextCar)) {
+                // First car in group to stop for traffic light
                 newSpeeds.add(trafficLightInteraction(currentCar, nextTrafficLight));
+                newInteractions.put(currentCar.getId(), true);
+            } else if (shouldStopForTrafficLightChain(currentCar, nextTrafficLight, nextCar)) {
+                // Car ahead is interacting with traffic light
+                newSpeeds.add(trafficLightChainInteraction(currentCar, nextCar, nextTrafficLight));
+                newInteractions.put(currentCar.getId(), true);
             } else {
+                // Regular KSSS evolution
                 newSpeeds.add(evolveCar(currentCar, nextCar, nextNextCar));
             }
         }
         // Advance cars
         particles = advanceCars(particles, newSpeeds, false);
+        // Update interactions
+        trafficLightInteractions = newInteractions;
         // Make sure we didn't break anything
         validateCars(particles, roadLength, maxSpeed);
         validateCarOrder(particles);
@@ -170,6 +194,32 @@ public class LiPumaNavas extends SingleLaneModel {
     }
 
     /**
+     * Similar to {@link #shouldStopForTrafficLight(Car, TrafficLight, Car)} but for cars that are behind another car
+     * that is already stopping for a traffic light.  This is used to override KSSS to prevent collisions.
+     *
+     * @param currentCar       Current car
+     * @param nextTrafficLight Next traffic light
+     * @param nextCar          Next car (can be either before or after {@code nextTrafficLight})
+     * @return Whether the current car should stop as part of a traffic light chain.
+     */
+    private boolean shouldStopForTrafficLightChain(Car currentCar, TrafficLight nextTrafficLight, Car nextCar) {
+        if (nextTrafficLight == null) {
+            return false;
+        }
+
+        double v = getVelocityComponent(currentCar),
+                carDistance = wrapAroundDistance(currentCar, nextCar),
+                trafficLightDistance = wrapAroundDistance(currentCar, nextTrafficLight),
+                th = carDistance / v,
+                ts = Math.min(v, H);
+
+        return carDistance < trafficLightDistance                   // Next particle is a car
+                && trafficLightInteractions.get(nextCar.getId())    // Next car is interacting with traffic light
+                && (th < ts                                         // Is within interaction horizon or is stopped right behind a car
+                    || (v == 0 && effectiveGap(currentCar, nextCar, nextTrafficLight) == 0));
+    }
+
+    /**
      * Computes the deceleration required for a given car not to crash into the given traffic light.
      *
      * @param car          The car.
@@ -182,6 +232,26 @@ public class LiPumaNavas extends SingleLaneModel {
         return trafficLightEffectiveGap == 0
                 ? -v // Come to a stop
                 : Math.floor(-(v*v) / (2 * trafficLightEffectiveGap)); // a = (vf^2 - vi^2) / (2*d). Use floor to always give whole numbers.
+    }
+
+    /**
+     * Computes the deceleration required for a given car not to crash into the car ahead.
+     *
+     * @param currentCar  The car.
+     * @param nextCar     The car ahead.
+     * @param nextTrafficLight The car ahead of {@code nextCar}.
+     * @return The required deceleration.
+     */
+    private double requiredDeceleration(Car currentCar, Car nextCar, TrafficLight nextTrafficLight) {
+        double effectiveGap = effectiveGap(currentCar, nextCar, nextTrafficLight),
+                v = getVelocityComponent(currentCar),
+                vf = anticipatedSpeed(nextCar, nextTrafficLight),
+                a = effectiveGap == 0
+                    ? -v // Come to a stop
+                    : ((vf*vf) - (v*v)) / (2 * effectiveGap), // a = (vf^2 - vi^2) / (2*d)
+                aFloor = Math.floor(a); // Use floor to always give whole numbers.
+
+        return a > -1 ? 0 : aFloor;
     }
 
     /**
@@ -199,6 +269,28 @@ public class LiPumaNavas extends SingleLaneModel {
             throw new IllegalStateException("EDGE CASE: " + currentCar + " is directly under a traffic light and is going too fast to stop. What do we do?");
         } else if (requiredDeceleration < maxDeceleration) {
             throw new IllegalStateException(String.format("Required deceleration for car %s to not crash against traffic light %s exceeds maximum deceleration: %g < %g", currentCar, nextTrafficLight, requiredDeceleration, maxDeceleration));
+        }
+        double vf = v + requiredDeceleration * 1; // vf = vi + a*t, t = 1s
+        if (vf <= v) {
+            currentCar.turnBrakeLightsOn();
+        } else {
+            currentCar.turnBrakeLightsOff();
+        }
+        return vf;
+    }
+
+    /**
+     * Traffic light interaction. Cars slow down as necessary for red and yellow lights. <b>NOTE:</b> This assumes that
+     * {@link #shouldStopForTrafficLight(Car, TrafficLight, Car)} is true.
+     *
+     * @param currentCar Current car
+     * @param nextTrafficLight The next traffic light
+     */
+    private double trafficLightChainInteraction(Car currentCar, Car nextCar, TrafficLight nextTrafficLight) {
+        double v = getVelocityComponent(currentCar),
+               requiredDeceleration = requiredDeceleration(currentCar, nextCar, nextTrafficLight);
+        if (requiredDeceleration < maxDeceleration) {
+            throw new IllegalStateException(String.format("Required deceleration for car %s to not crash against %s exceeds maximum deceleration: %g < %g", currentCar, nextCar, requiredDeceleration, maxDeceleration));
         }
         double vf = v + requiredDeceleration * 1; // vf = vi + a*t, t = 1s
         if (vf <= v) {
@@ -241,31 +333,52 @@ public class LiPumaNavas extends SingleLaneModel {
      */
     private int effectiveGap(Car car, TrafficLight trafficLight) {
         if (trafficLight.isGreen()) {
-            return Integer.MAX_VALUE;
+            return Integer.MAX_VALUE; // "Infinite" gap when traffic light is green
         } else {
             return Math.max(wrapAroundDistance(car, trafficLight) - securityGap, 0); // TODO consider using a different traffic light security gap
         }
     }
 
     /**
-     * Copy of {@link KSSS#effectiveGap(Car, Car, Car)} except when {@code middleCar} or {@code rightCar} are stopped.
-     * In this case, try to leave as much of {@link #securityGap} as possible.
+     * Effective gap, exclusively for cars, that behaves differently when either {@code middleCar} or {@code rightCar} is
+     * stopped. In this case, try to leave as much of {@link #securityGap} as possible.
      *
-     * @param leftCar   Leftmost car.
-     * @param middleCar Car ahead of {@code leftCar}.
-     * @param rightCar  Car ahead of {@code middleCar}.
-     * @return The effective distance.
-     * @see KSSS#effectiveGap(Car, Car, Car)
+     * @return The effective gap.
+     * @see #effectiveGap(Car, Particle, Particle)
      */
-    @SuppressWarnings("JavadocReference")
     private int effectiveGap(Car leftCar, Car middleCar, Car rightCar) {
         if (getVelocityComponent(middleCar) == 0 || getVelocityComponent(rightCar) == 0) {
             return Math.max(wrapAroundDistance(leftCar, middleCar) - securityGap, 0);
+        } else {
+            return effectiveGap(leftCar,  (Particle) middleCar, rightCar);
         }
+    }
+
+    /**
+     * Copy of {@link KSSS#effectiveGap(Car, Car, Car)} but more generic (ie. works with particles).
+     *
+     * @param currentCar       Current car
+     * @param nextParticle     Particle ahead of current car
+     * @param nextNextParticle Particle ahead of next particle
+     * @return The effective gap
+     */
+    @SuppressWarnings("JavadocReference")
+    private int effectiveGap(Car currentCar, Particle nextParticle, Particle nextNextParticle) {
         // d(n) = x(n+1) − x(n) − car length
-        int dn = wrapAroundDistance(leftCar, middleCar);  // TODO incorporate car length into these
-        int dn1 = wrapAroundDistance(middleCar, rightCar);
-        double anticipatedSpeed = Math.min(dn1, getVelocityComponent(middleCar)); // Expected velocity of middle car in the next time step
+        int dn = wrapAroundDistance(currentCar, nextParticle);  // TODO incorporate car length into these
+        double anticipatedSpeed = anticipatedSpeed(nextParticle, nextNextParticle); //
         return dn + (int) Math.max(anticipatedSpeed - securityGap, 0);
+    }
+
+    /**
+     * Compute expected velocity of a given particle in the next time step, given the particle ahead of it.
+     *
+     * @param particle     The particle whose speed to anticipate.
+     * @param nextParticle The particle ahead of it.
+     * @return The anticipated speed of {@code particle} in the next time step.
+     */
+    private int anticipatedSpeed(Particle particle, Particle nextParticle) {
+        int dn1 = wrapAroundDistance(particle, nextParticle);
+        return (int) Math.min(dn1, getVelocityComponent(particle));
     }
 }
