@@ -1,7 +1,6 @@
 package ar.edu.itba.ss.models;
 
 import ar.edu.itba.ss.particles.Car;
-import ar.edu.itba.ss.particles.Particle;
 
 import java.util.*;
 
@@ -12,7 +11,7 @@ import java.util.*;
  *
  * @see <a href="https://es.wikipedia.org/wiki/Modelo_Nagel-Schreckenberg">Wikipedia entry</a>.
  */
-public class NaSchModel extends SingleLaneModel {
+public class NaSch extends SingleLaneModel {
 
     private final int maxSpeed;
     private final double p;
@@ -32,7 +31,7 @@ public class NaSchModel extends SingleLaneModel {
      *                      <li>0 <= x <= roadLength for each car</li>
      *                      <li>0 <= Vx <= maxSpeed for each car</li>
      */
-    public NaSchModel(int roadLength, int maxSpeed, double p, boolean horizontal, List<Car> cars) {
+    public NaSch(int roadLength, int maxSpeed, double p, boolean horizontal, List<Car> cars) {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.p = p;
@@ -41,9 +40,9 @@ public class NaSchModel extends SingleLaneModel {
     }
 
     /**
-     * Equivalent to {@code NaSchModel(roadLength, maxSpeed, p, true, cars)}.
+     * Equivalent to {@code NaSch(roadLength, maxSpeed, p, true, cars)}.
      */
-    public NaSchModel(int roadLength, int maxSpeed, double p, List<Car> cars) {
+    public NaSch(int roadLength, int maxSpeed, double p, List<Car> cars) {
         this(roadLength, maxSpeed, p, true, cars);
     }
 
@@ -51,6 +50,7 @@ public class NaSchModel extends SingleLaneModel {
     @Override
     public List<Car> evolve() {
         // Get new velocities
+        List<Double> newSpeeds = new ArrayList<>(particles.size());
         for (int i = 0; i < particles.size(); i++) {
             Car currentCar = particles.get(i), carAhead = getCarAhead(i);
             double currentSpeed = getVelocityComponent(currentCar), newSpeed;
@@ -74,26 +74,13 @@ public class NaSchModel extends SingleLaneModel {
             if (newSpeed > currentSpeed) {
                 currentCar.turnBrakeLightsOff();
             }
-            setVelocityComponent(currentCar, newSpeed);
+            newSpeeds.add(newSpeed);
         }
         // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
-        Set<Car> sortedCars = new TreeSet<>(Comparator.comparingDouble(this::getPositionComponent)); // Leftmost car will be first
-        particles.forEach(car -> {
-            double newPosition = getPositionComponent(car) + getVelocityComponent(car);
-            if (newPosition > roadLength) {
-                // Out bounds; wrap around (periodic boundary conditions), add first in list rather than last
-                newPosition -= roadLength;
-            }
-            setPositionComponent(car, newPosition);
-            sortedCars.add(car);
-        });
-        particles = new ArrayList<>(sortedCars);
-        // Make sure we didn't break anything. Re-throw IllegalArgument as IllegalState exceptions
-        try {
-            validateCars(particles, roadLength, maxSpeed);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        }
+        particles = advanceCars(particles, newSpeeds, true); // NaSch doesn't have logic for brake lights, these are merely for visualization
+        // Make sure we didn't break anything
+        validateCars(particles, roadLength, maxSpeed);
+        validateCarOrder(particles);
         return particles;
     }
 

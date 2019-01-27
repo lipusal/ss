@@ -37,6 +37,7 @@ public class KSSS extends SingleLaneModel {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
+        validateCars(particles, roadLength, maxSpeed);
     }
 
     /**
@@ -70,13 +71,10 @@ public class KSSS extends SingleLaneModel {
             newSpeeds.add(evolveCar(currentCar, nextCar, nextNextCar));
         }
         // Advance cars
-        for (int i = 0; i < particles.size(); i++) {
-            Car c = particles.get(i);
-            double v = newSpeeds.get(i);
-            setVelocityComponent(c, v);
-            double newPos = (getPositionComponent(c) + v) % roadLength; // Modulo because road is periodic
-            setPositionComponent(c, newPos);
-        }
+        particles = advanceCars(particles, newSpeeds, false); // We handle brake lights ourselves
+        // Make sure we didn't break anything
+        validateCars(particles, roadLength, maxSpeed);
+        validateCarOrder(particles);
         return particles;
     }
 

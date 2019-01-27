@@ -1,7 +1,6 @@
 package ar.edu.itba.ss.runners.singleLane;
 
 import ar.edu.itba.ss.files.OvitoWriter;
-import ar.edu.itba.ss.models.LiPumaNavasModel;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
@@ -38,7 +37,7 @@ public class LiPumaNavas {
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50, 0));
         trafficLightsH.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0 - 10));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
+        ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación

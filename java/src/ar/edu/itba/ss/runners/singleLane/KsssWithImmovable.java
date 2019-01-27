@@ -31,8 +31,9 @@ public class KsssWithImmovable {
         carsH.add(new Car(new Point2D.Double(10, ROAD_LENGTH/2.0), new Point2D.Double(1, 0), car_radius));
 //        cars.add(new Car(new Point2D.Double(7, 0), new Point2D.Double(2, 0)));
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
+        carsH.add(new ImmovableCar(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0)));
 
-        KSSS modelH = new KSSS(ROAD_LENGTH, MAX_SPEED, 5, true, 0.5, 0.94, 0.1, carsH);
+        KSSS modelH = new KSSS(ROAD_LENGTH, MAX_SPEED, 1, true, 0.5, 0.94, 0.1, carsH);
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);

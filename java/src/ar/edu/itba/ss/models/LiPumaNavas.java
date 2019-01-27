@@ -9,7 +9,7 @@ import java.util.*;
  * Modified version of KSSS that includes interaction with traffic lights
  */
 @SuppressWarnings("Duplicates")
-public class LiPumaNavasModel extends SingleLaneModel {
+public class LiPumaNavas extends SingleLaneModel {
     protected int maxSpeed;
 
     protected int H = 6;
@@ -35,7 +35,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
 
     private List<TrafficLight> trafficLights = new ArrayList<>();
 
-    public LiPumaNavasModel(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
@@ -44,19 +44,19 @@ public class LiPumaNavasModel extends SingleLaneModel {
     }
 
     /**
-     * Equivalent to {@code LiPumaNavasModel(roadLength, maxSpeed, securityGap, true, cars, trafficLights)}.
+     * Equivalent to {@code LiPumaNavas(roadLength, maxSpeed, securityGap, true, cars, trafficLights)}.
      *
-     * @see #LiPumaNavasModel(int, int, int, boolean, List, List)
+     * @see #LiPumaNavas(int, int, int, boolean, List, List)
      */
-    public LiPumaNavasModel(int roadLength, int maxSpeed, int securityGap, List<Car> cars, List<TrafficLight> trafficLights) {
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, List<Car> cars, List<TrafficLight> trafficLights) {
         this(roadLength, maxSpeed, securityGap, true, cars, trafficLights);
     }
 
     /**
-     * Equivalent to {@link #LiPumaNavasModel(int, int, int, boolean, List, List)} original constructor} with overrides
+     * Equivalent to {@link #LiPumaNavas(int, int, int, boolean, List, List)} original constructor} with overrides
      * for different probability parameters.
      */
-    public LiPumaNavasModel(int roadLength, int maxSpeed, int securityGap, boolean horizontal, double P0, double Pb, double Pd, List<Car> cars, List<TrafficLight> trafficLights) {
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, double P0, double Pb, double Pd, List<Car> cars, List<TrafficLight> trafficLights) {
         this(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights);
         this.P0 = P0;
         this.PB = Pb;
@@ -81,23 +81,9 @@ public class LiPumaNavasModel extends SingleLaneModel {
             }
         }
         // Advance cars
-        for (int i = 0; i < particles.size(); i++) {
-            Car c = particles.get(i);
-            double v = newSpeeds.get(i);
-            setVelocityComponent(c, v);
-            double newPos = (getPositionComponent(c) + v) % roadLength; // Modulo because road is periodic
-            setPositionComponent(c, newPos);
-        }
-
-//        // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
-//        Set<Car> sortedCars = new TreeSet<>(Comparator.comparingDouble(this::getPositionComponent)); // Leftmost car will be first
-//        for (int i = 0; i < particles.size(); i++) {
-//            Car car = particles.get(i);
-//            double newPosition = (getPositionComponent(car) + newSpeeds.get(i)) % roadLength;
-//            setPositionComponent(car, newPosition);
-//            sortedCars.add(car);
-//        }
-//        particles = new ArrayList<>(sortedCars);
+        particles = advanceCars(particles, newSpeeds, false);
+        // Make sure we didn't break anything
+        validateCars(particles, roadLength, maxSpeed);
         validateCarOrder(particles);
 
         this.simTime++;

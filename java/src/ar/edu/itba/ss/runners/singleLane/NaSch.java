@@ -1,7 +1,6 @@
 package ar.edu.itba.ss.runners.singleLane;
 
 import ar.edu.itba.ss.files.OvitoWriter;
-import ar.edu.itba.ss.models.NaSchModel;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 
@@ -35,7 +34,7 @@ public class NaSch {
 //        cars.add(new Car(new Point2D.Double(7, 0), new Point2D.Double(2, 0)));
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
 
-        NaSchModel modelH = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, carsH);
+        ar.edu.itba.ss.models.NaSch modelH = new ar.edu.itba.ss.models.NaSch(ROAD_LENGTH, MAX_SPEED, P, carsH);
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);

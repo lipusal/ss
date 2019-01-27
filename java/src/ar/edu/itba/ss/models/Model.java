@@ -32,29 +32,43 @@ public abstract class Model {
         return particles.get((index + 1) % particles.size());   // Periodic boundary conditions (ie. the rightmost car has the leftmost car ahead)
     }
 
-    protected void validateCars(List<Car> cars, int roadLength, int maxSpeed) throws IllegalArgumentException {
+    /**
+     * Validates that:
+     * <ol>
+     *     <li>Cars are listed in order (ie. for every i, j such that 0 <= i, j <= cars.length, then if i < j then car #i.x < car #j.x)</li>
+     *     <li>Cars do not overlap</li>
+     *     <li>Cars are within bounds ({@code 0 <= x <= roadLength})</li>
+     *     <li>Cars speeds are within bounds ({@code 0 <= Vx <= maxSpeed})</li>
+     * </ol>
+     *
+     * @param cars       Cars to validate
+     * @param roadLength Road length, ie. high bound for X coordinate.
+     * @param maxSpeed   High bound for Vx.
+     * @throws IllegalStateException If any condition is not met.
+     */
+    protected void validateCars(List<Car> cars, int roadLength, int maxSpeed) throws IllegalStateException {
         for (int i = 0; i < cars.size(); i++) {
             Car current = cars.get(i),
-                    carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
+                carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
             // 1) Cars are listed in order, and
             // 2) Cars do not overlap
             if (carAhead != null) {
                 if (current.getX() > carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, current.getX(), carAhead.getX()));
+                    throw new IllegalStateException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, current.getX(), carAhead.getX()));
                 } else if (current.getX() == carAhead.getX()) {
-                    throw new IllegalArgumentException(String.format("%s and %s overlap (same X coordinate)", current, carAhead));
+                    throw new IllegalStateException(String.format("%s and %s overlap (same X coordinate)", current, carAhead));
                 }
             }
             // 3) Position
             if (current.getX() < 0 || current.getX() > roadLength) {
-                throw new IllegalArgumentException(String.format("%s is outside of bounds ([%d <= x <= %d, but x=%g])", current, 0, roadLength, current.getX()));
+                throw new IllegalStateException(String.format("%s is outside of bounds ([%d <= x <= %d, but x=%g])", current, 0, roadLength, current.getX()));
             }
             // 4) Speed
             if (current.getVX() < 0) {
-                throw new IllegalArgumentException(String.format("%s is going to the left (%g)", current, current.getVX()));
+                throw new IllegalStateException(String.format("%s is going to the left (%g)", current, current.getVX()));
             }
             if (current.getVX() > maxSpeed) {
-                throw new IllegalArgumentException(String.format("%s is going too fast (%g, max speed is %d)", current, current.getVX(), maxSpeed));
+                throw new IllegalStateException(String.format("%s is going too fast (%g, max speed is %d)", current, current.getVX(), maxSpeed));
             }
         }
     }

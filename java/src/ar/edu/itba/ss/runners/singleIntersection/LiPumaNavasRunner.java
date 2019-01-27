@@ -1,7 +1,7 @@
 package ar.edu.itba.ss.runners.singleIntersection;
 
 import ar.edu.itba.ss.files.OvitoWriter;
-import ar.edu.itba.ss.models.LiPumaNavasModel;
+import ar.edu.itba.ss.models.LiPumaNavas;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
@@ -43,7 +43,7 @@ public class LiPumaNavasRunner {
         List<TrafficLight> trafficLightsH = new ArrayList<>();
         trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 50, 50, 0));
         trafficLightsH.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0 + 10, ROAD_LENGTH/2.0));
-        LiPumaNavasModel modelH = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
+        LiPumaNavas modelH = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* *************************************************************************************************************
          *                                          VERTICAL MODEL
@@ -60,11 +60,11 @@ public class LiPumaNavasRunner {
         List<TrafficLight> trafficLightsV = new ArrayList<>();
         trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), 50, 50, 50));
         trafficLightsV.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0  + 10));
-        LiPumaNavasModel modelV = new LiPumaNavasModel(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
+        LiPumaNavas modelV = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
 
 //        KSSS model = new KSSS(ROAD_LENGTH, MAX_SPEED, cars);
-//        NaSchModel model = new NaSchModel(ROAD_LENGTH, MAX_SPEED, P, cars);
+//        NaSch model = new NaSch(ROAD_LENGTH, MAX_SPEED, P, cars);
         int t = 0;
         while (t < 500) { // TODO: parametrizar tiempo de simulación
             List<Particle> allCars = withPlaceholders(placeholders, carsH);

@@ -3,7 +3,8 @@ package ar.edu.itba.ss.models;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Specification of {@link Model} for a single-lane road model with periodic boundary conditions (ie. cars wrap around
@@ -17,6 +18,8 @@ public abstract class SingleLaneModel extends Model {
      */
     protected final boolean isHorizontal;
 
+    private final List<Integer> originalParticleOrder;
+
     /**
      * Instances a new horizontal or vertical single-lane model of the specified length.
      *
@@ -28,6 +31,7 @@ public abstract class SingleLaneModel extends Model {
         super(particles);
         this.roadLength = roadLength;
         this.isHorizontal = horizontal;
+        this.originalParticleOrder = particles.stream().map(Particle::getId).collect(Collectors.toList());
     }
 
     /**
@@ -45,6 +49,114 @@ public abstract class SingleLaneModel extends Model {
             result = roadLength - result;
         }
         return result;
+    }
+
+    /**
+     * Equivalent to {@link Model#validateCars(List, int, int)} but is direction-independent.
+     *
+     * @see Model#validateCars(List, int, int)
+     */
+    @Override
+    protected void validateCars(List<Car> cars, int roadLength, int maxSpeed) throws IllegalStateException {
+        for (int i = 0; i < cars.size(); i++) {
+            Car current = cars.get(i),
+                carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
+            // 1) Cars are listed in order, and
+            // 2) Cars do not overlap
+            if (carAhead != null) {
+                if (getPositionComponent(current) > getPositionComponent(carAhead)) {
+                    throw new IllegalStateException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, getPositionComponent(current), getPositionComponent(carAhead)));
+                } else if (getPositionComponent(current) == getPositionComponent(carAhead)) {
+                    throw new IllegalStateException(String.format("%s and %s overlap at %s = %g)", current, carAhead, componentAxis(), getPositionComponent(current)));
+                }
+            }
+            // 3) Position
+            if (getPositionComponent(current) < 0 || getPositionComponent(current) > roadLength) {
+                throw new IllegalStateException(String.format("%s is outside of bounds (%d <= %s <= %d, but %s = %g)", current, 0, componentAxis(), roadLength, componentAxis(), getPositionComponent(current)));
+            }
+            // 4) Speed
+            if (getVelocityComponent(current) < 0) {
+                throw new IllegalStateException(String.format("%s is going backwards (%g)", current, getVelocityComponent(current)));
+            }
+            if (getVelocityComponent(current) > maxSpeed) {
+                throw new IllegalStateException(String.format("%s is going too fast (%g, max speed is %d)", current, getVelocityComponent(current), maxSpeed));
+            }
+        }
+    }
+
+    /**
+     * Validates that the original particle order (ie. the one this model was instantiated with) has not been violated.
+     * This is sometimes necessary as in {@link #evolve()} the car list is recreated with a {@link java.util.TreeSet}
+     * ordered by position component, which guarantees that the first condition in {@link #validateCars(List, int, int)}
+     * will be met. However, that method does not validate that car order was not disrupted, for example if one car
+     * passed another.
+     *
+     * @param particles The particles to validate
+     * @throws IllegalStateException If original car order was violated (includes the case where cars are added or disappear
+     * from the model).
+     */
+    protected void validateCarOrder(List<Car> particles) throws IllegalStateException {
+        int listIndex = -1;
+        for (int i = 0; i < originalParticleOrder.size(); i++) {
+            if (particles.get(i).getId() == originalParticleOrder.get(0)) {
+                listIndex = i;
+                break;
+            }
+        }
+        if (listIndex == -1) {
+            throw new IllegalStateException("Couldn't find leading car with ID #" + originalParticleOrder.get(0) + " in cars list");
+        }
+        for (int i = 0; i < originalParticleOrder.size(); i++) {
+            int carIndex = (listIndex + i) % particles.size();
+            if (particles.get(carIndex).getId() != originalParticleOrder.get(i)) {
+                throw new IllegalStateException(String.format("Original car order was violated, %s != %s", originalParticleOrder.toString(), particles.stream().map(Particle::getId).collect(Collectors.toList()).toString()));
+//                System.err.println(String.format("Original car order was violated, %s != %s", originalParticleOrder.toString(), particles.stream().map(Particle::getId).collect(Collectors.toList()).toString()));
+            }
+        }
+    }
+
+    /**
+     * Given a list of cars and velocities, advance every car by its corresponding velocity (respecting periodic boundary
+     * conditions, ie. wrapping around) and update its velocity. If specified, also update cars' brake lights.
+     *
+     * @param originalCars      Cars to advance.
+     * @param newVelocities     New car velocities.
+     * @param changeBrakeLights Whether brake lights should be modified (ie. turn off for accelerating cars, turn on for braking cars).
+     * @return The new car list, <b>with cars in order</b> according to {@link #getPositionComponent(Particle)}.
+     * @throws IllegalArgumentException If {@code originalCars.size() != newVelocities.size()}.
+     */
+    protected List<Car> advanceCars(List<Car> originalCars, List<Double> newVelocities, boolean changeBrakeLights) throws IllegalArgumentException {
+        if (originalCars.size() != newVelocities.size()) {
+            throw new IllegalArgumentException(String.format("Cars and velocities lists must match in length, %d != %d", originalCars.size(), newVelocities.size()));
+        }
+        List<Car> advancedCars = new ArrayList<>(originalCars.size());
+        for (int i = 0; i < originalCars.size(); i++) {
+            Car c = originalCars.get(i);
+            double oldV = getVelocityComponent(c),
+                    newV = newVelocities.get(i),
+                    newPosition = (getPositionComponent(c) + newV) % roadLength; // Modulo for periodic boundary conditions
+            setPositionComponent(c, newPosition);
+            setVelocityComponent(c, newV);
+            if (changeBrakeLights) {
+                if (newV < oldV || newV == 0) {
+                    c.turnBrakeLightsOn();
+                } else {
+                    c.turnBrakeLightsOff();
+                }
+            }
+            advancedCars.add(c);
+        }
+        advancedCars.sort(Comparator.comparingDouble(this::getPositionComponent)); // Sort by position component
+        return advancedCars;
+    }
+
+    /**
+     * Equivalent to {@code advanceCars(originalCars, newVelocities, false)}.
+     *
+     * @see #advanceCars(List, List, boolean)
+     */
+    protected List<Car> advanceCars(List<Car> originalCars, List<Double> newVelocities) {
+        return advanceCars(originalCars, newVelocities, false);
     }
 
     /* *****************************************************************************************************************
@@ -92,6 +204,10 @@ public abstract class SingleLaneModel extends Model {
         } else {
             particle.setVy(newSpeed);
         }
+    }
+
+    private char componentAxis() {
+        return isHorizontal ? 'x' : 'y';
     }
 
     /* *****************************************************************************************************************
