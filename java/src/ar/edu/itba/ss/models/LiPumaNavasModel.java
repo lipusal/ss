@@ -40,6 +40,7 @@ public class LiPumaNavasModel extends SingleLaneModel {
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
         this.trafficLights.addAll(trafficLights);
+        validateCars(cars, roadLength, maxSpeed);
     }
 
     /**
@@ -87,6 +88,18 @@ public class LiPumaNavasModel extends SingleLaneModel {
             double newPos = (getPositionComponent(c) + v) % roadLength; // Modulo because road is periodic
             setPositionComponent(c, newPos);
         }
+
+//        // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
+//        Set<Car> sortedCars = new TreeSet<>(Comparator.comparingDouble(this::getPositionComponent)); // Leftmost car will be first
+//        for (int i = 0; i < particles.size(); i++) {
+//            Car car = particles.get(i);
+//            double newPosition = (getPositionComponent(car) + newSpeeds.get(i)) % roadLength;
+//            setPositionComponent(car, newPosition);
+//            sortedCars.add(car);
+//        }
+//        particles = new ArrayList<>(sortedCars);
+        validateCarOrder(particles);
+
         this.simTime++;
         return particles;
     }
