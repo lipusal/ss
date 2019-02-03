@@ -35,7 +35,7 @@ public class LiPumaNavas {
         carsH.add(new Car(new Point2D.Double(20, ROAD_LENGTH/2.0), car_radius));
 
         List<TrafficLight> trafficLightsH = new ArrayList<>();
-        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50, 0));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), 25, /*TODO calculate this*/10, 50));
         trafficLightsH.get(0).setDrawPosition(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0 - 10));
         ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
