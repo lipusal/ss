@@ -47,8 +47,8 @@ public class ManyIntersections {
         carsH.add(new Car(new Point2D.Double(20, firstStreetCoordinates), car_radius));
         // Add traffic lights
         List<TrafficLight> trafficLightsH = new ArrayList<>();
-        trafficLightsH.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
-        trafficLightsH.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates), 25, 50, 0, new Point2D.Double(firstStreetCoordinates + 10, firstStreetCoordinates)));
+        trafficLightsH.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates), 25, 50, 0, new Point2D.Double(secondStreetCoordinates + 10, firstStreetCoordinates)));
         LiPumaNavas modelH = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
         /* TOP HORIZONTAL STREET*/
@@ -62,8 +62,8 @@ public class ManyIntersections {
         carsH2.add(new Car(new Point2D.Double(20, secondStreetCoordinates), car_radius));
         // Add traffic light
         List<TrafficLight> trafficLightsH2 = new ArrayList<>();
-        trafficLightsH2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates - 5, firstStreetCoordinates), 25, 50, 0));
-        trafficLightsH2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates - 5, secondStreetCoordinates), 25, 50, 0));
+        trafficLightsH2.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates), 25, 50, 0, new Point2D.Double(firstStreetCoordinates + 10, secondStreetCoordinates)));
+        trafficLightsH2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates), 25, 50, 0, new Point2D.Double(secondStreetCoordinates + 10, secondStreetCoordinates)));
         LiPumaNavas modelH2 = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH2, trafficLightsH2);
 
         /* *************************************************************************************************************
@@ -80,8 +80,8 @@ public class ManyIntersections {
         carsV.add(new Car(new Point2D.Double(firstStreetCoordinates, 20), car_radius));
         // Add traffic lights
         List<TrafficLight> trafficLightsV = new ArrayList<>();
-        trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
-        trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates), 50, 25, 25, new Point2D.Double(firstStreetCoordinates, firstStreetCoordinates + 10)));
+        trafficLightsV.add(new TrafficLight(new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates), 50, 25, 25, new Point2D.Double(firstStreetCoordinates, secondStreetCoordinates + 10)));
         LiPumaNavas modelV = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
         /* RIGHT VERTICAL STREET*/
@@ -94,8 +94,8 @@ public class ManyIntersections {
         carsV2.add(new Car(new Point2D.Double(secondStreetCoordinates, 20), car_radius));
         // Add traffic lights
         List<TrafficLight> trafficLightsV2 = new ArrayList<>();
-        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates - 5), 50, 25, 25));
-        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates - 5), 50, 25, 25));
+        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates), 50, 25, 25, new Point2D.Double(secondStreetCoordinates, firstStreetCoordinates + 10)));
+        trafficLightsV2.add(new TrafficLight(new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates), 50, 25, 25, new Point2D.Double(secondStreetCoordinates, secondStreetCoordinates + 10)));
         LiPumaNavas modelV2 = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, false, carsV2, trafficLightsV2);
 
         int t = 0;
