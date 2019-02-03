@@ -52,7 +52,7 @@ public class TimeMinimizer {
                             timeMap.put(carsH.get(carsH.size()-1).getId(), 0);
                         }
                         List<TrafficLight> trafficLightsH = new ArrayList<>();
-                        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0 - 5, ROAD_LENGTH/2.0), redDuration, greenDuration, 0, new Point2D.Double(ROAD_LENGTH/2.0 + 10, ROAD_LENGTH/2.0)));
+                        trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0), redDuration, greenDuration, 0, new Point2D.Double(ROAD_LENGTH/2.0 + 10, ROAD_LENGTH/2.0)));
                         LiPumaNavas modelH = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, SECURITY_GAP, true, carsH, trafficLightsH);
 
                         /* *************************************************************************************************************
@@ -64,7 +64,7 @@ public class TimeMinimizer {
                             timeMap.put(carsV.get(i).getId(), 0);
                         }
                         List<TrafficLight> trafficLightsV = new ArrayList<>();
-                        trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0 - 5), greenDuration, redDuration, redDuration, new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0  + 10)));
+                        trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0), greenDuration, redDuration, redDuration, new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0  + 10)));
                         LiPumaNavas modelV = new LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, false, carsV, trafficLightsV);
 
 
