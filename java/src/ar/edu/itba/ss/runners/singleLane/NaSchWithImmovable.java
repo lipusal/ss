@@ -5,6 +5,7 @@ import ar.edu.itba.ss.models.NaSch;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.ImmovableCar;
 import ar.edu.itba.ss.particles.Particle;
+import ar.edu.itba.ss.runners.Runner;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NaSchWithImmovable {
+public class NaSchWithImmovable extends Runner{
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {
@@ -48,9 +49,4 @@ public class NaSchWithImmovable {
         ovitoWriter.close();
     }
 
-    private static List<Particle> withPlaceholders(List<Car> placeholders, List<Car> cars) {
-        List<Particle> result = new ArrayList<>(cars);
-        result.addAll(placeholders);
-        return result;
-    }
 }

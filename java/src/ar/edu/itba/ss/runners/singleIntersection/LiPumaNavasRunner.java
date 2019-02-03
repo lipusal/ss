@@ -5,16 +5,15 @@ import ar.edu.itba.ss.models.LiPumaNavas;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
+import ar.edu.itba.ss.runners.Runner;
 
-import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class LiPumaNavasRunner {
+public class LiPumaNavasRunner extends Runner{
 
     public static void main(String[] args) throws IOException {
         final int ROAD_LENGTH = 1000,
@@ -79,15 +78,4 @@ public class LiPumaNavasRunner {
         ovitoWriter.close();
     }
 
-    private static List<Particle> withPlaceholders(List<Car> placeholders, List<Car> cars) {
-        List<Particle> result = new ArrayList<>(cars);
-        result.addAll(placeholders);
-        return result;
-    }
-
-    private static List<Color> colors(List<Car> carsWithPlaceholders) {
-        Color[] c = new Color[] { Color.RED, Color.BLUE, Color.CYAN };
-        int max = c.length;
-        return carsWithPlaceholders.stream().map(car -> car.isFake() ? Color.GREEN : c[car.getId() % max]).collect(Collectors.toList());
-    }
 }
