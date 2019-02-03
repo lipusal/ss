@@ -13,7 +13,7 @@ public class TrafficLight extends Particle {
         GREEN, RED
     }
 
-    private static final int DRAW_RADIUS = 5;
+    private static final int DRAW_RADIUS = 1;
 
     private LightState state = LightState.GREEN;
 
