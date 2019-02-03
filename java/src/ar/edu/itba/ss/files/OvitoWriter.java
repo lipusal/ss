@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class OvitoWriter<T extends Particle> {
@@ -16,6 +17,11 @@ public class OvitoWriter<T extends Particle> {
     private final FileWriter fileWriter;
 
     public OvitoWriter(File file) throws IOException {
+        // Create directories if needed, see https://stackoverflow.com/a/4040667
+        Optional<File> containingDir = Optional.ofNullable(file.getParentFile());
+        if (containingDir.map(dir -> !dir.exists() && !dir.mkdirs()).orElse(false)) {
+            throw new IllegalStateException("Couldn't create dir: " + containingDir);
+        }
         this.file = file;
         this.fileWriter = new FileWriter(this.file);
     }
