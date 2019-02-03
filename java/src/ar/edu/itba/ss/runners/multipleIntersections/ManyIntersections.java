@@ -1,4 +1,4 @@
-package ar.edu.itba.ss;
+package ar.edu.itba.ss.runners.multipleIntersections;
 
 import ar.edu.itba.ss.files.OvitoWriter;
 import ar.edu.itba.ss.models.LiPumaNavas;
