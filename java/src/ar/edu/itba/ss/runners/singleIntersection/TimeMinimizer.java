@@ -36,7 +36,6 @@ public class TimeMinimizer {
                     int t = 0;
                     try {
                         ovitoWriter = new OvitoWriter<>(Paths.get("timeMin" , "c"+NUM_CARS, String.format("g%d_r%d.txt", greenDuration, redDuration)));
-                        int[] positions = splitEvenly((int) (ROAD_LENGTH/2.0 - SECURITY_GAP), NUM_CARS);
                         List<Car> placeholders = new ArrayList<>(4);
                         placeholders.add(new Car(new Point2D.Double(0, 0), 0.1).fake());
                         placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH), 0.1).fake());
@@ -47,7 +46,7 @@ public class TimeMinimizer {
                          *                                          HORIZONTAL MODEL
                          * ************************************************************************************************************/
                         List<Car> carsH = new ArrayList<>();
-                        for(int pos : positions) {
+                        for(int pos : splitEvenly((int) (ROAD_LENGTH/2.0 - SECURITY_GAP), NUM_CARS)) {
                             carsH.add(new Car(new Point2D.Double(pos, ROAD_LENGTH/2.0), CAR_RADIUS));
                             timeMap.put(carsH.get(carsH.size()-1).getId(), 0);
                         }
@@ -59,9 +58,10 @@ public class TimeMinimizer {
                          *                                          VERTICAL MODEL
                          * ************************************************************************************************************/
                         List<Car> carsV = new ArrayList<>();
-                        for (int i = 0; i < positions.length * 0.6; i++) { // Vertical model has 2/3 the traffic of horizontal
-                            carsV.add(new Car(new Point2D.Double(ROAD_LENGTH/2.0, positions[i]), CAR_RADIUS));
-                            timeMap.put(carsV.get(i).getId(), 0);
+                        // Use 2/3 the density of cars as horizontal model
+                        for(int pos : splitEvenly((int) (ROAD_LENGTH/2.0 - SECURITY_GAP), (int) (NUM_CARS * (2.0 / 3)))) {
+                            carsV.add(new Car(new Point2D.Double(ROAD_LENGTH/2.0, pos), CAR_RADIUS));
+                            timeMap.put(carsV.get(carsV.size()-1).getId(), 0);
                         }
                         List<TrafficLight> trafficLightsV = new ArrayList<>();
                         trafficLightsV.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0), greenDuration, redDuration, redDuration, new Point2D.Double(ROAD_LENGTH/2.0, ROAD_LENGTH/2.0  + 10)));
