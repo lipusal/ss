@@ -12,43 +12,38 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LiPumaNavasGreenLights extends Runner{
+public class LiPumaNavasGreenLights extends Runner {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {
-        final int ROAD_LENGTH = 500,
-                MAX_SPEED = 3;
-        final int car_radius = 1;
+        final int ROAD_LENGTH = 500,    // 500 * 7.5m = 3.75km
+                MAX_SPEED = 3;          // 3 * 7.5 * 3.6 = 81km/h
+        final double car_radius = 0.5;
         boolean errored = false;
         do {
             OvitoWriter<Particle> ovitoWriter = null;
             try {
-
+                // First traffic light
                 int greenDurationOne = 20;
                 int redDurationOne = 10;
                 int phaseOne = 0;
-
+                // Second traffic light
                 int greenDurationTwo = 20;
                 int redDurationTwo = 10;
                 int phaseTwo = 0;
-
+                // Third traffic light
                 int greenDurationThree = 20;
                 int redDurationThree = 10;
                 int phaseThree = 0;
 
-
                 ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
-
                 List<Car> placeholders = new ArrayList<>(2);
+                placeholders.add(new Car(new Point2D.Double(0, -10), 0.1).fake());
+                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 10), 0.1).fake());
 
-        /* *************************************************************************************************************
-         *                                          HORIZONTAL MODEL
-         * ************************************************************************************************************/
-                placeholders.add(new Car(new Point2D.Double(0, ROAD_LENGTH / 2.0 + 20), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH / 2.0 - 20), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 0), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(0, 0), 0.1).fake());
-
+                /* *************************************************************************************************************
+                 *                                                  MODEL
+                 * ************************************************************************************************************/
                 List<Car> carsH = new ArrayList<>();
                 carsH.add(new Car(new Point2D.Double(0, 0), new Point2D.Double(2, 0), car_radius));
                 carsH.add(new Car(new Point2D.Double(10, 0), new Point2D.Double(1, 0), car_radius));
@@ -59,7 +54,7 @@ public class LiPumaNavasGreenLights extends Runner{
 
                 List<TrafficLight> trafficLightsH = new ArrayList<>();
                 trafficLightsH.add(new TrafficLight(new Point2D.Double(ROAD_LENGTH / 4.0, 0), redDurationOne, greenDurationOne, phaseOne));
-                trafficLightsH.add(new TrafficLight(new Point2D.Double((2 * ROAD_LENGTH) / 4.0, 0), redDurationTwo, greenDurationTwo,phaseTwo));
+                trafficLightsH.add(new TrafficLight(new Point2D.Double((2 * ROAD_LENGTH) / 4.0, 0), redDurationTwo, greenDurationTwo, phaseTwo));
                 trafficLightsH.add(new TrafficLight(new Point2D.Double((3 * ROAD_LENGTH) / 4.0, 0), redDurationThree, greenDurationThree, phaseThree));
                 ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, 3, true, carsH, trafficLightsH);
 
@@ -74,14 +69,12 @@ public class LiPumaNavasGreenLights extends Runner{
                 ovitoWriter.close();
             } catch (IllegalStateException | IllegalArgumentException e) {
                 errored = true;
-                System.out.format("Error in run. Retrying\n");
-
-            }
-            finally {
+                System.out.format("Error in run: %s. Retrying\n", e.getMessage());
+            } finally {
                 if (ovitoWriter != null) {
                     ovitoWriter.close();
                 }
             }
-        }while (errored);
+        } while (errored);
     }
 }
