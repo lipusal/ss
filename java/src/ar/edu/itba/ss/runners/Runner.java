@@ -2,6 +2,7 @@ package ar.edu.itba.ss.runners;
 
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
+import ar.edu.itba.ss.particles.TrafficLight;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -20,5 +21,20 @@ public abstract  class Runner {
         Color[] c = new Color[] { Color.RED, Color.BLUE, Color.CYAN };
         int max = c.length;
         return carsWithPlaceholders.stream().map(car -> car.isFake() ? Color.GREEN : c[car.getId() % max]).collect(Collectors.toList());
+    }
+
+    /**
+     * Evolve the given traffic lights for a specified number of seconds. Useful when reconstructing a previous run for
+     * debugging purposes.
+     *
+     * @param trafficLights Traffic lights to evolve.
+     * @param time          Time to evolve until.
+     */
+    protected static void evolveTrafficLightsUntil(List<TrafficLight> trafficLights, int time) {
+        for (int i = 0; i < time; i++) {
+            for (TrafficLight t : trafficLights) {
+                t.evolve(i);
+            }
+        }
     }
 }
