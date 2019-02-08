@@ -102,7 +102,7 @@ public class LiPumaNavas extends SingleLaneModel {
                 // First car in group to stop for traffic light
                 newSpeeds.add(trafficLightInteraction(currentCar, nextTrafficLight));
                 newInteractions.put(currentCar.getId(), true);
-            } else if (shouldStopForTrafficLightChain(currentCar, nextTrafficLight, nextCar)) {
+            } else if (shouldStopForTrafficLightChain(i, nextTrafficLight)) {
                 // Car ahead is interacting with traffic light
                 newSpeeds.add(trafficLightChainInteraction(currentCar, nextCar, nextTrafficLight));
                 newInteractions.put(currentCar.getId(), true);
@@ -226,6 +226,35 @@ public class LiPumaNavas extends SingleLaneModel {
                 && trafficLightInteractions.get(nextCar.getId())    // Next car is interacting with traffic light
                 && (th < ts                                         // Is within interaction horizon or is stopped right behind a car
                     || (v == 0 && effectiveGap(currentCar, nextCar, nextTrafficLight) == 0));
+    }
+
+    /**
+     * Recursively check "forward" if a car should stop due to a traffic light chain.  Given the current car index, and
+     * the next traffic light in question, checks whether:
+     * <ul>
+     *     <li>The current car should stop for a traffic light chain as per {@link #shouldStopForTrafficLightChain(Car, TrafficLight, Car)}</li>
+     *     <li>OR its preceding car is closer to the current car than the next traffic light and either that car should
+     *     stop for a traffic light as per {@link #shouldStopForTrafficLight(Car, TrafficLight, Car)} (ie. it would be
+     *     the first in chain to stop) or itself should stop due to its own preceding car stopping in a chain (this is
+     *     the recursive call that eventually looks forward the whole group).</li>
+     * </ul>
+     *
+     * @param currentCarIndex Current car index
+     * @param nextTrafficLight Next traffic light
+     * @return Whether this car should stop for a traffic light chain.
+     */
+    private boolean shouldStopForTrafficLightChain(int currentCarIndex, TrafficLight nextTrafficLight) {
+        Car currentCar = particles.get(currentCarIndex % particles.size()),
+                nextCar = getCarAhead(currentCarIndex);
+
+        // Regular should stop for traffic light chain
+        return shouldStopForTrafficLightChain(currentCar, nextTrafficLight, nextCar)
+            // OR next car is closer than next traffic light
+            || (wrapAroundDistance(currentCar, nextCar) < wrapAroundDistance(currentCar, nextTrafficLight)
+                // AND the next car should stop for traffic light (first in group)
+                && (shouldStopForTrafficLight(nextCar, nextTrafficLight, getCarAhead(currentCarIndex+1))
+                    // OR car ahead should stop for traffic light chain (recursive, looks forward in group)
+                    || shouldStopForTrafficLightChain(currentCarIndex+1 , nextTrafficLight)));
     }
 
     /**
