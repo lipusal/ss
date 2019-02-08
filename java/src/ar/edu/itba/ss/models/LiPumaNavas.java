@@ -194,9 +194,10 @@ public class LiPumaNavas extends SingleLaneModel {
         double v = getVelocityComponent(car),
                 trafficLightDistance = wrapAroundDistance(car, nextTrafficLight),
                 th = wrapAroundDistance(car, nextTrafficLight) / v,
-                ts = Math.min(v, H * 3);                                            // Bigger interaction horizon for traffic lights since they're visible from farther away and cars approach them with a much bigger delta T than with another car
+                ts = Math.min(v, H * 3),                                            // Bigger interaction horizon for traffic lights since they're visible from farther away and cars approach them with a much bigger delta T than with another car
+                remainingTime = nextTrafficLight.getRemainingTime(simTime);
         return trafficLightDistance < wrapAroundDistance(car, nextCar)              // Traffic light is closer than next car
-                && !nextTrafficLight.isGreen()                                      // Traffic light is not green
+                && (!nextTrafficLight.isGreen() || remainingTime <= th)             // Traffic light is not green OR will stop being green before reaching it
                 &&  (th < ts                                                        // Traffic light is within interaction horizon (always false when car is stopped), OR
                     || (v == 0 && effectiveGap(car, nextTrafficLight) == 0))        // Car is stopped because of the traffic light
                 && requiredDeceleration(car, nextTrafficLight) >= maxDeceleration;  // Required deceleration is acceptable (>=, not <= because we're dealing with negative numbers)

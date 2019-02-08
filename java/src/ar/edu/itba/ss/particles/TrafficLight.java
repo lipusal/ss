@@ -68,6 +68,26 @@ public class TrafficLight extends Particle {
         }
     }
 
+    /**
+     * Get remaining time until traffic light changes state.
+     *
+     * @param currentTime Current time.
+     * @return Time until traffic light changes. Greater than or equal to 0.
+     */
+    public double getRemainingTime(int currentTime) {
+        int timeSinceLastChange = currentTime - lastUpdateTime;
+        double result = -1;
+        switch (getState()) {
+            case GREEN:
+                result = greenDuration - phase - timeSinceLastChange;
+                break;
+            case RED:
+                result = redDuration - phase - timeSinceLastChange;
+                break;
+        }
+        return Math.max(result, 0);
+    }
+
     private LightState getState() {
         return state;
     }
