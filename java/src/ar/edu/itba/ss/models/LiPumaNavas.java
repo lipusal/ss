@@ -106,6 +106,9 @@ public class LiPumaNavas extends SingleLaneModel {
                 // Car ahead is interacting with traffic light
                 newSpeeds.add(trafficLightChainInteraction(currentCar, nextCar, nextTrafficLight));
                 newInteractions.put(currentCar.getId(), true);
+            } else if (nextTrafficLight != null && !nextTrafficLight.isGreen() && wrapAroundDistance(currentCar, nextTrafficLight) < wrapAroundDistance(currentCar, nextCar)) {
+                // Car is very close to next traffic light, but its speed is not enough to cause it to interact. Don't accelerate.
+                newSpeeds.add(getVelocityComponent(currentCar));
             } else {
                 // Regular KSSS evolution
                 newSpeeds.add(evolveCar(currentCar, nextCar, nextNextCar));
