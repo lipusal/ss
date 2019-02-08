@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class OvitoWriter<T extends Particle> {
-    private final File file;
+    /*package*/ final File file;
     private final FileWriter fileWriter;
 
     public OvitoWriter(File file) throws IOException {
