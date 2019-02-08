@@ -270,7 +270,7 @@ public class LiPumaNavas extends SingleLaneModel {
     private double requiredDeceleration(Car car, TrafficLight trafficLight) {
         double trafficLightEffectiveGap = effectiveGap(car, trafficLight),
                 v = getVelocityComponent(car);
-        return trafficLightEffectiveGap == 0
+        return trafficLightEffectiveGap <= 1
                 ? -v // Come to a stop
                 : Math.floor(-(v*v) / (2 * trafficLightEffectiveGap)); // a = (vf^2 - vi^2) / (2*d). Use floor to always give whole numbers.
     }
