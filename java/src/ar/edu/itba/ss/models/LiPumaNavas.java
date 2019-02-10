@@ -53,7 +53,7 @@ public class LiPumaNavas extends SingleLaneModel {
         trafficLightInteractions = new HashMap<>(cars.size());
         cars.forEach(c -> trafficLightInteractions.put(c.getId(), false));
 
-        validateCars(cars, roadLength, maxSpeed);
+        validateCars(roadLength, maxSpeed);
     }
 
     /**
@@ -116,8 +116,8 @@ public class LiPumaNavas extends SingleLaneModel {
         // Update interactions
         trafficLightInteractions = newInteractions;
         // Make sure we didn't break anything
-        validateCars(particles, roadLength, maxSpeed);
-        validateCarOrder(particles);
+        validateCars(roadLength, maxSpeed);
+        validateCarOrder();
 
         this.simTime++;
         return particles;

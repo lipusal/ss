@@ -37,7 +37,7 @@ public class KSSS extends SingleLaneModel {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
-        validateCars(particles, roadLength, maxSpeed);
+        validateCars(roadLength, maxSpeed);
     }
 
     /**
@@ -73,8 +73,8 @@ public class KSSS extends SingleLaneModel {
         // Advance cars
         particles = advanceCars(particles, newSpeeds, false); // We handle brake lights ourselves
         // Make sure we didn't break anything
-        validateCars(particles, roadLength, maxSpeed);
-        validateCarOrder(particles);
+        validateCars(roadLength, maxSpeed);
+        validateCarOrder();
         return particles;
     }
 
