@@ -8,6 +8,7 @@ import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
 
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -21,10 +22,16 @@ public class TimeMinimizer {
         final int ROAD_LENGTH = 135,    // 135 * 7.5 = 1012.5m ~ 1km
                   MAX_SPEED = 3,        // 3 * 7.5 * 3.6 = 81km/h
                   SECURITY_GAP = 1,
-                  NUM_CARS = 10;
+                  NUM_CARS = 5;
         final double CAR_RADIUS = 0.5;  // Each car takes up 1 cell
 
-        FileWriter resultsFileWriter = new FileWriter(Paths.get("timeMin", "c"+NUM_CARS, "c" + NUM_CARS+ "_results.csv").toFile());
+        File outputFile = Paths.get("timeMin", "c"+NUM_CARS, "c" + NUM_CARS+ "_results.csv").toFile(),
+            containingDir = outputFile.getParentFile();
+        // Make directories if needed
+        if (!containingDir.exists() && !containingDir.mkdirs()) {
+            throw new IllegalArgumentException("Could not create directories for output files: " + outputFile.toString());
+        }
+        FileWriter resultsFileWriter = new FileWriter(outputFile);
         resultsFileWriter.write("greenDuration,redDuration,t\n");
         for (int greenDuration = 5; greenDuration <= 100; greenDuration++) {
             for (int redDuration = 5; redDuration <= 100; redDuration++) {
