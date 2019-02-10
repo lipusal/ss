@@ -36,7 +36,7 @@ public class NaSch extends SingleLaneModel {
         this.maxSpeed = maxSpeed;
         this.p = p;
         this.random = new Random();
-        validateCars(cars, roadLength, maxSpeed);
+        validateCars(roadLength, maxSpeed);
     }
 
     /**
@@ -79,8 +79,8 @@ public class NaSch extends SingleLaneModel {
         // Advance cars by their velocities, and return a SORTED list (see precondition in constructor)
         particles = advanceCars(particles, newSpeeds, true); // NaSch doesn't have logic for brake lights, these are merely for visualization
         // Make sure we didn't break anything
-        validateCars(particles, roadLength, maxSpeed);
-        validateCarOrder(particles);
+        validateCars(roadLength, maxSpeed);
+        validateCarOrder();
         return particles;
     }
 

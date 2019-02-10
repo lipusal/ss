@@ -32,6 +32,12 @@ public class Car extends Particle {
         this(position, 1.0);
     }
 
+    public Car(Car other) {
+        this(other.id, other.position, other.velocity, other.acceleration, other.drawRadius);
+        this.isFake = other.isFake;
+        this.brakeLightsOn = other.areBrakeLightsOn();
+    }
+
     public void turnBrakeLightsOn() {
         this.brakeLightsOn = true;
         this.color = Color.RED;

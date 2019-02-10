@@ -4,6 +4,7 @@ import ar.edu.itba.ss.particles.Car;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class Model {
 
@@ -41,15 +42,14 @@ public abstract class Model {
      *     <li>Cars speeds are within bounds ({@code 0 <= Vx <= maxSpeed})</li>
      * </ol>
      *
-     * @param cars       Cars to validate
      * @param roadLength Road length, ie. high bound for X coordinate.
      * @param maxSpeed   High bound for Vx.
      * @throws IllegalStateException If any condition is not met.
      */
-    protected void validateCars(List<Car> cars, int roadLength, int maxSpeed) throws IllegalStateException {
-        for (int i = 0; i < cars.size(); i++) {
-            Car current = cars.get(i),
-                carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
+    protected void validateCars(int roadLength, int maxSpeed) throws IllegalStateException {
+        for (int i = 0; i < particles.size(); i++) {
+            Car current = particles.get(i),
+                carAhead = i < particles.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
             // 1) Cars are listed in order, and
             // 2) Cars do not overlap
             if (carAhead != null) {
@@ -71,5 +71,15 @@ public abstract class Model {
                 throw new IllegalStateException(String.format("%s is going too fast (%g, max speed is %d)", current, current.getVX(), maxSpeed));
             }
         }
+    }
+
+    /**
+     * Copy a list of cars. Note that IDs are copied too.
+     *
+     * @param original Original cars to copy.
+     * @return The copied cars.
+     */
+    List<Car> copyCars(List<Car> original) {
+        return original.stream().map(Car::new).collect(Collectors.toList());
     }
 }

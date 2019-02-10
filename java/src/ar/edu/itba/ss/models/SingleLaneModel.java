@@ -19,19 +19,28 @@ public abstract class SingleLaneModel extends Model {
     protected final boolean isHorizontal;
 
     private final List<Integer> originalParticleOrder;
+    private final boolean autoFix;
 
     /**
      * Instances a new horizontal or vertical single-lane model of the specified length.
-     *
-     * @param particles  Particles that compose the model.
-     * @param roadLength Road length.
-     * @param horizontal Whether the model is horizontal (if false, it's vertical).
+     *  @param particles  Particles that compose the model.
+     * @param roadLength  Road length.
+     * @param horizontal  Whether the model is horizontal (if false, it's vertical).
+     * @param autoFix     Whether to automatically fix violations.
      */
-    public SingleLaneModel(List<Car> particles, int roadLength, boolean horizontal) {
+    public SingleLaneModel(List<Car> particles, int roadLength, boolean horizontal, boolean autoFix) {
         super(particles);
         this.roadLength = roadLength;
         this.isHorizontal = horizontal;
         this.originalParticleOrder = particles.stream().map(Particle::getId).collect(Collectors.toList());
+        this.autoFix = autoFix;
+    }
+
+    /**
+     * Equivalent to {@code SingleLaneModel(particles, roadLength, horizontal, true)}
+     */
+    public SingleLaneModel(List<Car> particles, int roadLength, boolean horizontal) {
+        this(particles, roadLength, horizontal, true);
     }
 
     /**
@@ -52,22 +61,31 @@ public abstract class SingleLaneModel extends Model {
     }
 
     /**
-     * Equivalent to {@link Model#validateCars(List, int, int)} but is direction-independent.
+     * Equivalent to {@link Model#validateCars(int, int)} but is direction-independent.
+     * <b>NOTE:</b> If {@link #autoFix} is set, this corrects overlap and backwards-velocity errors, modifying {@link #particles}
+     * (re-sorting if necessary).
      *
-     * @see Model#validateCars(List, int, int)
+     * @see Model#validateCars(int, int)
      */
     @Override
-    protected void validateCars(List<Car> cars, int roadLength, int maxSpeed) throws IllegalStateException {
-        for (int i = 0; i < cars.size(); i++) {
-            Car current = cars.get(i),
-                carAhead = i < cars.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
+    protected void validateCars(int roadLength, int maxSpeed) throws IllegalStateException {
+        boolean autoFixed = false;
+        for (int i = 0; i < particles.size(); i++) {
+            Car current = particles.get(i),
+                carAhead = i < particles.size() - 1 ? getCarAhead(i) : null; // Don't want to wrap around here
             // 1) Cars are listed in order, and
             // 2) Cars do not overlap
             if (carAhead != null) {
                 if (getPositionComponent(current) > getPositionComponent(carAhead)) {
                     throw new IllegalStateException(String.format("%s and %s are not listed in order (%g > %g)", current, carAhead, getPositionComponent(current), getPositionComponent(carAhead)));
                 } else if (getPositionComponent(current) == getPositionComponent(carAhead)) {
-                    throw new IllegalStateException(String.format("%s and %s overlap at %s = %g)", current, carAhead, componentAxis(), getPositionComponent(current)));
+                    if (autoFix) {
+                        System.out.println("Overlap error, auto-fixing");
+                        fixOverlap(roadLength, i, (i+1) % roadLength);
+                        autoFixed = true;
+                    } else {
+                        throw new IllegalStateException(String.format("%s and %s overlap at %s = %g)", current, carAhead, componentAxis(), getPositionComponent(current)));
+                    }
                 }
             }
             // 3) Position
@@ -76,27 +94,73 @@ public abstract class SingleLaneModel extends Model {
             }
             // 4) Speed
             if (getVelocityComponent(current) < 0) {
-                throw new IllegalStateException(String.format("%s is going backwards (%g)", current, getVelocityComponent(current)));
+                if (autoFix) {
+                    System.out.println("Backwards velocity error, auto-fixing");
+                    fixGoingBackwards(i);
+                    autoFixed = true;
+                } else {
+                    throw new IllegalStateException(String.format("%s is going backwards (%g)", current, getVelocityComponent(current)));
+                }
             }
             if (getVelocityComponent(current) > maxSpeed) {
                 throw new IllegalStateException(String.format("%s is going too fast (%g, max speed is %d)", current, getVelocityComponent(current), maxSpeed));
             }
         }
+        if (autoFixed) {
+            // Car order potentially changed, re-sort
+            particles.sort(Comparator.comparingDouble(this::getPositionComponent));
+        }
+    }
+
+    /**
+     * For overlapping cars, moves first car backwards. Never move a car forward, as some models have traffic lights
+     * which are not in scope here. If moving a car backwards creates another conflict, solve it recursively.
+     *
+     * @param roadLength     Road length.
+     * @param firstCarIndex  First car index.
+     * @param secondCarIndex Second car index.
+     * @throws IllegalStateException When the overlap can't be solved (ie. moving cars backwards creates another overlap
+     * all the way around).
+     */
+    private void fixOverlap(int roadLength, int firstCarIndex, int secondCarIndex) throws IllegalStateException {
+        if (secondCarIndex == firstCarIndex) {
+            throw new IllegalStateException("Could not fix overlap, wrapped around cars completely");
+        }
+        int previousCarIndex = wrapUnder(firstCarIndex, 1, particles.size());
+        Car conflictingCar = particles.get(firstCarIndex),
+            previousCar = particles.get(previousCarIndex);
+        int newPosition = wrapUnder((int) getPositionComponent(conflictingCar), 1, roadLength);
+        setPositionComponent(conflictingCar, newPosition);
+        if (getPositionComponent(previousCar) == newPosition) {
+            // Overlap, retry recursively
+            fixOverlap(roadLength, previousCarIndex, firstCarIndex);
+        }
+    }
+
+    private void fixGoingBackwards(int carIndex) {
+        /*
+        TODO NOW actually solve:
+        - Advance position backwards as per velocity
+        - Set velocity to 0
+        - Fix overlaps
+        - Or fix corrupted car order
+         */
+        setVelocityComponent(particles.get(carIndex), 0);
     }
 
     /**
      * Validates that the original particle order (ie. the one this model was instantiated with) has not been violated.
      * This is sometimes necessary as in {@link #evolve()} the car list is recreated with a {@link java.util.TreeSet}
-     * ordered by position component, which guarantees that the first condition in {@link #validateCars(List, int, int)}
+     * ordered by position component, which guarantees that the first condition in {@link Model#validateCars(int, int)}
      * will be met. However, that method does not validate that car order was not disrupted, for example if one car
      * passed another.
      *
-     * @param particles The particles to validate
      * @throws IllegalStateException If original car order was violated (includes the case where cars are added or disappear
      * from the model).
      */
-    protected void validateCarOrder(List<Car> particles) throws IllegalStateException {
+    protected void validateCarOrder() throws IllegalStateException {
         int listIndex = -1;
+        // Find starting index. From here on, car order should be maintained (wrapping around if necessary)
         for (int i = 0; i < originalParticleOrder.size(); i++) {
             if (particles.get(i).getId() == originalParticleOrder.get(0)) {
                 listIndex = i;
@@ -213,4 +277,20 @@ public abstract class SingleLaneModel extends Model {
     /* *****************************************************************************************************************
      *                                      END DIRECTION-INDEPENDENT HELPERS
      * ****************************************************************************************************************/
+
+    /**
+     * Equivalent to {@code x - delta < 0 ? x - delta + max : x - delta}.
+     *
+     * @param x     Starting value
+     * @param delta Amount to subtract
+     * @param max   Upper bound if {@code x - delta < 0}.
+     * @return The result.
+     */
+    private int wrapUnder(int x, int delta, int max) {
+        int result = x - delta;
+        if (result < 0) {
+            result += max;
+        }
+        return result;
+    }
 }
