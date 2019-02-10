@@ -11,10 +11,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NaSchFundamentalDiagram extends Runner {
+public class fundamentalDiagram extends Runner {
 
     public static void main(String[] args) throws IOException {
-        final int amountOfCars = 30;
+        final int amountOfCars = 50;
         System.out.println("amount of cars " + amountOfCars);
         final int ROAD_LENGTH = 500,
                 MAX_SPEED = 20;
@@ -24,7 +24,7 @@ public class NaSchFundamentalDiagram extends Runner {
         final int carRadius = 1;
         Boolean hadError;
         do {
-            OvitoWriter<Particle> ovitoWriter = null;
+            OvitoWriter<Particle> ovitoWriter;
             try {
                 ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
                 // Generate cars and placeholders
@@ -34,7 +34,7 @@ public class NaSchFundamentalDiagram extends Runner {
                 List<Car> carsH = generateCars(amountOfCars, ROAD_LENGTH, carRadius, 1);
 
 //        ar.edu.itba.ss.models.NaSch modelH = new ar.edu.itba.ss.models.NaSch(ROAD_LENGTH, MAX_SPEED, P, carsH);
-                ar.edu.itba.ss.models.KSSS modelH = new ar.edu.itba.ss.models.KSSS(ROAD_LENGTH, MAX_SPEED, 1, carsH);
+                ar.edu.itba.ss.models.KSSS modelH = new ar.edu.itba.ss.models.KSSS(ROAD_LENGTH, MAX_SPEED, 7, carsH);
                 int t = 0;
                 while (t < 3000) { // TODO: parametrizar tiempo de simulación
                     List<Particle> allCars = withPlaceholders(placeholders, carsH);
