@@ -45,6 +45,9 @@ public class OvitoReader<T extends Particle> {
         boolean done = false;
         List<Car> result = null;
         do {
+            if(!fileReader.ready()) {
+                throw new IllegalArgumentException("Reached end of file (?) but time " + time + " was not reached");
+            }
             int numParticles = Integer.parseInt(fileReader.readLine());
             double currentTime = Double.parseDouble(fileReader.readLine());
             if (currentTime == time) {

@@ -32,7 +32,7 @@ public abstract  class Runner {
      * @param initialVelocity for all the cars that are generated
      * @return list of generated cars
      */
-    protected static List<Car> generateCars(int amountOfCars, int roadLength, int carRadius, int initialVelocity){
+    protected static List<Car> generateCars(int amountOfCars, int roadLength, double carRadius, int initialVelocity){
         List<Car> cars = new ArrayList<>();
         for (int i=0; i<roadLength; i+=(roadLength/amountOfCars)){
             cars.add(new Car(new Point2D.Double(i, 0), new Point2D.Double(initialVelocity, 0), carRadius));

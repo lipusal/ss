@@ -7,7 +7,9 @@ import ar.edu.itba.ss.runners.Runner;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,22 +22,21 @@ public class fundamentalDiagram extends Runner {
                 MAX_SPEED = 20;
         final double density = 1.0 * amountOfCars / ROAD_LENGTH;
         System.out.println("The system density is " + density);
-        final double P = 0.1;
-        final int carRadius = 1;
-        Boolean hadError;
+        final double carRadius = 0.5;
+        boolean hadError = false;
         do {
-            OvitoWriter<Particle> ovitoWriter;
+            OvitoWriter<Particle> ovitoWriter = null;
+            int t = 0;
             try {
                 ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
                 // Generate cars and placeholders
                 List<Car> placeholders = new ArrayList<>(2);
-                placeholders.add(new Car(new Point2D.Double(0, ROAD_LENGTH / 2.0 + 20), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH / 2.0 - 20), 0.1).fake());
+                placeholders.add(new Car(new Point2D.Double(0, 20), 0.1).fake());
+                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, -20), 0.1).fake());
                 List<Car> carsH = generateCars(amountOfCars, ROAD_LENGTH, carRadius, 1);
 
 //        ar.edu.itba.ss.models.NaSch modelH = new ar.edu.itba.ss.models.NaSch(ROAD_LENGTH, MAX_SPEED, P, carsH);
                 ar.edu.itba.ss.models.KSSS modelH = new ar.edu.itba.ss.models.KSSS(ROAD_LENGTH, MAX_SPEED, 7, carsH);
-                int t = 0;
                 while (t < 3000) { // TODO: parametrizar tiempo de simulación
                     List<Particle> allCars = withPlaceholders(placeholders, carsH);
                     ovitoWriter.exportPositions(allCars, t);
@@ -47,11 +48,18 @@ public class fundamentalDiagram extends Runner {
                     accumVelocity += car.getVX();
                 }
                 System.out.println("average velocity is " + accumVelocity / amountOfCars);
-                ovitoWriter.close();
                 hadError = false;
             } catch(IllegalStateException | IllegalArgumentException e){
                 hadError = true;
-                System.out.format("Error in run: %s. Retrying\n", e.getMessage());
+                System.out.format("Error in run at t=%d: %s. Retrying\n", t, e.getMessage());
+            } finally {
+                if (ovitoWriter != null) {
+                    ovitoWriter.close();
+                    Files.copy(Paths.get("out.txt"), Paths.get("in.txt"), StandardCopyOption.REPLACE_EXISTING);
+                }
+                if (hadError) {
+                    System.exit(1);
+                }
             }
         }while(hadError);
     }
