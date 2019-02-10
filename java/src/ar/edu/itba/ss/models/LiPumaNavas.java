@@ -31,7 +31,7 @@ public class LiPumaNavas extends SingleLaneModel {
 //    protected double PD = 0;
     protected int securityGap;
 
-    private int simTime = 0;
+    private int simTime;
     private final double maxDeceleration = -5;
 
     private List<TrafficLight> trafficLights = new ArrayList<>();
@@ -43,16 +43,25 @@ public class LiPumaNavas extends SingleLaneModel {
      */
     private Map<Integer, Boolean> trafficLightInteractions;
 
-    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights, int startTime) {
         super(cars, roadLength, horizontal);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
         this.trafficLights.addAll(trafficLights);
+        this.simTime = startTime;
         // Initialize and populate traffic light interactions
         trafficLightInteractions = new HashMap<>(cars.size());
         cars.forEach(c -> trafficLightInteractions.put(c.getId(), false));
 
         validateCars(cars, roadLength, maxSpeed);
+    }
+
+    /**
+     * Equivalent to {@code LiPumaNavas(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0);}
+     * @see #LiPumaNavas(int, int, int, boolean, List, List, int)
+     */
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
+        this(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0);
     }
 
     /**
