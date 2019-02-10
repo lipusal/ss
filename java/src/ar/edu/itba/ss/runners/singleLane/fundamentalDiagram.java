@@ -22,15 +22,15 @@ public class fundamentalDiagram extends Runner {
         System.out.println("The system density is " + density);
         final double P = 0.1;
         final int carRadius = 1;
-        Boolean hadError;
+        boolean hadError;
         do {
             OvitoWriter<Particle> ovitoWriter;
             try {
                 ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
                 // Generate cars and placeholders
                 List<Car> placeholders = new ArrayList<>(2);
-                placeholders.add(new Car(new Point2D.Double(0, ROAD_LENGTH / 2.0 + 20), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, ROAD_LENGTH / 2.0 - 20), 0.1).fake());
+                placeholders.add(new Car(new Point2D.Double(0, 20), 0.1).fake());
+                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, -20), 0.1).fake());
                 List<Car> carsH = generateCars(amountOfCars, ROAD_LENGTH, carRadius, 1);
 
 //        ar.edu.itba.ss.models.NaSch modelH = new ar.edu.itba.ss.models.NaSch(ROAD_LENGTH, MAX_SPEED, P, carsH);
