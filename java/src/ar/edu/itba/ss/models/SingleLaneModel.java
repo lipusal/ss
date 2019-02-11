@@ -231,7 +231,7 @@ public abstract class SingleLaneModel extends Model {
     /**
      * Gets the horizontal or vertical component of the specified particle's position, as appropriate for this model.
      */
-    protected double getPositionComponent(Particle particle) {
+    public double getPositionComponent(Particle particle) {
         return isHorizontal ? particle.getX() : particle.getY();
     }
 

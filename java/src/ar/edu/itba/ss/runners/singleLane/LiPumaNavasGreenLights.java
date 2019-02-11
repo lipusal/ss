@@ -1,19 +1,19 @@
 package ar.edu.itba.ss.runners.singleLane;
 
 import ar.edu.itba.ss.files.OvitoWriter;
+import ar.edu.itba.ss.models.SingleLaneModel;
 import ar.edu.itba.ss.particles.Car;
 import ar.edu.itba.ss.particles.Particle;
 import ar.edu.itba.ss.particles.TrafficLight;
 import ar.edu.itba.ss.runners.Runner;
 
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LiPumaNavasGreenLights extends Runner {
 
@@ -23,62 +23,90 @@ public class LiPumaNavasGreenLights extends Runner {
                 MAX_SPEED = 3,          // 3 * 7.5 * 3.6 = 81km/h
                 SECURITY_GAP = 1;
 
-        final int greenDuration = 35;
-        final int redDuration = 10;
-        final int phaseBetweenTrafficLights = 5;
-
+        final int GREEN_DURATION = 35,
+                RED_DURATION = 10,
+                PHASE_BETWEEN_LIGHTS = 5;
         final double car_radius = 0.5;
+        final String experimentFolder = String.format("changing_phase");
+        String experimentName;
 
-        boolean errored = false;
+        File outputFile = Paths.get("ondaVerde", experimentFolder, "_results.csv").toFile(),
+                containingDir = outputFile.getParentFile();
+        // Create directories if needed
+        if (!containingDir.exists() && !containingDir.mkdirs()) {
+            throw new IllegalArgumentException("Could not create directories for output files: " + outputFile.toString());
+        }
+        FileWriter resultsFileWriter = new FileWriter(outputFile);
 
-        do {
-            OvitoWriter<Particle> ovitoWriter = null;
-            int t = 0;
-            try {
-                ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
-                List<Car> placeholders = new ArrayList<>(2);
-                placeholders.add(new Car(new Point2D.Double(0, -10), 0.1).fake());
-                placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 10), 0.1).fake());
+        for (int i = 0; i < GREEN_DURATION; i++) {
+            int GREEN_DURATION_FINAL = GREEN_DURATION,
+                    RED_DURATION_FINAL = RED_DURATION,
+                    PHASE_BETWEEN_LIGHTS_FINAL = PHASE_BETWEEN_LIGHTS + i;
+            experimentName = String.format("g%d_r%d_p%d", GREEN_DURATION_FINAL, RED_DURATION_FINAL, PHASE_BETWEEN_LIGHTS_FINAL);
+            // Map recording the time required for each car to complete a loop. Mapping is car ID => time taken
+            boolean errored;
+            do {
+                Map<Integer, Integer> timeMap = new HashMap<>();
+                OvitoWriter<Particle> ovitoWriter = null;
+                int t = 0;
+                try {
+                    ovitoWriter = new OvitoWriter<>(Paths.get("ondaVerde", experimentFolder, experimentName + ".txt"));
+                    List<Car> placeholders = new ArrayList<>(2);
+                    placeholders.add(new Car(new Point2D.Double(0, -10), 0.1).fake());
+                    placeholders.add(new Car(new Point2D.Double(ROAD_LENGTH, 10), 0.1).fake());
 
-                /* *************************************************************************************************************
-                 *                                                  MODEL
-                 * ************************************************************************************************************/
-                List<Car> carsH = new ArrayList<>();
-                int[] positions = splitEvenly(50, 5);
-                for(int pos : positions) {
-                    carsH.add(new Car(new Point2D.Double(pos, 0), car_radius));
+                    /* *************************************************************************************************************
+                     *                                                  MODEL
+                     * ************************************************************************************************************/
+                    List<Car> carsH = new ArrayList<>();
+                    int[] positions = splitEvenly(50, 5);
+                    for(int pos : positions) {
+                        carsH.add(new Car(new Point2D.Double(pos, 0), car_radius));
+                        timeMap.put(carsH.get(carsH.size() - 1).getId(), -1);
+                    }
+
+                    /* *************************************************************************************************************
+                     *                                      TRAFFIC LIGHTS EVERY ~400M
+                     * ************************************************************************************************************/
+                    List<TrafficLight> trafficLightsH = new ArrayList<>();
+                    int phase = 0;
+                    for (int x = 54; x < ROAD_LENGTH; x += 54) { // 54 * 7.5 = 405m
+                        trafficLightsH.add(new TrafficLight(new Point2D.Double(x, 0), RED_DURATION_FINAL, GREEN_DURATION_FINAL, phase));
+                        phase += PHASE_BETWEEN_LIGHTS_FINAL; // The phase varies between lights
+                    }
+                    ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, SECURITY_GAP, true, carsH, trafficLightsH, 0, false);
+
+                    while (timeMap.containsValue(-1)) {
+                        List<Particle> allCars = withPlaceholders(placeholders, carsH);
+                        allCars.addAll(trafficLightsH);
+                        ovitoWriter.exportPositions(allCars, t);
+
+                        // Record cars that looped
+                        Map<Integer, Double> positionsBefore = positionsMap(carsH, modelH);
+                        carsH = modelH.evolve();
+                        recordLoopedCars(positionsBefore, positionsMap(carsH, modelH), timeMap, t);
+                        t++;
+                        if (t > 500) {
+                            System.err.println("Simulation " + experimentName + " not completed after 500 seconds, terminating run");
+                            break;
+                        }
+                    }
+                    System.out.println("Run " + experimentName + " completed at t=" + t);
+                    errored = false;
+                    resultsFileWriter.write(String.format("%d,%d,%d,%d\n", GREEN_DURATION_FINAL, RED_DURATION_FINAL, PHASE_BETWEEN_LIGHTS_FINAL, t));
+                    resultsFileWriter.flush();
+                } catch (IllegalStateException | IllegalArgumentException e) {
+                    errored = true;
+                    System.out.format("Error in run at t=%d: %s. Retrying\n", t, e.getMessage());
+                } finally {
+                    if (ovitoWriter != null) {
+                        ovitoWriter.close();
+//                        Files.copy(Paths.get("out.txt"), Paths.get("in.txt"), StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
-
-                /* *************************************************************************************************************
-                 *                                      TRAFFIC LIGHTS EVERY ~400M
-                 * ************************************************************************************************************/
-                List<TrafficLight> trafficLightsH = new ArrayList<>();
-                int phase = 0;
-                for (int x = 54; x < ROAD_LENGTH; x += 54) { // 54 * 7.5 = 405m
-                    trafficLightsH.add(new TrafficLight(new Point2D.Double(x, 0), redDuration, greenDuration, phase));
-                    phase += phaseBetweenTrafficLights; // The phase varies between lights
-                }
-                ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, SECURITY_GAP, true, carsH, trafficLightsH);
-
-                while (t < 300) { // TODO: parametrizar tiempo de simulación
-                    System.out.println(t);
-                    List<Particle> allCars = withPlaceholders(placeholders, carsH);
-                    allCars.addAll(trafficLightsH);
-                    ovitoWriter.exportPositions(allCars, t);
-                    carsH = modelH.evolve();
-                    t++;
-                }
-                ovitoWriter.close();
-            } catch (IllegalStateException | IllegalArgumentException e) {
-                errored = true;
-                System.out.format("Error in run at t=%d: %s. Retrying\n", t, e.getMessage());
-            } finally {
-                if (ovitoWriter != null) {
-                    ovitoWriter.close();
-                    Files.copy(Paths.get("out.txt"), Paths.get("in.txt"), StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-        } while (errored);
+            } while (errored);
+        }
+        resultsFileWriter.close();
     }
 
     private static int[] splitEvenly(int roadLength, int numCars) {
@@ -113,6 +141,40 @@ public class LiPumaNavasGreenLights extends Runner {
             result[i] = nextValue;
         }
         Arrays.sort(result); // Slots may not be all in order, eg. when we have to save the last slot.
+        return result;
+    }
+
+    /**
+     * TODO NOW doc me
+     * @param positionsMapBefore
+     * @param positionsMapAfter
+     * @param timeMap
+     * @param t
+     * @return
+     */
+    private static boolean recordLoopedCars(Map<Integer, Double> positionsMapBefore, Map<Integer, Double> positionsMapAfter, Map<Integer, Integer> timeMap, final int t) {
+        if (!positionsMapBefore.keySet().equals(positionsMapAfter.keySet())) {
+            throw new IllegalArgumentException(String.format("Key set mismatch, %s != %s", positionsMapBefore.toString(), positionsMapAfter.toString()));
+        }
+        AtomicBoolean result = new AtomicBoolean(false);
+        positionsMapBefore.keySet().stream()
+                .filter(id -> positionsMapAfter.get(id) < positionsMapBefore.get(id) && timeMap.get(id) == -1)
+                .forEach(loopedId -> {
+                    timeMap.put(loopedId, t);
+                    result.set(true);
+                });
+        return result.get();
+    }
+
+    /**
+     * TODO NOW doc me
+     * @param cars
+     * @param model
+     * @return
+     */
+    private static Map<Integer, Double> positionsMap(List<Car> cars, SingleLaneModel model) {
+        Map<Integer, Double> result = new HashMap<>(cars.size());
+        cars.forEach(c -> result.put(c.getId(), model.getPositionComponent(c)));
         return result;
     }
 }

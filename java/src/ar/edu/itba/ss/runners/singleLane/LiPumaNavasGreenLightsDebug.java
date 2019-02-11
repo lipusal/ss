@@ -48,7 +48,7 @@ public class LiPumaNavasGreenLightsDebug extends Runner {
 
             List<Car> carsH = new OvitoReader<Car>(Paths.get("in.txt")).importPositionsOvito(TIME, placeholders.size(), trafficLightsH.size());
 
-            ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, SECURITY_GAP, true, carsH, trafficLightsH, TIME);
+            ar.edu.itba.ss.models.LiPumaNavas modelH = new ar.edu.itba.ss.models.LiPumaNavas(ROAD_LENGTH, MAX_SPEED, SECURITY_GAP, true, carsH, trafficLightsH, TIME, false);
 
             while (TIME < 300) { // TODO: parametrizar tiempo de simulación
                 List<Particle> allCars = withPlaceholders(placeholders, carsH);

@@ -43,8 +43,8 @@ public class LiPumaNavas extends SingleLaneModel {
      */
     private Map<Integer, Boolean> trafficLightInteractions;
 
-    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights, int startTime) {
-        super(cars, roadLength, horizontal);
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights, int startTime, boolean autoFix) {
+        super(cars, roadLength, horizontal, autoFix);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
         this.trafficLights.addAll(trafficLights);
@@ -58,10 +58,10 @@ public class LiPumaNavas extends SingleLaneModel {
 
     /**
      * Equivalent to {@code LiPumaNavas(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0);}
-     * @see #LiPumaNavas(int, int, int, boolean, List, List, int)
+     * @see #LiPumaNavas(int, int, int, boolean, List, List, int, boolean)
      */
     public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
-        this(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0);
+        this(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0, true);
     }
 
     /**
