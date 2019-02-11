@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("Duplicates")
-public class OndaVerdeChangingPhase extends Runner {
+public class OndaVerdeChangingRed extends Runner {
 
     public static void main(String[] args) throws IOException {
         final int ROAD_LENGTH = 250,    // 250 * 7.5m = 1.875km
@@ -24,10 +24,10 @@ public class OndaVerdeChangingPhase extends Runner {
                 SECURITY_GAP = 1;
 
         final int GREEN_DURATION = 35,
-                RED_DURATION = 10,
+                RED_DURATION = 5,
                 PHASE_BETWEEN_LIGHTS = 5;
         final double car_radius = 0.5;
-        final String experimentFolder = "changing_phase";
+        final String experimentFolder = "changing_red";
         String experimentName;
 
         File outputFile = Paths.get("ondaVerde", experimentFolder, "_results.csv").toFile(),
@@ -38,10 +38,10 @@ public class OndaVerdeChangingPhase extends Runner {
         }
         FileWriter resultsFileWriter = new FileWriter(outputFile);
 
-        for (int i = 0; i < GREEN_DURATION; i++) {
+        for (int i = 0; i < 100; i++) {
             int GREEN_DURATION_FINAL = GREEN_DURATION,
-                    RED_DURATION_FINAL = RED_DURATION,
-                    PHASE_BETWEEN_LIGHTS_FINAL = PHASE_BETWEEN_LIGHTS + i;
+                    RED_DURATION_FINAL = RED_DURATION + i,
+                    PHASE_BETWEEN_LIGHTS_FINAL = PHASE_BETWEEN_LIGHTS;
             experimentName = String.format("g%d_r%d_p%d", GREEN_DURATION_FINAL, RED_DURATION_FINAL, PHASE_BETWEEN_LIGHTS_FINAL);
             // Map recording the time required for each car to complete a loop. Mapping is car ID => time taken
             boolean errored;
