@@ -198,7 +198,8 @@ public class LiPumaNavas extends SingleLaneModel {
         return trafficLightDistance < wrapAroundDistance(car, nextCar)              // Traffic light is closer than next car
                 && !nextTrafficLight.isGreen()                                      // Traffic light is not green
                 &&  (th < ts                                                        // Traffic light is within interaction horizon (always false when car is stopped), OR
-                    || (v == 0 && effectiveGap(car, nextTrafficLight) == 0))        // Car is stopped because of the traffic light
+                    || (v == 0                                                      // Car is stopped because of the traffic light
+                    && (effectiveGap(car, nextTrafficLight) == 0 || trafficLightInteractions.get(car.getId()))))
                 && requiredDeceleration(car, nextTrafficLight) >= maxDeceleration;  // Required deceleration is acceptable (>=, not <= because we're dealing with negative numbers)
     }
 
