@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.runners.singleLane;
+package ar.edu.itba.ss.runners.singleLane.ondaVerde;
 
 import ar.edu.itba.ss.files.OvitoReader;
 import ar.edu.itba.ss.files.OvitoWriter;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LiPumaNavasGreenLightsDebug extends Runner {
+public class OndaVerdeDebugger extends Runner {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {

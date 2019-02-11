@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.runners.singleLane;
+package ar.edu.itba.ss.runners.singleLane.ondaVerde;
 
 import ar.edu.itba.ss.files.OvitoWriter;
 import ar.edu.itba.ss.models.SingleLaneModel;
@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LiPumaNavasGreenLights extends Runner {
+public class OndaVerdeChangingPhase extends Runner {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {
