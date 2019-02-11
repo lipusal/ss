@@ -30,7 +30,7 @@ public class OndaVerdeChangingRed extends Runner {
         final String experimentFolder = "changing_red";
         String experimentName;
 
-        File outputFile = Paths.get("ondaVerde", experimentFolder, "_results.csv").toFile(),
+        File outputFile = Paths.get("ondaVerde", experimentFolder, "_" + experimentFolder + "results.csv").toFile(),
                 containingDir = outputFile.getParentFile();
         // Create directories if needed
         if (!containingDir.exists() && !containingDir.mkdirs()) {
