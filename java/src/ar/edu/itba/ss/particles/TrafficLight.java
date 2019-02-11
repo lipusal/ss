@@ -7,7 +7,7 @@ public class TrafficLight extends Particle {
 
     private final double redDuration, greenDuration;
     private double phase;
-    private int lastUpdateTime;
+    private int lastUpdateTime = 0;
 
     public enum LightState {
         GREEN, RED
@@ -34,7 +34,7 @@ public class TrafficLight extends Particle {
         this.redDuration = redDuration;
         this.greenDuration = greenDuration;
         this.phase = phase;
-        this.lastUpdateTime = 0;
+        this.lastUpdateTime = 0; // TODO ver de scar o poner en 0
         this.drawPosition = drawPosition;
     }
 
@@ -48,21 +48,27 @@ public class TrafficLight extends Particle {
         int timeSinceLastChange = time - lastUpdateTime;
         switch (getState()) {
             case GREEN:
-                if (timeSinceLastChange + phase >= greenDuration) {
+                if (time <= phase){
+                    if(time == phase) {
+                        changeToRed();
+                        lastUpdateTime = time;
+                    }
+                }
+                else if (timeSinceLastChange - phase >= greenDuration) {
                     changeToRed();
                     lastUpdateTime = time;
-                    if (phase != 0) {
-                        phase = 0;
-                    }
+//                    if (phase != 0) {
+//                        phase = 0;
+//                    }
                 }
             break;
             case RED:
-                if (timeSinceLastChange + phase >= redDuration) {
+                if (timeSinceLastChange >= redDuration) {
                     changeToGreen();
                     lastUpdateTime = time;
-                    if (phase != 0) {
-                        phase = 0;
-                    }
+//                    if (phase != 0) {
+//                        phase = 0;
+//                    }
                 }
             break;
         }
