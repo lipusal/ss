@@ -19,7 +19,7 @@ public class LiPumaNavasGreenLights extends Runner {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) throws IOException {
-        final int ROAD_LENGTH = 500,    // 500 * 7.5m = 3.75km
+        final int ROAD_LENGTH = 250,    // 250 * 7.5m = 1.875km
                 MAX_SPEED = 3,          // 3 * 7.5 * 3.6 = 81km/h
                 SECURITY_GAP = 1;
 
@@ -35,7 +35,6 @@ public class LiPumaNavasGreenLights extends Runner {
             OvitoWriter<Particle> ovitoWriter = null;
             int t = 0;
             try {
-                double deltaT = (ROAD_LENGTH/4.0) / MAX_SPEED; // Distance between lights / VMax = t min for cars to get from one light to the next
                 ovitoWriter = new OvitoWriter<>(Paths.get("out.txt"));
                 List<Car> placeholders = new ArrayList<>(2);
                 placeholders.add(new Car(new Point2D.Double(0, -10), 0.1).fake());
