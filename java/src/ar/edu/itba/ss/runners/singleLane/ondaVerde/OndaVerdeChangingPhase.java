@@ -37,6 +37,7 @@ public class OndaVerdeChangingPhase extends Runner {
             throw new IllegalArgumentException("Could not create directories for output files: " + outputFile.toString());
         }
         FileWriter resultsFileWriter = new FileWriter(outputFile);
+        resultsFileWriter.write("greenDuration,redDuration,phaseBetweenLights,time\n");
 
         for (int i = 0; i < GREEN_DURATION; i++) {
             int GREEN_DURATION_FINAL = GREEN_DURATION,
