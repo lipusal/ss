@@ -31,7 +31,7 @@ public class LiPumaNavas extends SingleLaneModel {
 //    protected double PD = 0;
     protected int securityGap;
 
-    private int simTime = 0;
+    private int simTime;
     private final double maxDeceleration = -5;
 
     private List<TrafficLight> trafficLights = new ArrayList<>();
@@ -43,16 +43,25 @@ public class LiPumaNavas extends SingleLaneModel {
      */
     private Map<Integer, Boolean> trafficLightInteractions;
 
-    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
-        super(cars, roadLength, horizontal);
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights, int startTime, boolean autoFix) {
+        super(cars, roadLength, horizontal, autoFix);
         this.maxSpeed = maxSpeed;
         this.securityGap = securityGap;
         this.trafficLights.addAll(trafficLights);
+        this.simTime = startTime;
         // Initialize and populate traffic light interactions
         trafficLightInteractions = new HashMap<>(cars.size());
         cars.forEach(c -> trafficLightInteractions.put(c.getId(), false));
 
         validateCars(roadLength, maxSpeed);
+    }
+
+    /**
+     * Equivalent to {@code LiPumaNavas(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0);}
+     * @see #LiPumaNavas(int, int, int, boolean, List, List, int, boolean)
+     */
+    public LiPumaNavas(int roadLength, int maxSpeed, int securityGap, boolean horizontal, List<Car> cars, List<TrafficLight> trafficLights) {
+        this(roadLength, maxSpeed, securityGap, horizontal, cars, trafficLights, 0, true);
     }
 
     /**
@@ -189,7 +198,8 @@ public class LiPumaNavas extends SingleLaneModel {
         return trafficLightDistance < wrapAroundDistance(car, nextCar)              // Traffic light is closer than next car
                 && !nextTrafficLight.isGreen()                                      // Traffic light is not green
                 &&  (th < ts                                                        // Traffic light is within interaction horizon (always false when car is stopped), OR
-                    || (v == 0 && effectiveGap(car, nextTrafficLight) == 0))        // Car is stopped because of the traffic light
+                    || (v == 0                                                      // Car is stopped because of the traffic light
+                    && (effectiveGap(car, nextTrafficLight) == 0 || trafficLightInteractions.get(car.getId()))))
                 && requiredDeceleration(car, nextTrafficLight) >= maxDeceleration;  // Required deceleration is acceptable (>=, not <= because we're dealing with negative numbers)
     }
 
